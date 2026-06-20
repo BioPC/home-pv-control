@@ -1,0 +1,11 @@
+name: Home PV Control for HBC
+content_in_root: false
+render_readme: true
+domains:
+  - automation
+  - input_boolean
+  - input_number
+  - input_select
+  - input_text
+  - sensor
+homeassistant: "2024.8.0"
