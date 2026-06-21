@@ -18,7 +18,9 @@
 
 Home PV Control manages PV inverter power limits while HBC remains responsible for battery charging, discharging and strategy selection.
 
-> Home PV Control does **not** modify Home Battery Control files. It runs next to HBC.
+> ⚠️ Home PV Control is designed for PV inverters that support external power limit control (curtailment).
+>
+> ⚠️ Home PV Control does **not** modify Home Battery Control files. It runs next to HBC.
 
 ## What it does
 
