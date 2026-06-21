@@ -1,5 +1,29 @@
 # Release Notes
 
+## v1.0.1 - Maintenance release
+
+Bug-fix and control-behavior update for Home PV Control.
+
+### Fixed
+
+- Entity dropdowns no longer disappear after Home Assistant restart or Quick Reload.
+- Dropdown entity discovery no longer stops at partial lists.
+- PV limit / restore / recalculation actions are blocked during cooldown.
+- Cooldown finished is logged before the next PV action is allowed.
+- Cooldown now uses seconds consistently.
+
+### Changed
+
+- EMS evaluation interval is now 15 seconds.
+- PV cooldown can be configured from 15 seconds to 15 minutes.
+- Default PV cooldown remains 60 seconds.
+- Debug output shows the actual cooldown value.
+
+### Added
+
+- HBC live status now shows battery AC power for M1, M2, M3 and higher.
+- Main dashboard now explains that, during negative all-in prices, PV is automatically reduced to the user-configured minimum limits.
+
 ## v1.0.0 - First public release
 
 First public GitHub-style release of Home PV Control for HBC users.

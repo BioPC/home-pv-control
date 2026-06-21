@@ -13,7 +13,7 @@ views:
         type: markdown
         text_only: true
         content: |-
-          ### Home PV Control for HBC (v1.0.0)
+          ### Home PV Control for HBC (v1.0.1)
 
           Standalone PV export control for Home Battery Control users.
     badges:
@@ -53,6 +53,15 @@ views:
               Control only controls configured PV limit entities and can
               optionally select the HBC strategy. HBC files are not
               edited.</ha-alert>
+          - type: markdown
+            text_only: true
+            content: >-
+              <ha-alert title="Negative price protection" alert-type="warning">When
+              the configured all-in price is zero or negative, Home PV Control
+              automatically sets the configured PV inverters to the user-defined
+              minimum PV limits. Set the minimum limits to 0 W if you want PV
+              fully off, or use small values if your inverter should keep running.
+              </ha-alert>
           - type: tile
             entity: input_boolean.pv_ems_enabled
             name: Home PV Control enabled
@@ -422,8 +431,7 @@ views:
           - type: markdown
             text_only: true
             content: >-
-              **Cooldown**: minimum time between PV limit changes to prevent too
-              many writes.
+              **Cooldown**: minimum time between PV limit changes (15 sec to 15 min).
 
 
               **Deadband**: ignore small PV limit corrections so the EMS does
@@ -548,10 +556,26 @@ views:
                   conditions:
                     - condition: numeric_state
                       entity: input_number.house_battery_count
+                      above: 0
+                  row:
+                    entity: sensor.marstek_m1_ac_power
+                    name: Battery M1 power
+                - type: conditional
+                  conditions:
+                    - condition: numeric_state
+                      entity: input_number.house_battery_count
                       above: 1
                   row:
                     entity: sensor.marstek_m2_battery_state_of_charge
                     name: Battery M2 SOC
+                - type: conditional
+                  conditions:
+                    - condition: numeric_state
+                      entity: input_number.house_battery_count
+                      above: 1
+                  row:
+                    entity: sensor.marstek_m2_ac_power
+                    name: Battery M2 power
                 - type: conditional
                   conditions:
                     - condition: numeric_state
@@ -564,6 +588,14 @@ views:
                   conditions:
                     - condition: numeric_state
                       entity: input_number.house_battery_count
+                      above: 2
+                  row:
+                    entity: sensor.marstek_m3_ac_power
+                    name: Battery M3 power
+                - type: conditional
+                  conditions:
+                    - condition: numeric_state
+                      entity: input_number.house_battery_count
                       above: 3
                   row:
                     entity: sensor.marstek_m4_battery_state_of_charge
@@ -572,10 +604,26 @@ views:
                   conditions:
                     - condition: numeric_state
                       entity: input_number.house_battery_count
+                      above: 3
+                  row:
+                    entity: sensor.marstek_m4_ac_power
+                    name: Battery M4 power
+                - type: conditional
+                  conditions:
+                    - condition: numeric_state
+                      entity: input_number.house_battery_count
                       above: 4
                   row:
                     entity: sensor.marstek_m5_battery_state_of_charge
                     name: Battery M5 SOC
+                - type: conditional
+                  conditions:
+                    - condition: numeric_state
+                      entity: input_number.house_battery_count
+                      above: 4
+                  row:
+                    entity: sensor.marstek_m5_ac_power
+                    name: Battery M5 power
               show_header_toggle: false
       - type: grid
         cards:

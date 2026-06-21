@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="releases/v1.0.0/release.md"><img src="https://img.shields.io/badge/release-v1.0.0-blue" alt="release"></a>
+  <a href="releases/v1.0.1/release.md"><img src="https://img.shields.io/badge/release-v1.0.1-blue" alt="release"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant">
   <img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED">
   <img src="https://img.shields.io/badge/HBC-compatible-22C55E" alt="HBC compatible">
