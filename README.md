@@ -3,12 +3,21 @@
 </p>
 
 <p align="center">
-  <a href="releases/v1.0.1/release.md"><img src="https://img.shields.io/badge/release-v1.0.1-blue" alt="release"></a>
+  <a href="releases/v1.0.2/release.md"><img src="https://img.shields.io/badge/release-v1.0.2-blue" alt="release"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant">
   <img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED">
   <img src="https://img.shields.io/badge/HBC-compatible-22C55E" alt="HBC compatible">
   <img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="GPL-3.0-or-later">
 </p>
+
+## Requirements
+
+- Home Assistant
+- Node-RED
+- PV inverter(s) with writable power limit entities
+
+⚠️ Home PV Control is designed for PV inverters that support external power limit control (curtailment). PV curtailment features require at least one writable inverter power limit entity.
+
 
 ## Home PV Control (HPVC)
 
@@ -18,9 +27,7 @@
 
 Home PV Control manages PV inverter power limits while HBC remains responsible for battery charging, discharging and strategy selection.
 
-> ⚠️ Home PV Control is designed for PV inverters that support external power limit control (curtailment).
->
-> ⚠️ Home PV Control does **not** modify Home Battery Control files. It runs next to HBC.
+> Home PV Control does **not** modify Home Battery Control files. It runs next to HBC.
 
 ## What it does
 
@@ -115,7 +122,7 @@ Each inverter is clamped to its own `minimum_power`.
 
 Home PV Control evaluates on:
 
-- Every 15 seconds: PV limit, restore, negative-price mode and HBC strategy.
+- Every 1 minute: PV limit, restore, negative-price mode and HBC strategy.
 - On deploy/startup: one immediate evaluation.
 - When Home PV Control settings change: one immediate evaluation.
 

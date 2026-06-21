@@ -13,7 +13,7 @@ views:
         type: markdown
         text_only: true
         content: |-
-          ### Home PV Control for HBC (v1.0.1)
+          ### Home PV Control for HBC (v1.0.2)
 
           Standalone PV export control for Home Battery Control users.
     badges:
@@ -439,7 +439,7 @@ views:
           - type: entities
             title: Control tuning
             entities:
-              - entity: input_number.pv_ems_min_change_minutes
+              - entity: input_number.pv_ems_cooldown_seconds
                 name: Cooldown
               - entity: input_number.pv_ems_pv_adjust_deadband
                 name: Deadband

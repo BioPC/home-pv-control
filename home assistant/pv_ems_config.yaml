@@ -33,7 +33,6 @@ input_text:
     icon: mdi:battery-sync
     max: 255
     initial: input_select.house_battery_strategy
-    initial: input_select.house_battery_strategy
   pv_ems_pv_power_sensor:
     name: Total PV Power Sensor
     icon: mdi:solar-power
@@ -529,8 +528,8 @@ input_number:
     unit_of_measurement: W
     icon: mdi:weather-night
     initial: 10
-  pv_ems_min_change_minutes:
-    name: PV Cooldown
+  pv_ems_cooldown_seconds:
+    name: PV Cooldown (sec)
     min: 15
     max: 900
     step: 15
@@ -552,21 +551,21 @@ template:
   - name: Home PV Control Configured Inverter Count
     unique_id: pv_ems_configured_inverter_count
     icon: mdi:counter
-    state: '{% set count = states(''input_number.pv_ems_inverter_count'')|int(2) %} {% set ns = namespace(total=0) %} {% if count >= 1 and states(''input_select.pv_ems_pv1_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + 1 %}{% endif %} {% if count >= 2 and states(''input_select.pv_ems_pv2_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + 1 %}{% endif %} {% if count >= 3 and states(''input_select.pv_ems_pv3_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + 1 %}{% endif %} {% if count >= 4 and states(''input_select.pv_ems_pv4_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + 1 %}{% endif %} {% if count >= 5 and states(''input_select.pv_ems_pv5_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'','''']
+    state: '{% set count = states(''input_number.pv_ems_inverter_count'')|int(1) %} {% set ns = namespace(total=0) %} {% if count >= 1 and states(''input_select.pv_ems_pv1_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + 1 %}{% endif %} {% if count >= 2 and states(''input_select.pv_ems_pv2_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + 1 %}{% endif %} {% if count >= 3 and states(''input_select.pv_ems_pv3_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + 1 %}{% endif %} {% if count >= 4 and states(''input_select.pv_ems_pv4_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + 1 %}{% endif %} {% if count >= 5 and states(''input_select.pv_ems_pv5_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'','''']
       %}{% set ns.total = ns.total + 1 %}{% endif %} {% if count >= 6 and states(''input_select.pv_ems_pv6_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + 1 %}{% endif %} {% if count >= 7 and states(''input_select.pv_ems_pv7_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + 1 %}{% endif %} {% if count >= 8 and states(''input_select.pv_ems_pv8_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + 1 %}{% endif %} {% if count >= 9 and states(''input_select.pv_ems_pv9_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + 1 %}{% endif %} {% if count >= 10 and states(''input_select.pv_ems_pv10_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + 1 %}{% endif
       %} {{ ns.total }}'
   - name: Home PV Control Configured Full Power
     unique_id: pv_ems_configured_full_power
     unit_of_measurement: W
     icon: mdi:solar-power
-    state: '{% set count = states(''input_number.pv_ems_inverter_count'')|int(2) %} {% set ns = namespace(total=0) %} {% if count >= 1 and states(''input_select.pv_ems_pv1_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv1_full_limit'')|float(0) %}{% endif %} {% if count >= 2 and states(''input_select.pv_ems_pv2_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv2_full_limit'')|float(0) %}{% endif %} {% if count >= 3 and states(''input_select.pv_ems_pv3_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv3_full_limit'')|float(0) %}{% endif %} {% if count >= 4 and states(''input_select.pv_ems_pv4_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set
+    state: '{% set count = states(''input_number.pv_ems_inverter_count'')|int(1) %} {% set ns = namespace(total=0) %} {% if count >= 1 and states(''input_select.pv_ems_pv1_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv1_full_limit'')|float(0) %}{% endif %} {% if count >= 2 and states(''input_select.pv_ems_pv2_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv2_full_limit'')|float(0) %}{% endif %} {% if count >= 3 and states(''input_select.pv_ems_pv3_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv3_full_limit'')|float(0) %}{% endif %} {% if count >= 4 and states(''input_select.pv_ems_pv4_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set
       ns.total = ns.total + states(''input_number.pv_ems_pv4_full_limit'')|float(0) %}{% endif %} {% if count >= 5 and states(''input_select.pv_ems_pv5_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv5_full_limit'')|float(0) %}{% endif %} {% if count >= 6 and states(''input_select.pv_ems_pv6_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv6_full_limit'')|float(0) %}{% endif %} {% if count >= 7 and states(''input_select.pv_ems_pv7_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv7_full_limit'')|float(0) %}{% endif %} {% if count >= 8 and states(''input_select.pv_ems_pv8_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total
       + states(''input_number.pv_ems_pv8_full_limit'')|float(0) %}{% endif %} {% if count >= 9 and states(''input_select.pv_ems_pv9_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv9_full_limit'')|float(0) %}{% endif %} {% if count >= 10 and states(''input_select.pv_ems_pv10_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv10_full_limit'')|float(0) %}{% endif %} {{ ns.total|round(0) }}'
   - name: Home PV Control Configured Minimum Power
     unique_id: pv_ems_configured_minimum_power
     unit_of_measurement: W
     icon: mdi:solar-power
-    state: '{% set count = states(''input_number.pv_ems_inverter_count'')|int(2) %} {% set ns = namespace(total=0) %} {% if count >= 1 and states(''input_select.pv_ems_pv1_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv1_low_limit'')|float(0) %}{% endif %} {% if count >= 2 and states(''input_select.pv_ems_pv2_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv2_low_limit'')|float(0) %}{% endif %} {% if count >= 3 and states(''input_select.pv_ems_pv3_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv3_low_limit'')|float(0) %}{% endif %} {% if count >= 4 and states(''input_select.pv_ems_pv4_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total
+    state: '{% set count = states(''input_number.pv_ems_inverter_count'')|int(1) %} {% set ns = namespace(total=0) %} {% if count >= 1 and states(''input_select.pv_ems_pv1_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv1_low_limit'')|float(0) %}{% endif %} {% if count >= 2 and states(''input_select.pv_ems_pv2_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv2_low_limit'')|float(0) %}{% endif %} {% if count >= 3 and states(''input_select.pv_ems_pv3_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv3_low_limit'')|float(0) %}{% endif %} {% if count >= 4 and states(''input_select.pv_ems_pv4_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total
       = ns.total + states(''input_number.pv_ems_pv4_low_limit'')|float(0) %}{% endif %} {% if count >= 5 and states(''input_select.pv_ems_pv5_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv5_low_limit'')|float(0) %}{% endif %} {% if count >= 6 and states(''input_select.pv_ems_pv6_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv6_low_limit'')|float(0) %}{% endif %} {% if count >= 7 and states(''input_select.pv_ems_pv7_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv7_low_limit'')|float(0) %}{% endif %} {% if count >= 8 and states(''input_select.pv_ems_pv8_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv8_low_limit'')|float(0)
       %}{% endif %} {% if count >= 9 and states(''input_select.pv_ems_pv9_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv9_low_limit'')|float(0) %}{% endif %} {% if count >= 10 and states(''input_select.pv_ems_pv10_limit_number_picker'') not in [''unknown'',''unavailable'',''select_entity_first'',''''] %}{% set ns.total = ns.total + states(''input_number.pv_ems_pv10_low_limit'')|float(0) %}{% endif %} {{ ns.total|round(0) }}'
   - name: Home PV Control Target Total Limit
@@ -658,43 +657,43 @@ template:
   - name: Home PV Control Show Inverter Slot 1
     unique_id: pv_ems_show_inverter_slot_1
     icon: mdi:eye-outline
-    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(2) >= 1 }}'
+    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(1) >= 1 }}'
   - name: Home PV Control Show Inverter Slot 2
     unique_id: pv_ems_show_inverter_slot_2
     icon: mdi:eye-outline
-    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(2) >= 2 }}'
+    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(1) >= 2 }}'
   - name: Home PV Control Show Inverter Slot 3
     unique_id: pv_ems_show_inverter_slot_3
     icon: mdi:eye-outline
-    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(2) >= 3 }}'
+    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(1) >= 3 }}'
   - name: Home PV Control Show Inverter Slot 4
     unique_id: pv_ems_show_inverter_slot_4
     icon: mdi:eye-outline
-    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(2) >= 4 }}'
+    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(1) >= 4 }}'
   - name: Home PV Control Show Inverter Slot 5
     unique_id: pv_ems_show_inverter_slot_5
     icon: mdi:eye-outline
-    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(2) >= 5 }}'
+    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(1) >= 5 }}'
   - name: Home PV Control Show Inverter Slot 6
     unique_id: pv_ems_show_inverter_slot_6
     icon: mdi:eye-outline
-    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(2) >= 6 }}'
+    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(1) >= 6 }}'
   - name: Home PV Control Show Inverter Slot 7
     unique_id: pv_ems_show_inverter_slot_7
     icon: mdi:eye-outline
-    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(2) >= 7 }}'
+    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(1) >= 7 }}'
   - name: Home PV Control Show Inverter Slot 8
     unique_id: pv_ems_show_inverter_slot_8
     icon: mdi:eye-outline
-    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(2) >= 8 }}'
+    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(1) >= 8 }}'
   - name: Home PV Control Show Inverter Slot 9
     unique_id: pv_ems_show_inverter_slot_9
     icon: mdi:eye-outline
-    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(2) >= 9 }}'
+    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(1) >= 9 }}'
   - name: Home PV Control Show Inverter Slot 10
     unique_id: pv_ems_show_inverter_slot_10
     icon: mdi:eye-outline
-    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(2) >= 10 }}'
+    state: '{{ states(''input_number.pv_ems_inverter_count'')|int(1) >= 10 }}'
 - binary_sensor:
   - name: Home PV Control PV Limited
     unique_id: pv_ems_pv_limited
