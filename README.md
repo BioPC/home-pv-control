@@ -122,7 +122,7 @@ Each inverter is clamped to its own `minimum_power`.
 
 Home PV Control evaluates on:
 
-- Every 1 minute: PV limit, restore, negative-price mode and HBC strategy.
+- Every 15 seconds: PV limit, restore, negative-price mode and HBC strategy.
 - On deploy/startup: one immediate evaluation.
 - When Home PV Control settings change: one immediate evaluation.
 
