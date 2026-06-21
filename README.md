@@ -10,15 +10,6 @@
   <img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="GPL-3.0-or-later">
 </p>
 
-## Requirements
-
-- Home Assistant
-- Node-RED
-- PV inverter(s) with writable power limit entities
-
-⚠️ Home PV Control is designed for PV inverters that support external power limit control (curtailment). PV curtailment features require at least one writable inverter power limit entity.
-
-
 ## Home PV Control (HPVC)
 
 **Home PV Control** is a standalone photovoltaic export-control add-on for Home Assistant and Node-RED. It works independently or together with **Home Battery Control (HBC)**.
@@ -28,6 +19,14 @@
 Home PV Control manages PV inverter power limits while HBC remains responsible for battery charging, discharging and strategy selection.
 
 > Home PV Control does **not** modify Home Battery Control files. It runs next to HBC.
+
+## Requirements
+
+- Home Assistant
+- Node-RED
+- PV inverter(s) with writable power limit entities
+
+⚠️ Home PV Control is designed for PV inverters that support external power limit control (curtailment). PV curtailment features require at least one writable inverter power limit entity.
 
 ## What it does
 
