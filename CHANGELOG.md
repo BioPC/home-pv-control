@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented here.
 
+## [1.0.3] - Optional HBC mode
+
+### Added
+- Added HBC detection status and guard logic.
+- Added PV-only mode support when no HBC strategy entity is available.
+- Added dashboard HBC detection status.
+
+### Fixed
+- HBC strategy control now defaults off and is forced off when no valid HBC strategy entity is found.
+- HBC strategy entity picker changes now trigger immediate EMS re-evaluation.
+- Removed dead output fallback code from the Node-RED logic.
+- Renamed the Hoymiles example to a reference file to avoid Node-RED import confusion.
+- Battery strategy actions are skipped when HBC is not available.
+- HBC-related dashboard controls are hidden when HBC strategy control is off.
+
 ## [1.0.2] - Maintenance release
 
 ### Fixed

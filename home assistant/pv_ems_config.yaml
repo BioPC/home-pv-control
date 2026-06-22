@@ -8,9 +8,9 @@ input_boolean:
     icon: mdi:bell-outline
     initial: true
   pv_ems_control_hbc_strategy:
-    name: Control HBC Strategy
+    name: Enable HBC Strategy Control
     icon: mdi:battery-sync
-    initial: true
+    initial: false
   pv_ems_debug:
     name: Home PV Control Debug
     icon: mdi:bug-outline
@@ -61,6 +61,11 @@ input_text:
     name: Home PV Control Last Targets JSON
     icon: mdi:code-json
     max: 255
+  pv_ems_hbc_status:
+    name: HBC Detection Status
+    icon: mdi:battery-check
+    max: 255
+    initial: HBC not detected
   pv_ems_insight_1:
     name: Home PV Control Insight 1
     icon: mdi:lightbulb-on-outline

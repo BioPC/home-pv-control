@@ -12,10 +12,12 @@ views:
       card:
         type: markdown
         text_only: true
-        content: |-
-          ### Home PV Control for HBC (v1.0.2)
+        content: >-
+          ### Home PV Control for HBC (v1.0.3)
 
-          Standalone PV export control for Home Battery Control users.
+
+          Standalone PV export control. HBC battery strategy control is
+          optional.
     badges:
       - type: entity
         show_name: true
@@ -50,18 +52,18 @@ views:
             text_only: true
             content: >-
               <ha-alert title="Standalone module" alert-type="info">Home PV
-              Control only controls configured PV limit entities and can
-              optionally select the HBC strategy. HBC files are not
-              edited.</ha-alert>
+              Control works as PV-only export control. HBC strategy control is
+              optional and is only enabled when a valid HBC strategy entity is
+              detected.</ha-alert>
           - type: markdown
             text_only: true
             content: >-
-              <ha-alert title="Negative price protection" alert-type="warning">When
-              the configured all-in price is zero or negative, Home PV Control
-              automatically sets the configured PV inverters to the user-defined
-              minimum PV limits. Set the minimum limits to 0 W if you want PV
-              fully off, or use small values if your inverter should keep running.
-              </ha-alert>
+              <ha-alert title="Negative price protection"
+              alert-type="warning">When the configured all-in price is zero or
+              negative, Home PV Control automatically sets the configured PV
+              inverters to the user-defined minimum PV limits. Set the minimum
+              limits to 0 W if you want PV fully off, or use small values if
+              your inverter should keep running. </ha-alert>
           - type: tile
             entity: input_boolean.pv_ems_enabled
             name: Home PV Control enabled
@@ -74,7 +76,7 @@ views:
             hide_state: true
           - type: tile
             entity: input_boolean.pv_ems_control_hbc_strategy
-            name: Control HBC strategy
+            name: Enable HBC strategy control
             icon: mdi:battery-sync
             hide_state: true
           - type: tile
@@ -83,7 +85,7 @@ views:
             icon: mdi:bug-outline
             hide_state: true
           - type: entities
-            title: EMS status
+            title: HPVC status
             entities:
               - entity: input_text.pv_ems_status
                 name: Status
@@ -133,22 +135,28 @@ views:
               - entity: input_select.pv_ems_pv_power_sensor_picker
                 name: Solar power
             show_header_toggle: false
+          - type: markdown
+            title: Optional HBC setup
+            content: >-
+              {% set hbc = states('input_text.pv_ems_hbc_status') %} {% if
+              hbc.startswith('HBC detected') %} <ha-alert title="🟢 HBC
+              available" alert-type="success"> {{ hbc }}<br> Enable/Disable HBC
+              strategy control in PV Master Control. </ha-alert> {% else %}
+              <ha-alert title="🔴 No HBC strategy entity detected"
+              alert-type="warning"> Home PV Control will stay in PV-only mode.
+              HBC strategy control is forced off until a valid HBC strategy
+              entity is detected. </ha-alert> {% endif %}
           - type: conditional
             conditions:
               - entity: input_boolean.pv_ems_control_hbc_strategy
                 state: "on"
             card:
-              type: markdown
-              text_only: true
-              content: >-
-                **HBC strategy selector**
-
-
-                `input_select.house_battery_strategy`
-
-
-                This is the default Home Battery Control strategy selector used
-                by Home PV Control.
+              type: entities
+              title: HBC settings
+              entities:
+                - entity: input_select.pv_ems_battery_strategy_entity_picker
+                  name: HBC strategy entity
+              show_header_toggle: false
       - type: grid
         cards:
           - type: heading
@@ -350,36 +358,62 @@ views:
             content: >-
               **PV limit price**: PV limiting is allowed at or below this
               market/export price.
+          - type: conditional
+            conditions:
+              - entity: input_boolean.pv_ems_control_hbc_strategy
+                state: "on"
+            card:
+              type: markdown
+              text_only: true
+              content: >-
+                **Charge price**: HBC switches to Charge when all-in price is
+                cheap enough.
 
 
-              **Charge price**: HBC switches to Charge when all-in price is
-              cheap enough.
+                **Expensive price**: HBC switches to the expensive strategy when
+                all-in price is high.
 
-
-              **Expensive price**: HBC switches to the expensive strategy when
-              all-in price is high.
-
-
-              **Hysteresis**: prevents strategy bouncing near thresholds.
-
-
-              **Balanced/Expensive strategy**: HBC modes to select for those
-              price zones.
+                 **Balanced/Expensive strategy**: HBC modes to select for those price zones.
+          - type: markdown
+            text_only: true
+            content: >-
+              **Price hysteresis**: prevents rapid switching around configured
+              price thresholds.
           - type: entities
             title: Price strategy
             entities:
               - entity: input_number.pv_ems_pv_limiting_price
                 name: PV limit price
-              - entity: input_number.pv_ems_battery_charge_price
-                name: Charge price
-              - entity: input_number.pv_ems_battery_expensive_price
-                name: Expensive price
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.pv_ems_control_hbc_strategy
+                    state: "on"
+                row:
+                  entity: input_number.pv_ems_battery_charge_price
+                  name: Charge price
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.pv_ems_control_hbc_strategy
+                    state: "on"
+                row:
+                  entity: input_number.pv_ems_battery_expensive_price
+                  name: Expensive price
               - entity: input_number.pv_ems_battery_price_hysteresis
-                name: Hysteresis
-              - entity: input_select.pv_ems_balanced_strategy
-                name: Balanced strategy
-              - entity: input_select.pv_ems_expensive_strategy
-                name: Expensive strategy
+                name: Price hysteresis
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.pv_ems_control_hbc_strategy
+                    state: "on"
+                row:
+                  entity: input_select.pv_ems_balanced_strategy
+                  name: Balanced strategy
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.pv_ems_control_hbc_strategy
+                    state: "on"
+                row:
+                  entity: input_select.pv_ems_expensive_strategy
+                  name: Expensive strategy
             show_header_toggle: false
       - type: grid
         cards:
@@ -431,7 +465,8 @@ views:
           - type: markdown
             text_only: true
             content: >-
-              **Cooldown**: minimum time between PV limit changes (15 sec to 15 min).
+              **Cooldown**: minimum time between PV limit changes (15 sec to 15
+              min).
 
 
               **Deadband**: ignore small PV limit corrections so the EMS does
