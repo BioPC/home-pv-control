@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="releases/v1.0.3/release.md"><img src="https://img.shields.io/badge/release-v1.0.3-blue" alt="release"></a>
+  <a href="releases/v1.0.4/release.md"><img src="https://img.shields.io/badge/release-v1.0.4-blue" alt="release"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant">
   <img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED">
   <img src="https://img.shields.io/badge/HBC-compatible-22C55E" alt="HBC compatible">
@@ -123,7 +123,7 @@ Each inverter is clamped to its own `minimum_power`.
 
 Home PV Control evaluates on:
 
-- Every 15 seconds: PV limit, restore, negative-price mode and HBC strategy.
+- Every 1 minute: PV limit, restore, negative-price mode and HBC strategy.
 - On deploy/startup: one immediate evaluation.
 - When Home PV Control settings change: one immediate evaluation.
 

@@ -13,7 +13,7 @@ views:
         type: markdown
         text_only: true
         content: >-
-          ### Home PV Control for HBC (v1.0.3)
+          ### Home PV Control for HBC (v1.0.4)
 
 
           Standalone PV export control. HBC battery strategy control is

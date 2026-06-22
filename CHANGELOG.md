@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented here.
 
+## [1.0.4] - Entity ID compatibility fix
+
+- Fixed Home Assistant template entity IDs for clean installs.
+- Template sensor/binary sensor names now use the legacy PV EMS naming so entity IDs stay compatible with the dashboard and Node-RED flow.
+- Prevents `entity not found: sensor.pv_ems_configured_inverter_count` and related missing entity errors.
+
 ## [1.0.3] - Optional HBC mode
 
 ### Added
