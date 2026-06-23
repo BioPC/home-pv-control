@@ -1,19 +1,15 @@
 # Changelog
 
 ## v1.0.5
-### Fixes
+
 - Fixed configuration validation for missing entities.
 - Fixed negative-price mode forcing PV minimum output.
 - Fixed PV minimum insight logging.
 - Fixed export threshold fallback consistency.
 - Improved entity ID compatibility after rebranding.
-
-### Improvements
 - Dashboard renamed to "Home PV Control".
 - Added documentation that Home PV Control is optimized for dynamic energy contracts.
 - Improved diagnostics and configuration feedback.
-
-### Cleanup
 - Removed unused functions and variables.
 - Removed duplicate example JSON file.
 - Simplified internal logic and improved readability.
