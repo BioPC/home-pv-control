@@ -1,15 +1,17 @@
-# Home PV Control Release Notes
+v1.0.5
 
-## v1.0.4
+Fixes
+- Fixed configuration validation for missing entities.
+- Fixed negative-price mode forcing PV minimum output.
+- Fixed PV minimum insight logging.
+- Fixed export threshold fallback consistency.
+- Improved entity ID compatibility after rebranding.
 
-Bugfix release for clean Home Assistant installs.
+Improvements
+- Dashboard renamed to "Home PV Control".
+- Added dynamic tariff documentation.
+- Improved diagnostics and configuration feedback.
 
-### Fixed
-- Fixed template entity ID mismatch after the PV EMS → Home PV Control rebrand.
-- Template sensors now keep the expected `sensor.pv_ems_*` and `binary_sensor.pv_ems_*` entity IDs.
-- Fixes missing dashboard entities such as `sensor.pv_ems_configured_inverter_count`.
-
-### Included
-- Home Assistant config
-- Home Assistant dashboard
-- Node-RED flow
+Cleanup
+- Removed unused code and duplicate example files.
+- Internal code quality improvements.

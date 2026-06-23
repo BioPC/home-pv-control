@@ -1,4 +1,4 @@
-name: Home PV Control for HBC
+name: Home PV Control
 content_in_root: false
 render_readme: true
 domains:

@@ -1,6 +1,6 @@
 # HACS notes
 
-Home PV Control for HBC is not a normal Python Home Assistant integration.
+Home PV Control is not a normal Python Home Assistant integration.
 
 It contains:
 

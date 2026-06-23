@@ -1,6 +1,6 @@
 # Wiki
 
-Welcome to the Home PV Control for HBC wiki.
+Welcome to the Home PV Control wiki.
 
 ## Pages
 

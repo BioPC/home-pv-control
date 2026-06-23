@@ -2,7 +2,7 @@
 
 ## Highlights
 
-- Standalone Home PV Control for HBC users
+- Standalone Home PV Control users
 - Multi-inverter support
 - Per-inverter full and minimum power
 - Dynamic PV export limiting

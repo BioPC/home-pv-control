@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="Home PV Control for HBC banner">
+  <img src="assets/banner.svg" alt="Home PV Control banner">
 </p>
 
 <p align="center">
-  <a href="releases/v1.0.4/release.md"><img src="https://img.shields.io/badge/release-v1.0.4-blue" alt="release"></a>
+  <a href="releases/v1.0.5/release.md"><img src="https://img.shields.io/badge/release-v1.0.5-blue" alt="release"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant">
   <img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED">
   <img src="https://img.shields.io/badge/HBC-compatible-22C55E" alt="HBC compatible">
@@ -29,6 +29,11 @@
 Home PV Control manages PV inverter power limits while HBC remains responsible for battery charging, discharging and strategy selection.
 
 > Home PV Control does **not** modify Home Battery Control files. It runs next to HBC.
+
+## Designed for Dynamic Energy Contracts
+
+Home PV Control is primarily designed for households with dynamic electricity tariffs.
+Many of its advanced optimization features are specifically intended for dynamic pricing environments.
 
 ## What it does
 
@@ -207,4 +212,3 @@ By using this software, you acknowledge that:
 * The author is not responsible for any financial losses, equipment damage, data loss, regulatory issues, or other consequences resulting from the use of this project.
 
 Use this project at your own risk.
-
