@@ -5,6 +5,7 @@
 - Removed unused legacy configuration components.
 - Reduced unnecessary background processing.
 - Internal cleanup and maintenance improvements.
+- Updated dashboard.
 - Updated badges.
 - Fixed insight log source labels.
 - Aligned expensive price fallback.
