@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.0.6
+- Updated default threshold values for new installations.
+- Removed unused legacy configuration components.
+- Reduced unnecessary background processing.
+- Internal cleanup and maintenance improvements.
+- Updated badges.
+- Fixed insight log source labels.
+- Aligned expensive price fallback.
+- Minor internal logic cleanup.
+- Improved entity picker persistence after Home Assistant restart or reload.
+- Replaced obsolete inverter count template reference with the existing inverter count helper.
+- Removed phantom battery picker dropdown refresh calls.
+- Removed redundant PV adjust guard conditions.
+- Removed forced startup defaults from user-configurable helpers so user settings persist after restart or reload.
+- Added startup restore wait to avoid temporary missing-entity warnings while Home Assistant inputs restore.
+
 ## v1.0.5
 
 - Fixed configuration validation for missing entities.

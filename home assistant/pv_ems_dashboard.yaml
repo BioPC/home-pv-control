@@ -13,8 +13,7 @@ views:
         type: markdown
         text_only: true
         content: >-
-          # Home PV Control (v1.0.5)
-
+          # Home PV Control (v1.0.6)
 
           ### Standalone PV optimization for dynamic energy contracts. Optional
           HBC integration.
@@ -29,7 +28,7 @@ views:
         show_name: true
         show_state: true
         show_icon: true
-        entity: sensor.pv_ems_configured_inverter_count
+        entity: input_number.pv_ems_inverter_count
         name: Inverters
       - type: entity
         show_name: true
@@ -52,18 +51,15 @@ views:
             text_only: true
             content: >-
               <ha-alert title="Standalone module" alert-type="info">Home PV
-              Control works as PV-only export control. HBC strategy control is
-              optional and is only enabled when a valid HBC strategy entity is
-              detected.</ha-alert>
+              Control works as PV-only export control. HBC is optional and can
+              be enabled when a valid HBC is detected.</ha-alert>
           - type: markdown
             text_only: true
             content: >-
               <ha-alert title="Negative price protection"
-              alert-type="warning">When the configured all-in price is zero or
-              negative, Home PV Control automatically sets the configured PV
-              inverters to the user-defined minimum PV limits. Set the minimum
-              limits to 0 W if you want PV fully off, or use small values if
-              your inverter should keep running. </ha-alert>
+              alert-type="warning">When all-in price ≤ 0, PV output is reduced
+              to the configured minimum limits. Set those to 0 W if you want PV
+              fully off. </ha-alert>
           - type: tile
             entity: input_boolean.pv_ems_enabled
             name: Home PV Control enabled
@@ -110,6 +106,9 @@ views:
           - type: markdown
             text_only: true
             content: >-
+              <ha-alert title="" alert-type="info">Entities may take a few
+              seconds to reappear after a HA restart or reload.</ha-alert>
+
               **Grid**: power at the grid connection. Negative is export,
               positive is import.
 
@@ -122,7 +121,8 @@ views:
               switching.
 
 
-              **Solar power**: current total PV production in watts. .
+              **Solar power**: current total PV production in watts from active
+              inverters.
           - type: entities
             title: Core sensors
             entities:
@@ -138,14 +138,13 @@ views:
           - type: markdown
             title: Optional HBC setup
             content: >-
-              {% set hbc = states('input_text.pv_ems_hbc_status') %} {% if
-              hbc.startswith('HBC detected') %} <ha-alert title="🟢 HBC
-              available" alert-type="success"> {{ hbc }}<br> Enable/Disable HBC
-              strategy control in PV Master Control. </ha-alert> {% else %}
-              <ha-alert title="🔴 No HBC strategy entity detected"
-              alert-type="warning"> Home PV Control will stay in PV-only mode.
-              HBC strategy control is forced off until a valid HBC strategy
-              entity is detected. </ha-alert> {% endif %}
+              {% set hbc = states('input_text.pv_ems_hbc_status') %}
+
+              {% if hbc.startswith('HBC detected') %} <ha-alert title="🟢 HBC
+              available" alert-type="success"> HBC strategy control can be
+              enabled/disabled in PV Master Control. </ha-alert> {% else %}
+              <ha-alert title="🔴 HBC not available" alert-type="warning"> Home
+              PV Control is running in standalone mode. </ha-alert> {% endif %}
           - type: conditional
             conditions:
               - entity: input_boolean.pv_ems_control_hbc_strategy
