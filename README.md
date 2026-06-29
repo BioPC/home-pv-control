@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="Home PV Control banner">
+  <img src="assets/banner.png" alt="Home PV Control banner">
 </p>
 
 <p align="center">
-  <a href="releases/v1.0.6/release.md"><img src="https://img.shields.io/badge/release-v1.0.6-blue" alt="release"></a>
+  <a href="releases/v1.1.0/release.md"><img src="https://img.shields.io/badge/release-v1.1.0-blue" alt="release"></a>
   <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant"></a>
   <a href="https://nodered.org/"><img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED"></a>
   <a href="https://github.com/gitcodebob/marstek-venus-rs485-node-red"><img src="https://img.shields.io/badge/HBC-compatible-22C55E" alt="HBC compatible"></a>
@@ -122,6 +122,7 @@ Each inverter is clamped to its own `minimum_power`.
 | Import Recalculation | `200 W` |
 | Minimum PV Power | `100 W` |
 | Night Restore | `10 W` |
+| Hidden PV Reveal Step | `100 W` |
 | Minimum PV Change | `1 min` |
 | Deadband | `25 W` |
 
@@ -183,12 +184,6 @@ It is **not a normal Python Home Assistant integration**. HACS support would req
 See [HACS notes](docs/wiki/HACS.md).
 
 ## Roadmap
-
-- More dashboard examples
-- Node-RED trace/debug dashboard
-- Optional helper-based trigger configuration
-- Import/export examples for popular inverter brands
-- More safety checks around invalid inverter JSON
 
 ## Credits
 

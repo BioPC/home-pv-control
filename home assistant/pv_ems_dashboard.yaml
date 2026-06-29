@@ -13,9 +13,9 @@ views:
         type: markdown
         text_only: true
         content: >-
-          # Home PV Control (v1.0.6)
+          ## Home PV Control (v1.1.0)
 
-          ### Standalone PV optimization for dynamic energy contracts. Optional
+          #### Standalone PV optimization for dynamic energy contracts. Optional
           HBC integration.
     badges:
       - type: entity
@@ -109,20 +109,19 @@ views:
               <ha-alert title="" alert-type="info">Entities may take a few
               seconds to reappear after a HA restart or reload.</ha-alert>
 
-              **Grid**: power at the grid connection. Negative is export,
-              positive is import.
+              **Grid**: current grid power. Negative is export, positive is
+              import (W).
 
 
-              **Market price**: export/market price used to decide if PV
-              limiting is allowed.
+              **Market price**: export/market price used for PV limiting
+              (€/kWh).
 
 
               **All-in price**: total import price used for HBC strategy
-              switching.
+              switching (€/kWh).
 
 
-              **Solar power**: current total PV production in watts from active
-              inverters.
+              **Solar power**: current total PV power from active inverters (W).
           - type: entities
             title: Core sensors
             entities:
@@ -165,8 +164,7 @@ views:
           - type: markdown
             text_only: true
             content: >-
-              Set the number of active inverter limit entities. Only active
-              inverter slots are shown.
+              Set the number of active inverter limit entities (max 10).
 
 
               For each inverter: select the limit number entity, set full/max
@@ -417,7 +415,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: PV Export Control
+            heading: Power Flow Control
             heading_style: title
             icon: mdi:transmission-tower-export
           - type: markdown
@@ -441,8 +439,18 @@ views:
 
               **Night restore**: restore full inverter limits when PV production
               is low.
+          - type: conditional
+            conditions:
+              - entity: input_boolean.pv_ems_control_hbc_strategy
+                state: "on"
+            card:
+              type: markdown
+              text_only: true
+              content: >-
+                **Hidden PV reveal step**: extra PV power revealed while an HBC
+                battery charges. Lower = smoother, higher = faster.
           - type: entities
-            title: PV export control
+            title: Power flow control
             entities:
               - entity: input_number.pv_ems_export_start_threshold
                 name: Export start
@@ -454,6 +462,13 @@ views:
                 name: Min PV for control
               - entity: input_number.pv_ems_pv_night_restore_power
                 name: Night restore
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.pv_ems_control_hbc_strategy
+                    state: "on"
+                row:
+                  entity: input_number.pv_ems_hidden_pv_reveal_step
+                  name: Hidden PV reveal step
             show_header_toggle: false
       - type: grid
         cards:
@@ -699,9 +714,131 @@ views:
             conditions:
               - entity: input_boolean.pv_ems_debug
                 state: "on"
+              - entity: input_boolean.pv_ems_control_hbc_strategy
+                state: "on"
+            card:
+              type: custom:apexcharts-card
+              header:
+                show: true
+                show_states: false
+                title: HBC Strategy Price Zones (all-in price)
+              graph_span: 48h
+              span:
+                start: day
+              now:
+                show: true
+                color: "#009ac7"
+                label: Now
+              apex_config:
+                plotOptions:
+                  bar:
+                    borderRadius: 2
+                    columnWidth: 90%
+                legend:
+                  show: false
+                xaxis:
+                  type: datetime
+                  labels:
+                    datetimeUTC: false
+                    format: HH:mm
+                    rotate: -45
+                    rotateAlways: true
+                yaxis:
+                  decimalsInFloat: 3
+                  title:
+                    text: €/kWh
+                tooltip:
+                  x:
+                    format: ddd dd MMM HH:mm
+                  "y":
+                    formatter: |
+                      EVAL:function(value) {
+                        return Number(value).toFixed(3) + ' €/kWh';
+                      }
+              series:
+                - entity: sensor.hbc_energy_prices_data
+                  name: Price
+                  type: column
+                  float_precision: 3
+                  show:
+                    legend_value: false
+                  data_generator: >
+                    const marks = entity.attributes.marks || [];
+
+                    const charge =
+                    parseFloat(hass.states['input_number.pv_ems_battery_charge_price']?.state);
+
+                    const expensive =
+                    parseFloat(hass.states['input_number.pv_ems_battery_expensive_price']?.state);
+
+                    const chargePrice = Number.isFinite(charge) ? charge : 0.10;
+
+                    const expensivePrice = Number.isFinite(expensive) ?
+                    expensive : 0.25;
+
+                    const today = new Date(); today.setHours(0, 0, 0, 0);
+
+                    const tomorrow = new Date(today);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+
+                    const colorForPrice = (price, isNow) => {
+                      if (isNow) return '#009ac7';
+                      if (price < 0) return '#e53935';
+                      if (price <= chargePrice) return '#4caf50';
+                      if (price < expensivePrice) return '#fff107';
+                      return '#ff9800';
+                    };
+
+                    return marks.map(iv => {
+                      const rawPrice = Number(iv.price);
+                      const price = Math.abs(rawPrice) > 5 ? rawPrice / 100 : rawPrice;
+
+                      const start = new Date(iv.start);
+                      const isTomorrow = start >= tomorrow;
+
+                      let color = colorForPrice(price, iv.is_now);
+
+                      // Make tomorrow's bars semi-transparent (≈27% opacity)
+                      if (isTomorrow) {
+                        color += '60';
+                      }
+
+                      return {
+                        x: start.getTime(),
+                        y: price,
+                        fillColor: color
+                      };
+                    });
+          - type: conditional
+            conditions:
+              - entity: input_boolean.pv_ems_debug
+                state: "on"
+              - entity: input_boolean.pv_ems_control_hbc_strategy
+                state: "on"
             card:
               type: markdown
-              title: 📋 Insights (last 10 items)
+              content: >-
+                🔴 **Negative** ≤ €0/kWh 🟢 **Charge** ≤ €{{
+                states('input_number.pv_ems_battery_charge_price') | float(0.10)
+                | round(3) }}/kWh
+
+                🟡 **{{ states ('input_select.pv_ems_balanced_strategy')}}** €{{
+                states('input_number.pv_ems_battery_charge_price') | float(0.10)
+                | round(3) }}–€{{
+                states('input_number.pv_ems_battery_expensive_price') |
+                float(0.25) | round(3) }}/kWh 🟠 **{{
+                states('input_select.pv_ems_expensive_strategy')}}** ≥ €{{
+                states('input_number.pv_ems_battery_expensive_price') |
+                float(0.25) | round(3) }}/kWh
+      - type: grid
+        cards:
+          - type: conditional
+            conditions:
+              - entity: input_boolean.pv_ems_debug
+                state: "on"
+            card:
+              type: markdown
+              title: 📋 Insights (last 20 items)
               content: >-
                 | Time |  | Flow | Node | Explanation |
 
@@ -717,7 +854,17 @@ views:
                   'input_text.pv_ems_insight_7',
                   'input_text.pv_ems_insight_8',
                   'input_text.pv_ems_insight_9',
-                  'input_text.pv_ems_insight_10'
+                  'input_text.pv_ems_insight_10',
+                  'input_text.pv_ems_insight_11',
+                  'input_text.pv_ems_insight_12',
+                  'input_text.pv_ems_insight_13',
+                  'input_text.pv_ems_insight_14',
+                  'input_text.pv_ems_insight_15',
+                  'input_text.pv_ems_insight_16',
+                  'input_text.pv_ems_insight_17',
+                  'input_text.pv_ems_insight_18',
+                  'input_text.pv_ems_insight_19',
+                  'input_text.pv_ems_insight_20'
                 ] %}
 
                 {% set v = states(e) %}

@@ -94,6 +94,46 @@ input_text:
     name: Home PV Control Insight 10
     icon: mdi:lightbulb-on-outline
     max: 255
+  pv_ems_insight_11:
+    name: Home PV Control Insight 11
+    icon: mdi:lightbulb-on-outline
+    max: 255
+  pv_ems_insight_12:
+    name: Home PV Control Insight 12
+    icon: mdi:lightbulb-on-outline
+    max: 255
+  pv_ems_insight_13:
+    name: Home PV Control Insight 13
+    icon: mdi:lightbulb-on-outline
+    max: 255
+  pv_ems_insight_14:
+    name: Home PV Control Insight 14
+    icon: mdi:lightbulb-on-outline
+    max: 255
+  pv_ems_insight_15:
+    name: Home PV Control Insight 15
+    icon: mdi:lightbulb-on-outline
+    max: 255
+  pv_ems_insight_16:
+    name: Home PV Control Insight 16
+    icon: mdi:lightbulb-on-outline
+    max: 255
+  pv_ems_insight_17:
+    name: Home PV Control Insight 17
+    icon: mdi:lightbulb-on-outline
+    max: 255
+  pv_ems_insight_18:
+    name: Home PV Control Insight 18
+    icon: mdi:lightbulb-on-outline
+    max: 255
+  pv_ems_insight_19:
+    name: Home PV Control Insight 19
+    icon: mdi:lightbulb-on-outline
+    max: 255
+  pv_ems_insight_20:
+    name: Home PV Control Insight 20
+    icon: mdi:lightbulb-on-outline
+    max: 255
 input_select:
   pv_ems_balanced_strategy:
     name: Balanced Strategy
@@ -426,6 +466,15 @@ input_number:
     mode: box
     unit_of_measurement: W
     icon: mdi:transmission-tower-import
+  pv_ems_hidden_pv_reveal_step:
+    name: Hidden PV Reveal Step
+    min: 50
+    max: 250
+    step: 25
+    mode: slider
+    initial: 100
+    unit_of_measurement: W
+    icon: mdi:eye-plus-outline
   pv_ems_pv_min_power_for_control:
     name: PV Minimum Power For Control
     min: 0
@@ -464,80 +513,108 @@ template:
     unique_id: pv_ems_debug_market_price
     unit_of_measurement: €/kWh
     icon: mdi:cash
-    state: '{{ states(states(''input_select.pv_ems_market_price_sensor_picker'')) | float(0) }}'
+    state: '{{ states(states(''input_select.pv_ems_market_price_sensor_picker''))
+      | float(0) }}'
   - name: PV EMS Debug All In Price
     unique_id: pv_ems_debug_all_in_price
     unit_of_measurement: €/kWh
     icon: mdi:cash-multiple
-    state: '{{ states(states(''input_select.pv_ems_all_in_price_sensor_picker'')) | float(0) }}'
+    state: '{{ states(states(''input_select.pv_ems_all_in_price_sensor_picker''))
+      | float(0) }}'
   - name: PV EMS Debug Grid Power
     unique_id: pv_ems_debug_grid_power
     unit_of_measurement: W
     icon: mdi:transmission-tower
-    state: '{{ states(states(''input_select.pv_ems_grid_power_sensor_picker'')) | float(0) | round(0) }}'
+    state: '{{ states(states(''input_select.pv_ems_grid_power_sensor_picker'')) |
+      float(0) | round(0) }}'
   - name: PV EMS Debug PV Power
     unique_id: pv_ems_debug_pv_power
     unit_of_measurement: W
     icon: mdi:solar-power
-    state: '{{ states(states(''input_select.pv_ems_pv_power_sensor_picker'')) | float(0) | round(0) }}'
+    state: '{{ states(states(''input_select.pv_ems_pv_power_sensor_picker'')) | float(0)
+      | round(0) }}'
   - name: PV EMS Debug HBC Strategy
     unique_id: pv_ems_debug_hbc_strategy
     icon: mdi:battery-sync
-    state: '{{ states(states(''input_select.pv_ems_battery_strategy_entity_picker'')) }}'
+    state: '{{ states(states(''input_select.pv_ems_battery_strategy_entity_picker''))
+      }}'
   - name: PV EMS Last Calculation
     unique_id: pv_ems_last_calculation
     icon: mdi:calculator-variant-outline
-    state: '{% set grid = states(states(''input_select.pv_ems_grid_power_sensor_picker''))|float(0) %} {% set target = states(''input_number.pv_ems_export_stop_threshold'')|float(-25) %} {% set error = (target - grid)|round(0) %} Grid={{ grid|round(0) }}W Target={{ target|round(0) }}W Error={{ error }}W'
+    state: '{% set grid = states(states(''input_select.pv_ems_grid_power_sensor_picker''))|float(0)
+      %} {% set target = states(''input_number.pv_ems_export_stop_threshold'')|float(-25)
+      %} {% set error = (target - grid)|round(0) %} Grid={{ grid|round(0) }}W Target={{
+      target|round(0) }}W Error={{ error }}W'
   - name: PV EMS PV1 Actual Limit
     unique_id: pv_ems_pv1_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv1_limit_number_picker'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_select.pv_ems_pv1_limit_number_picker'') %}
+      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
+      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV2 Actual Limit
     unique_id: pv_ems_pv2_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv2_limit_number_picker'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_select.pv_ems_pv2_limit_number_picker'') %}
+      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
+      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV3 Actual Limit
     unique_id: pv_ems_pv3_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv3_limit_number_picker'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_select.pv_ems_pv3_limit_number_picker'') %}
+      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
+      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV4 Actual Limit
     unique_id: pv_ems_pv4_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv4_limit_number_picker'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_select.pv_ems_pv4_limit_number_picker'') %}
+      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
+      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV5 Actual Limit
     unique_id: pv_ems_pv5_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv5_limit_number_picker'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_select.pv_ems_pv5_limit_number_picker'') %}
+      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
+      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV6 Actual Limit
     unique_id: pv_ems_pv6_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv6_limit_number_picker'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_select.pv_ems_pv6_limit_number_picker'') %}
+      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
+      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV7 Actual Limit
     unique_id: pv_ems_pv7_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv7_limit_number_picker'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_select.pv_ems_pv7_limit_number_picker'') %}
+      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
+      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV8 Actual Limit
     unique_id: pv_ems_pv8_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv8_limit_number_picker'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_select.pv_ems_pv8_limit_number_picker'') %}
+      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
+      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV9 Actual Limit
     unique_id: pv_ems_pv9_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv9_limit_number_picker'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_select.pv_ems_pv9_limit_number_picker'') %}
+      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
+      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV10 Actual Limit
     unique_id: pv_ems_pv10_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv10_limit_number_picker'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_select.pv_ems_pv10_limit_number_picker'')
+      %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
+      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   binary_sensor:
   - name: PV EMS Show Inverter Slot 1
     unique_id: pv_ems_show_inverter_slot_1
@@ -583,20 +660,40 @@ template:
   - name: PV EMS PV Limited
     unique_id: pv_ems_pv_limited
     icon: mdi:solar-power-variant
-    state: "{% set bad = ['unknown','unavailable','select_entity_first',''] %}\n{% set count = states('input_number.pv_ems_inverter_count')|int(1) %}\n{% set db = states('input_number.pv_ems_pv_adjust_deadband')|float(25) %}\n{% set ns = namespace(limited=false) %}\n{% for i in range(1, count + 1) %}\n  {% set ent = states('input_select.pv_ems_pv' ~ i ~ '_limit_number_picker') %}\n  {% set full = states('input_number.pv_ems_pv' ~ i ~ '_full_limit')|float(0) %}\n  {% if ent not in bad and full > 0 and states(ent)|float(full) < (full - db) %}{% set ns.limited = true %}{% endif %}\n{% endfor %}\n{{ ns.limited }}"
+    state: "{% set bad = ['unknown','unavailable','select_entity_first',''] %}\n{%\
+      \ set count = states('input_number.pv_ems_inverter_count')|int(1) %}\n{% set\
+      \ db = states('input_number.pv_ems_pv_adjust_deadband')|float(25) %}\n{% set\
+      \ ns = namespace(limited=false) %}\n{% for i in range(1, count + 1) %}\n  {%\
+      \ set ent = states('input_select.pv_ems_pv' ~ i ~ '_limit_number_picker') %}\n\
+      \  {% set full = states('input_number.pv_ems_pv' ~ i ~ '_full_limit')|float(0)\
+      \ %}\n  {% if ent not in bad and full > 0 and states(ent)|float(full) < (full\
+      \ - db) %}{% set ns.limited = true %}{% endif %}\n{% endfor %}\n{{ ns.limited\
+      \ }}"
   - name: PV EMS Cooldown Active
     unique_id: pv_ems_cooldown_active
     icon: mdi:timer-sand
-    state: >
-      {% set data = states('input_text.pv_ems_last_targets_json') | from_json(default={}) %}
-      {{ data.get('cooldown_active', false) }}
+    state: '{% set data = states(''input_text.pv_ems_last_targets_json'') | from_json(default={})
+      %} {{ data.get(''cooldown_active'', false) }}
+
+      '
   - name: PV EMS Negative Price Mode
     unique_id: pv_ems_negative_price_mode
     icon: mdi:cash-minus
-    state: '{% set ent = states(''input_select.pv_ems_all_in_price_sensor_picker'') %}
+    state: '{% set ent = states(''input_select.pv_ems_all_in_price_sensor_picker'')
+      %}
 
-      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}false{% else %}{{ states(ent)|float(999) <= 0 }}{% endif %}'
+      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}false{%
+      else %}{{ states(ent)|float(999) <= 0 }}{% endif %}'
   - name: PV EMS At Minimum PV
     unique_id: pv_ems_at_minimum_pv
     icon: mdi:solar-power-variant-outline
-    state: "{% set bad = ['unknown','unavailable','select_entity_first',''] %}\n{% set count = states('input_number.pv_ems_inverter_count')|int(1) %}\n{% set db = states('input_number.pv_ems_pv_adjust_deadband')|float(25) %}\n{% set ns = namespace(any=false, all_min=true) %}\n{% for i in range(1, count + 1) %}\n  {% set ent = states('input_select.pv_ems_pv' ~ i ~ '_limit_number_picker') %}\n  {% set full = states('input_number.pv_ems_pv' ~ i ~ '_full_limit')|float(0) %}\n  {% set low = states('input_number.pv_ems_pv' ~ i ~ '_low_limit')|float(0) %}\n  {% if ent not in bad and full > 0 %}\n    {% set ns.any = true %}\n    {% if states(ent)|float(full) > (low + db) %}{% set ns.all_min = false %}{% endif %}\n  {% endif %}\n{% endfor %}\n{{ ns.any and ns.all_min }}"
+    state: "{% set bad = ['unknown','unavailable','select_entity_first',''] %}\n{%\
+      \ set count = states('input_number.pv_ems_inverter_count')|int(1) %}\n{% set\
+      \ db = states('input_number.pv_ems_pv_adjust_deadband')|float(25) %}\n{% set\
+      \ ns = namespace(any=false, all_min=true) %}\n{% for i in range(1, count + 1)\
+      \ %}\n  {% set ent = states('input_select.pv_ems_pv' ~ i ~ '_limit_number_picker')\
+      \ %}\n  {% set full = states('input_number.pv_ems_pv' ~ i ~ '_full_limit')|float(0)\
+      \ %}\n  {% set low = states('input_number.pv_ems_pv' ~ i ~ '_low_limit')|float(0)\
+      \ %}\n  {% if ent not in bad and full > 0 %}\n    {% set ns.any = true %}\n\
+      \    {% if states(ent)|float(full) > (low + db) %}{% set ns.all_min = false\
+      \ %}{% endif %}\n  {% endif %}\n{% endfor %}\n{{ ns.any and ns.all_min }}"

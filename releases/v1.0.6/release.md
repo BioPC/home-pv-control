@@ -15,5 +15,4 @@
 - Reduced unnecessary background processing.
 - Internal cleanup and maintenance improvements.
 - Updated default threshold values for new installations.
-- Updated dashboard.
 - Updated badges.

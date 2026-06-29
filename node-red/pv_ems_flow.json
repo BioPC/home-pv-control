@@ -1,594 +1,594 @@
 [
-    {
-        "id": "pvemsg_37a2e50fb4",
-        "type": "tab",
-        "label": "Home PV Control",
-        "disabled": false,
-        "info": "Standalone Home PV Control for Home Battery Control users. Controls configured PV limit entities and can optionally select the HBC strategy.",
-        "env": []
-    },
-    {
-        "id": "fea529e6b9b34321",
-        "type": "inject",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Every 15 seconds",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "15",
-        "crontab": "",
-        "once": true,
-        "onceDelay": "10",
-        "topic": "timer",
-        "payload": "",
-        "payloadType": "date",
-        "x": 150,
-        "y": 120,
-        "wires": [
-            [
-                "b6018e413112474a"
-            ]
-        ]
-    },
-    {
-        "id": "aa055ca1f8cc472e",
-        "type": "inject",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "On deploy / startup",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": true,
-        "onceDelay": "5",
-        "topic": "startup",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 180,
-        "wires": [
-            [
-                "b6018e413112474a"
-            ]
-        ]
-    },
-    {
-        "id": "b6018e413112474a",
-        "type": "function",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Home PV Control logic",
-        "func": "// Home PV Control users.\n// Blueprint-compatible multi-inverter version with main/debug dashboard configuration.\n// HBC remains untouched except optional selection of input_select.house_battery_strategy.\n\nfunction states() {\n    return global.get('homeassistant.homeAssistant.states') || {};\n}\n\nfunction getState(entity, fallback = undefined) {\n    const s = states();\n    if (!entity || !s[entity]) return fallback;\n    return s[entity].state;\n}\n\nfunction numEntity(entity, fallback = 0) {\n    const v = parseFloat(getState(entity, fallback));\n    return Number.isFinite(v) ? v : fallback;\n}\n\nfunction strEntity(entity, fallback = '') {\n    const v = getState(entity, fallback);\n    return v === undefined || v === null ? fallback : String(v);\n}\n\n// Configuration helper wrappers. Kept separate from numEntity()/strEntity() for readability\n// and future helper-specific validation.\nfunction helperNum(entity, fallback = 0) {\n    return numEntity(entity, fallback);\n}\n\nfunction helperStr(entity, fallback = '') {\n    return strEntity(entity, fallback);\n}\n\nfunction clamp(v, min, max) {\n    return Math.min(Math.max(v, min), max);\n}\n\nfunction serviceMsg(domain, service, data, target) {\n    return { payload: { action: `${domain}.${service}`, data, target } };\n}\n\nfunction validEntity(entity) {\n    return typeof entity === 'string' && entity.includes('.');\n}\n\nfunction entityExists(entity) {\n    if (!validEntity(entity)) return false;\n    const s = states();\n    if (!s[entity]) return false;\n    const st = String(s[entity].state || '').trim().toLowerCase();\n    return !['unknown', 'unavailable', 'none', ''].includes(st);\n}\n\nfunction stateIsNumeric(entity) {\n    const st = states()[entity] && states()[entity].state;\n    if (st === undefined || st === null) return false;\n    const text = String(st).trim().toLowerCase();\n    if (['unknown', 'unavailable', 'none', ''].includes(text)) return false;\n    return Number.isFinite(parseFloat(text));\n}\n\nfunction pickedEntity(pickerEntity, textEntity, fallback = '') {\n    const picked = helperStr(pickerEntity, '').trim();\n    if (validEntity(picked) && picked !== 'select_entity_first') return picked;\n\n    // Fallback to legacy/manual input_text entity fields when the dropdown is not set yet.\n    const typed = helperStr(textEntity, '').trim();\n    if (validEntity(typed) && typed !== 'select_entity_first') return typed;\n\n    return validEntity(fallback) ? fallback : '';\n}\n\n\nfunction insightTime() {\n    const d = new Date();\n    const hh = String(d.getHours()).padStart(2, '0');\n    const mm = String(d.getMinutes()).padStart(2, '0');\n    const ss = String(d.getSeconds()).padStart(2, '0');\n    return `${hh}:${mm}:${ss}`;\n}\n\nfunction insight(source, node, message) {\n    const body = `${source} | ${node} | ${message}`;\n    const line = `${insightTime()} | ${body}`;\n    const key = body.trim();\n    // Deduplicate inside one EMS run as well as against stored history.\n    if (!newInsights.some(item => item.key === key)) {\n        newInsights.push({ line, key });\n    }\n}\n\nfunction insightBody(line) {\n    const parts = String(line || '').split('|').map(p => p.trim());\n    return parts.length >= 4 ? parts.slice(1).join(' | ').trim() : String(line || '').trim();\n}\n\nconst now = Date.now();\nconst enabled = strEntity('input_boolean.pv_ems_enabled', 'on') === 'on';\nconst notify = strEntity('input_boolean.pv_ems_notifications', 'on') === 'on';\nconst hbcControlRequested = strEntity('input_boolean.pv_ems_control_hbc_strategy', 'off') === 'on';\n\n// Configurable entity IDs\nconst gridEntity = pickedEntity('input_select.pv_ems_grid_power_sensor_picker', 'input_text.pv_ems_grid_power_sensor', '');\nconst marketEntity = pickedEntity('input_select.pv_ems_market_price_sensor_picker', 'input_text.pv_ems_market_price_sensor', '');\nconst allInEntity = pickedEntity('input_select.pv_ems_all_in_price_sensor_picker', 'input_text.pv_ems_all_in_price_sensor', '');\nconst pvPowerEntity = pickedEntity('input_select.pv_ems_pv_power_sensor_picker', 'input_text.pv_ems_pv_power_sensor', '');\nconst hbcStrategyEntity = pickedEntity('input_select.pv_ems_battery_strategy_entity_picker', 'input_text.pv_ems_battery_strategy_entity', 'input_select.house_battery_strategy');\nconst hasHbc = entityExists(hbcStrategyEntity);\nconst controlHbc = hbcControlRequested && hasHbc;\n\n// Live values\nconst market = numEntity(marketEntity, 999);\nconst allIn = numEntity(allInEntity, 999);\nconst grid = numEntity(gridEntity, 0);        // negative export, positive import\nconst pvPower = numEntity(pvPowerEntity, 0);\n\n\n// Settings\nconst limitingPrice = helperNum('input_number.pv_ems_pv_limiting_price', 0.00);\nconst chargePrice = helperNum('input_number.pv_ems_battery_charge_price', 0.10);\nconst expensivePrice = helperNum('input_number.pv_ems_battery_expensive_price', 0.35);\nconst hysteresis = helperNum('input_number.pv_ems_battery_price_hysteresis', 0.02);\n\nconst exportStart = helperNum('input_number.pv_ems_export_start_threshold', -200);\nconst exportTarget = helperNum('input_number.pv_ems_export_stop_threshold', -25);\nconst importRecalc = helperNum('input_number.pv_ems_import_restore_threshold', 200);\nconst minPvPower = helperNum('input_number.pv_ems_pv_min_power_for_control', 100);\nconst nightRestorePower = helperNum('input_number.pv_ems_pv_night_restore_power', 10);\nconst cooldownSeconds = helperNum('input_number.pv_ems_cooldown_seconds', 60);\nconst deadband = helperNum('input_number.pv_ems_pv_adjust_deadband', 25);\n\nconst balancedStrategy = strEntity('input_select.pv_ems_balanced_strategy', 'Dynamic 2');\nconst expensiveStrategy = strEntity('input_select.pv_ems_expensive_strategy', 'Sell');\nconst currentStrategy = strEntity(hbcStrategyEntity, 'unknown');\n\n// Inverter configuration from blueprint-compatible helpers.\n// User selects inverter count (1-10). Only the first N slots are used.\nconst inverterCount = Math.round(clamp(helperNum('input_number.pv_ems_inverter_count', 1), 1, 10));\nconst configuredInverters = [];\nfor (let i = 1; i <= inverterCount; i++) {\n    configuredInverters.push({\n        name: `PV${i}`,\n        limit_entity: pickedEntity(`input_select.pv_ems_pv${i}_limit_number_picker`, `input_text.pv_ems_pv${i}_limit_number`, ''),\n        full_power: helperNum(`input_number.pv_ems_pv${i}_full_limit`, 0),\n        minimum_power: helperNum(`input_number.pv_ems_pv${i}_low_limit`, 0)\n    });\n}\n\nlet inverters = configuredInverters\n    .filter(inv => validEntity(inv.limit_entity) && inv.full_power > 0 && inv.minimum_power >= 0)\n    .map(inv => ({ ...inv, current: numEntity(inv.limit_entity, inv.full_power) }));\n\nconst outputs = Array(9).fill(null);\n// outputs:\n// 0 generic inverter limit calls, 1 status, 2 reason, 3 last action,\n// 4 targets json, 5 notification, 6 HBC strategy, 7 rolling insights, 8 force HBC toggle off\n\nlet status = 'Idle';\nlet reason = 'No action';\nlet pvAction = 'none';\nlet batteryOption = null;\nlet notification = null;\nlet notificationCalls = [];\nlet targetTotal = 0;\nlet targets = [];\nlet newInsights = [];\nlet hbcStatusText = hasHbc ? `HBC detected: ${hbcStrategyEntity}` : 'HBC not detected';\n\nif (hbcControlRequested && !hasHbc) {\n    hbcStatusText = 'HBC not detected - HBC control forced off';\n    outputs[8] = serviceMsg('input_boolean', 'turn_off', {}, { entity_id: 'input_boolean.pv_ems_control_hbc_strategy' });\n    insight('Home PV Control', 'HBC detection', 'HBC strategy entity not found; HBC control forced off');\n}\n\nconst marketValid = stateIsNumeric(marketEntity);\nconst allInValid = stateIsNumeric(allInEntity);\nconst totalFull = inverters.reduce((s, inv) => s + inv.full_power, 0);\nconst totalMin = inverters.reduce((s, inv) => s + inv.minimum_power, 0);\n\n// Strict PV cooldown gate.\n// Every PV write starts a flow-owned cooldown window. During that window no PV action is allowed.\n// On the first evaluation after the window ends, only the \"cooldown finished\" insight is allowed;\n// the next PV limit/restore/recalculation can only happen on the following evaluation.\n// This guarantees the insight order around every PV adjustment:\n// PV limit/Restore/Recalculation -> Cooldown active -> Cooldown finished -> next possible PV adjustment.\nconst cooldownMs = Math.max(0, cooldownSeconds * 1000);\nconst cooldownUntilMs = Number(flow.get('homePvControlCooldownUntilMs') || 0);\nconst previousCooldownActive = flow.get('homePvControlCooldownActive') === true;\nconst cooldownActiveComputed = cooldownUntilMs > now;\nconst cooldownJustFinished = previousCooldownActive && !cooldownActiveComputed;\nconst canChangePv = !cooldownActiveComputed && !cooldownJustFinished;\nlet cooldownActiveNow = cooldownActiveComputed;\n\nconst wantsMinimumPv = allInValid && allIn <= 0;\nconst atMinimumPv = inverters.length > 0 && inverters.every(inv => inv.current <= (inv.minimum_power + deadband));\nconst wasNegativeMinimumMode = flow.get('homePvControlNegativeMinimumActive') === true;\n\n// Required setup validation. Empty helpers stay empty; no personal/default entities are injected.\nlet missing = [];\nif (!validEntity(gridEntity)) missing.push('Grid power sensor');\nif (!validEntity(marketEntity)) missing.push('Market price sensor');\nif (!validEntity(allInEntity)) missing.push('All-in price sensor');\nif (!validEntity(pvPowerEntity)) missing.push('PV power sensor');\nif (hbcControlRequested && !hasHbc) missing.push('HBC strategy entity');\nfor (const inv of configuredInverters) {\n    if (!validEntity(inv.limit_entity)) missing.push(`${inv.name} limit entity`);\n    if (!(inv.full_power > 0)) missing.push(`${inv.name} max/full limit`);\n    if (inv.full_power > 0 && inv.minimum_power >= inv.full_power) missing.push(`${inv.name} minimum must be lower than full limit`);\n}\n\n// After Home Assistant restart/reload, helpers and dropdown selections can take\n// a short time to restore. Do not report configuration errors immediately.\nconst restoreGraceMs = 90000;\nconst nowMs = Date.now();\nlet missingSinceMs = flow.get('hpvc_missing_since_ms') || 0;\nif (missing.length === 0) {\n    flow.set('hpvc_missing_since_ms', 0);\n    missingSinceMs = 0;\n} else if (!missingSinceMs) {\n    missingSinceMs = nowMs;\n    flow.set('hpvc_missing_since_ms', missingSinceMs);\n}\nconst waitingForRestore = missing.length > 0 && (nowMs - missingSinceMs) < restoreGraceMs;\n\nif (!enabled) {\n    status = 'Disabled';\n    reason = 'Home PV Control is disabled';\n    insight('Home PV Control', 'Master control', 'Home PV Control disabled; no PV or HBC actions sent');\n} else if (waitingForRestore) {\n    status = 'Waiting for restore';\n    reason = 'Waiting for Home Assistant inputs to restore';\n    insight('Home PV Control', 'Startup', 'Waiting for Home Assistant inputs to restore');\n} else if (missing.length > 0) {\n    status = 'Configuration error';\n    reason = `Missing: ${missing.join(', ')}`;\n    insight('Home PV Control', 'Configuration', reason);\n} else if (inverters.length === 0 || totalFull <= 0) {\n    status = 'Configuration error';\n    reason = 'No valid PV inverter limit entities configured';\n    insight('Home PV Control', 'Configuration', 'No valid PV inverter limit entities configured');\n} else {\n    // Target total PV limit: PV power + grid power - target grid power.\n    // Example: PV 2500, grid -600, target -25 => 2500 - 600 + 25 = 1925.\n    const rawTarget = pvPower + grid - exportTarget;\n    targetTotal = Math.round(clamp(rawTarget, totalMin, totalFull));\n\n    targets = inverters.map(inv => {\n        const ratio = totalFull > 0 ? inv.full_power / totalFull : 0;\n        const target = Math.round(clamp(targetTotal * ratio, inv.minimum_power, inv.full_power));\n        return {\n            name: inv.name,\n            entity: inv.limit_entity,\n            current: inv.current,\n            target,\n            full_power: inv.full_power,\n            minimum_power: inv.minimum_power,\n            changed: Math.abs(inv.current - target) > deadband\n        };\n    });\n\n    const anyBelowFull = inverters.some(inv => inv.current < (inv.full_power - deadband));\n    const targetChanged = targets.some(t => t.changed);\n    const targetIsFull = targets.length > 0 && targets.every(t => t.target >= (t.full_power - deadband));\n    const targetIsMinimum = targets.length > 0 && targets.every(t => t.target <= (t.minimum_power + deadband));\n\n    const shouldForceMinimum =\n    canChangePv &&\n    !atMinimumPv &&\n    (\n        wantsMinimumPv ||\n        (\n            targetIsMinimum &&\n            marketValid &&\n            market <= limitingPrice &&\n            pvPower > minPvPower &&\n            grid < exportStart\n        )\n    );\n\n    const shouldRestore =\n        anyBelowFull &&\n        !wantsMinimumPv &&\n        canChangePv &&\n        (\n            (wasNegativeMinimumMode && atMinimumPv) ||\n            !marketValid ||\n            market > limitingPrice ||\n            pvPower < nightRestorePower ||\n            targetIsFull\n        );\n\n    const shouldAdjust =\n        !targetIsFull &&\n        !targetIsMinimum &&\n        !wantsMinimumPv &&\n        marketValid &&\n        targetChanged &&\n        market <= limitingPrice &&\n        pvPower > minPvPower &&\n        canChangePv &&\n        (\n            grid < exportStart ||\n            grid > importRecalc\n        );\n\n    if (shouldForceMinimum) {\n        pvAction = 'minimum';\n        status = wantsMinimumPv ? 'PV minimum - negative price' : 'PV minimum limit';\n        reason = wantsMinimumPv\n            ? 'All-in price is zero or negative; force PV to minimum'\n            : 'Calculated target is minimum power';\n    } else if (shouldRestore) {\n        pvAction = 'restore';\n        status = 'PV restored';\n        if (wasNegativeMinimumMode && atMinimumPv) reason = 'Leaving negative price minimum mode';\n        else if (!marketValid) reason = 'Market price unavailable';\n        else if (pvPower < nightRestorePower) reason = 'Night / low PV production';\n        else if (market > limitingPrice) reason = 'Market price recovered';\n        else if (targetIsFull) reason = 'Calculated target is full power';\n        else reason = 'Restore condition';\n    } else if (shouldAdjust) {\n        pvAction = 'adjust';\n        status = 'PV dynamically adjusted';\n        if (grid < exportStart) reason = 'Export above threshold';\n        else if (grid > importRecalc) reason = 'Import above recalculation threshold';\n        else reason = 'Dynamic adjustment';\n    } else {\n        status = wantsMinimumPv ? 'PV minimum active' : (market <= limitingPrice ? 'Monitoring low price' : 'PV full / price OK');\n        reason = cooldownJustFinished\n            ? 'Cooldown finished; waiting until next evaluation'\n            : (targetIsMinimum && atMinimumPv\n                ? 'PV already at minimum; waiting until higher target is needed'\n                : (canChangePv ? 'No target change needed' : 'PV cooldown active'));\n    }\n\n    // Track whether the current minimum state came from negative-price mode.\n    // This prevents the export-limiting minimum path from restoring and limiting in a loop.\n    if (wantsMinimumPv) {\n        flow.set('homePvControlNegativeMinimumActive', true);\n    } else if (wasNegativeMinimumMode && (pvAction === 'restore' || !atMinimumPv)) {\n        flow.set('homePvControlNegativeMinimumActive', false);\n    }\n\n    // Build inverter service messages as a list for split node.\n    let calls = [];\n    if (pvAction === 'minimum') {\n        let changedMinimum = [];\n        for (const inv of inverters) {\n            if (inv.current > (inv.minimum_power + deadband)) {\n                calls.push(serviceMsg('number', 'set_value', { value: inv.minimum_power }, { entity_id: inv.limit_entity }));\n                changedMinimum.push(`${inv.name} ${inv.current}→${inv.minimum_power}W`);\n            }\n        }\n        if (changedMinimum.length > 0) insight('Home PV Control', 'Negative price', `all-in=${allIn} €/kWh; ${changedMinimum.join(', ')}`);\n        if (notify) {\n            notification = {\n                title: 'PV minimum - negative price',\n                message:\n`PV forced to minimum.\n\nReason: ${reason}\n\nAll-in price: ${allIn} €/kWh\nMarket price: ${market} €/kWh\nPV power: ${pvPower} W\nGrid power: ${grid} W\n\nInverters changed: ${calls.length}`\n            };\n        }\n    } else if (pvAction === 'restore') {\n        let changedRestore = [];\n        for (const inv of inverters) {\n            if (inv.current < (inv.full_power - deadband)) {\n                calls.push(serviceMsg('number', 'set_value', { value: inv.full_power }, { entity_id: inv.limit_entity }));\n                changedRestore.push(`${inv.name} ${inv.current}→${inv.full_power}W`);\n            }\n        }\n        if (changedRestore.length > 0) insight('Home PV Control', 'Restore', `${reason}; ${changedRestore.join(', ')}`);\n        if (notify) {\n            notification = {\n                title: 'PV restored',\n                message:\n`PV restored to full power.\n\nReason: ${reason}\n\nMarket price: ${market} €/kWh\nPV power: ${pvPower} W\nGrid power: ${grid} W\n\nInverters changed: ${calls.length}`\n            };\n        }\n    } else if (pvAction === 'adjust') {\n        let changedAdjust = [];\n        for (const t of targets) {\n            if (t.changed) {\n                calls.push(serviceMsg('number', 'set_value', { value: t.target }, { entity_id: t.entity }));\n                changedAdjust.push(`${t.name} ${t.current}→${t.target}W`);\n            }\n        }\n        if (changedAdjust.length > 0) insight('Home PV Control', 'PV limit', `${reason}; target ${targetTotal}W; ${changedAdjust.join(', ')}`);\n        if (notify) {\n            notification = {\n                title: 'PV dynamically adjusted',\n                message:\n`PV dynamically adjusted.\n\nReason: ${reason}\n\nMarket price: ${market} €/kWh\nPV power: ${pvPower} W\nGrid power: ${grid} W\n\nTarget total PV limit: ${targetTotal} W\nInverters changed: ${calls.length}`\n            };\n        }\n    }\n\n    if (calls.length > 0) {\n        outputs[0] = calls;\n        if (['adjust', 'minimum', 'restore'].includes(pvAction)) {\n            flow.set('homePvControlLastPvWriteMs', now);\n            flow.set('homePvControlCooldownUntilMs', now + cooldownMs);\n            cooldownActiveNow = cooldownMs > 0;\n        }\n    }\n\n    // Battery strategy switching via HBC strategy selector.\n    if (controlHbc) {\n        const chargeEnter = chargePrice;\n        const chargeExit = chargePrice + hysteresis;\n        const expensiveEnter = expensivePrice;\n        const expensiveExit = expensivePrice - hysteresis;\n\n        const wantsCharge =\n            allInValid &&\n            (\n                allIn < chargeEnter ||\n                (currentStrategy === 'Charge' && allIn < chargeExit)\n            );\n\n        const wantsExpensive =\n            allInValid &&\n            (\n                allIn >= expensiveEnter ||\n                (currentStrategy === expensiveStrategy && allIn >= expensiveExit)\n            );\n\n        const wantsBalanced = allInValid && !wantsCharge && !wantsExpensive;\n\n        if (wantsCharge && currentStrategy !== 'Charge') {\n            batteryOption = 'Charge';\n        } else if (wantsExpensive && currentStrategy !== expensiveStrategy) {\n            batteryOption = expensiveStrategy;\n        } else if (wantsBalanced && currentStrategy !== balancedStrategy) {\n            batteryOption = balancedStrategy;\n        }\n\n        if (batteryOption) {\n            insight('Battery Strategy', 'Selected', `${currentStrategy} → ${batteryOption}`);\n            outputs[6] = serviceMsg('input_select', 'select_option', { option: batteryOption }, { entity_id: hbcStrategyEntity });\n            if (notify) {\n                let batteryReason = '';\n                if (batteryOption === 'Charge') {\n                    batteryReason = `all-in price ${allIn} €/kWh is below charge threshold ${chargeEnter} €/kWh.`;\n                } else if (batteryOption === expensiveStrategy) {\n                    batteryReason = `all-in price ${allIn} €/kWh is at or above expensive threshold ${expensiveEnter} €/kWh.`;\n                } else {\n                    batteryReason = `all-in price ${allIn} €/kWh is in the balanced price zone.`;\n                }\n                notificationCalls.push(serviceMsg('persistent_notification', 'create', {\n                    notification_id: 'battery_ems_status',\n                    title: 'Battery strategy changed',\n                    message: `Battery strategy changed to ${batteryOption}.\\n\\nReason: ${batteryReason}\\n\\nPrevious strategy: ${currentStrategy}`\n                }, {}));\n            }\n        }\n    }\n}\n\n// Cooldown insight: log exactly once when cooldown starts and exactly once when it finishes.\n// The cooldown-finished evaluation is intentionally blocked from PV changes by canChangePv above.\nif (cooldownActiveNow && !previousCooldownActive) {\n    insight('Home PV Control', 'Cooldown', `PV cooldown active (${cooldownSeconds} sec)`);\n} else if (cooldownJustFinished) {\n    insight('Home PV Control', 'Cooldown', 'PV cooldown finished; PV changes allowed on next evaluation');\n}\nflow.set('homePvControlCooldownActive', cooldownActiveNow);\nif (cooldownJustFinished) {\n    flow.set('homePvControlCooldownUntilMs', 0);\n}\n\n// Helper/status updates\n// outputs[8] may already carry the HBC toggle-off message from above.\noutputs[1] = serviceMsg('input_text', 'set_value', { value: String(status).slice(0,255) }, { entity_id: 'input_text.pv_ems_status' });\noutputs[2] = serviceMsg('input_text', 'set_value', { value: String(reason).slice(0,255) }, { entity_id: 'input_text.pv_ems_reason' });\noutputs[3] = serviceMsg('input_text', 'set_value', { value: (new Date().toLocaleString() + ' - ' + status).slice(0,255) }, { entity_id: 'input_text.pv_ems_last_action' });\noutputs[4] = serviceMsg('input_text', 'set_value', { value: JSON.stringify({\n    cooldown_active: cooldownActiveNow,\n    pv_limited: inverters.some(inv => inv.current < (inv.full_power - deadband)),\n    negative_price_mode: wantsMinimumPv,\n    at_minimum_pv: atMinimumPv,\n    hbc_detected: hasHbc,\n    hbc_enabled: controlHbc,\n    target_total: targetTotal\n}).slice(0,255) }, { entity_id: 'input_text.pv_ems_last_targets_json' });\n\nif (strEntity('input_text.pv_ems_hbc_status', '') !== hbcStatusText) {\n    const hbcStatusMsg = serviceMsg('input_text', 'set_value', { value: hbcStatusText.slice(0,255) }, { entity_id: 'input_text.pv_ems_hbc_status' });\n    outputs[8] = outputs[8] ? [outputs[8], hbcStatusMsg] : hbcStatusMsg;\n}\n// Rolling insight log: keep last 10 unique decisions in HBC-like rows.\n// Duplicate detection ignores the timestamp, so repeated monitor/cooldown messages do not fill the list.\nlet insightCalls = [];\nconst oldInsights = [];\nfor (let i = 1; i <= 10; i++) {\n    oldInsights.push(strEntity(`input_text.pv_ems_insight_${i}`, ''));\n}\n\nconst merged = [];\nconst seenBodies = new Set();\nfor (const item of [...newInsights].reverse()) {\n    if (!seenBodies.has(item.key)) {\n        merged.push(item.line);\n        seenBodies.add(item.key);\n    }\n}\nfor (const line of oldInsights) {\n    const body = insightBody(line);\n    if (line && body && !seenBodies.has(body)) {\n        merged.push(line);\n        seenBodies.add(body);\n    }\n}\nconst nextInsights = merged.slice(0, 10);\nlet changedInsights = false;\nfor (let i = 1; i <= 10; i++) {\n    const value = String(nextInsights[i - 1] || '').slice(0,255);\n    if (value !== String(oldInsights[i - 1] || '')) changedInsights = true;\n    insightCalls.push(serviceMsg('input_text', 'set_value', {\n        value\n    }, { entity_id: `input_text.pv_ems_insight_${i}` }));\n}\noutputs[7] = changedInsights ? insightCalls : null;\n\nif (notification) {\n    notificationCalls.push(serviceMsg('persistent_notification', 'create', {\n        notification_id: 'home_pv_control_status',\n        title: notification.title,\n        message: notification.message\n    }, {}));\n}\noutputs[5] = notificationCalls.length > 0 ? notificationCalls : null;\n\n\nreturn outputs;",
-        "outputs": 9,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 480,
-        "y": 220,
-        "wires": [
-            [
-                "e1c936397b244505"
-            ],
-            [
-                "01e07c219b49438d"
-            ],
-            [
-                "5c4ca22000dc41e2"
-            ],
-            [
-                "83132d46ae334992"
-            ],
-            [
-                "6e5b0732a25442c1"
-            ],
-            [
-                "f92d6aeb5dc24204"
-            ],
-            [
-                "6d0a5ff8950049cd"
-            ],
-            [
-                "set_pv_ems_latest_insight"
-            ],
-            [
-                "hbc_control_guard_service"
-            ]
-        ]
-    },
-    {
-        "id": "e1c936397b244505",
-        "type": "api-call-service",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Set inverter limit",
-        "server": "176d29a.6f648d6",
-        "version": 7,
-        "debugenabled": false,
-        "action": "{{$payload.action}}",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [],
-        "labelId": [],
-        "data": "payload.data",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "",
-        "service": "",
-        "target": "payload.target",
-        "x": 980,
-        "y": 60,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "01e07c219b49438d",
-        "type": "api-call-service",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Set status",
-        "server": "176d29a.6f648d6",
-        "version": 7,
-        "debugenabled": false,
-        "action": "{{$payload.action}}",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [],
-        "labelId": [],
-        "data": "payload.data",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "",
-        "service": "",
-        "target": "payload.target",
-        "x": 760,
-        "y": 120,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "5c4ca22000dc41e2",
-        "type": "api-call-service",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Set reason",
-        "server": "176d29a.6f648d6",
-        "version": 7,
-        "debugenabled": false,
-        "action": "{{$payload.action}}",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [],
-        "labelId": [],
-        "data": "payload.data",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "",
-        "service": "",
-        "target": "payload.target",
-        "x": 760,
-        "y": 160,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "83132d46ae334992",
-        "type": "api-call-service",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Set last action",
-        "server": "176d29a.6f648d6",
-        "version": 7,
-        "debugenabled": false,
-        "action": "{{$payload.action}}",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [],
-        "labelId": [],
-        "data": "payload.data",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "",
-        "service": "",
-        "target": "payload.target",
-        "x": 760,
-        "y": 200,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "6e5b0732a25442c1",
-        "type": "api-call-service",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Set targets JSON",
-        "server": "176d29a.6f648d6",
-        "version": 7,
-        "debugenabled": false,
-        "action": "{{$payload.action}}",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [],
-        "labelId": [],
-        "data": "payload.data",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "",
-        "service": "",
-        "target": "payload.target",
-        "x": 760,
-        "y": 280,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "f92d6aeb5dc24204",
-        "type": "api-call-service",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Persistent notification",
-        "server": "176d29a.6f648d6",
-        "version": 7,
-        "debugenabled": false,
-        "action": "{{$payload.action}}",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [],
-        "labelId": [],
-        "data": "payload.data",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "",
-        "service": "",
-        "target": "payload.target",
-        "x": 790,
-        "y": 340,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "6d0a5ff8950049cd",
-        "type": "api-call-service",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Set HBC strategy",
-        "server": "176d29a.6f648d6",
-        "version": 7,
-        "debugenabled": false,
-        "action": "{{$payload.action}}",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [],
-        "labelId": [],
-        "data": "payload.data",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "",
-        "service": "",
-        "target": "payload.target",
-        "x": 780,
-        "y": 400,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "d7a7d0a9f5e14a10",
-        "type": "inject",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Refresh entity dropdowns",
-        "props": [
-            {
-                "p": "payload"
-            }
-        ],
-        "repeat": "60",
-        "crontab": "",
-        "once": true,
-        "onceDelay": "15",
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 170,
-        "y": 500,
-        "wires": [
-            [
-                "c0a78fd9e1dd4a98"
-            ]
-        ]
-    },
-    {
-        "id": "c0a78fd9e1dd4a98",
-        "type": "function",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Build entity dropdown options - safe v3",
-        "func": "// Build dropdown options for main dashboard entity selectors.\n// Safe v3: fast startup, preserves selected entities after HA reload/restart,\n// and does NOT cut the list alphabetically.\nfunction states() {\n    return global.get('homeassistant.homeAssistant.states') || {};\n}\nfunction isRealEntity(e) {\n    return typeof e === 'string' && e.includes('.') && !['unknown', 'unavailable', 'select_entity_first', ''].includes(e);\n}\nfunction currentOptions(entity_id) {\n    const ent = states()[entity_id];\n    const opts = ent && ent.attributes && Array.isArray(ent.attributes.options) ? ent.attributes.options : [];\n    return opts.filter(isRealEntity);\n}\nfunction uniqueKeepOrder(arr) {\n    const seen = new Set();\n    const out = [];\n    for (const e of arr) {\n        if (isRealEntity(e) && !seen.has(e)) {\n            seen.add(e);\n            out.push(e);\n        }\n    }\n    return out;\n}\nfunction alpha(arr) {\n    return Array.from(arr).sort((a,b) => a.localeCompare(b));\n}\nfunction svc(entity_id, preferred, fallback) {\n    const s = states();\n    const current = s[entity_id] && s[entity_id].state;\n    const memoryKey = `hpvc_selected_${entity_id}`;\n\n    if (isRealEntity(current)) {\n        flow.set(memoryKey, current);\n    }\n\n    const remembered = flow.get(memoryKey);\n    const selected = isRealEntity(current) ? current : (isRealEntity(remembered) ? remembered : '');\n\n    // Order matters:\n    // 1 selected/remembered value\n    // 2 old dropdown options\n    // 3 best matching entities\n    // 4 all fallback entities\n    // No 250 cut: cutting caused lists to stop around sensor.i* alphabetically.\n    let list = uniqueKeepOrder([\n        selected,\n        current,\n        ...currentOptions(entity_id),\n        ...alpha(preferred || []),\n        ...alpha(fallback || [])\n    ]);\n\n    list = ['select_entity_first', ...list.filter(e => e !== 'select_entity_first')];\n\n    const out = [{\n        payload: {\n            action: 'input_select.set_options',\n            target: { entity_id },\n            data: { options: list }\n        }\n    }];\n\n    // If HA temporarily reset the picker to select_entity_first after a reload,\n    // reselect the last known real entity after restoring the option list.\n    if (isRealEntity(selected) && current !== selected) {\n        out.push({\n            payload: {\n                action: 'input_select.select_option',\n                target: { entity_id },\n                data: { option: selected }\n            }\n        });\n    }\n\n    return out;\n}\n\nconst s = states();\nconst all = Object.keys(s);\nconst sensors = all.filter(e => e.startsWith('sensor.'));\nconst numbers = all.filter(e => e.startsWith('number.'));\nconst inputNumbers = all.filter(e => e.startsWith('input_number.') && !e.startsWith('input_number.pv_ems_'));\nconst inputSelects = all.filter(e => e.startsWith('input_select.') && !e.startsWith('input_select.pv_ems_'));\nconst selects = all.filter(e => e.startsWith('select.'));\nconst switches = all.filter(e => e.startsWith('switch.'));\nconst binarySensors = all.filter(e => e.startsWith('binary_sensor.'));\n\n// Only block when HA states are really almost empty during reload/startup.\n// This keeps the dropdown fast but prevents overwriting with only select_entity_first.\nif (all.length < 30 || sensors.length < 3) {\n    node.warn(`Home Assistant states not ready yet (${all.length} entities, ${sensors.length} sensors). Dropdowns kept unchanged. Will retry in 60s.`);\n    return null;\n}\n\nconst powerSensors = sensors.filter(e => /power|meter|grid|p1|pv|solar|opendtu|ac_power|watt/i.test(e));\nconst priceSensors = sensors.filter(e => /price|tibber|energy|electricity|market|tariff|cost|eur|kwh/i.test(e));\nconst pvPowerSensors = sensors.filter(e => /pv|solar|opendtu|inverter|ac_power|power|hms/i.test(e));\nconst inverterNumbers = numbers.filter(e => /limit|power|inverter|hms|opendtu|pv|solar|watt/i.test(e));\nconst strategyEntities = [\n    'input_select.house_battery_strategy',\n    ...inputSelects,\n    ...selects\n];\n\nlet msgs = [];\nmsgs.push(...svc('input_select.pv_ems_grid_power_sensor_picker', powerSensors, sensors));\nmsgs.push(...svc('input_select.pv_ems_market_price_sensor_picker', priceSensors, sensors));\nmsgs.push(...svc('input_select.pv_ems_all_in_price_sensor_picker', priceSensors, sensors));\nmsgs.push(...svc('input_select.pv_ems_pv_power_sensor_picker', pvPowerSensors, sensors));\nmsgs.push(...svc('input_select.pv_ems_battery_strategy_entity_picker', strategyEntities, [...inputSelects, ...selects]));\n\nfor (let i = 1; i <= 10; i++) {\n    msgs.push(...svc(`input_select.pv_ems_pv${i}_limit_number_picker`, inverterNumbers, [...numbers, ...inputNumbers]));\n}\n\nreturn [msgs];",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 480,
-        "y": 500,
-        "wires": [
-            [
-                "a8f0ed0b23724bb4"
-            ]
-        ]
-    },
-    {
-        "id": "a8f0ed0b23724bb4",
-        "type": "api-call-service",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Set dropdown options",
-        "server": "176d29a.6f648d6",
-        "version": 7,
-        "debugenabled": false,
-        "action": "{{$payload.action}}",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [],
-        "labelId": [],
-        "data": "payload.data",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "",
-        "service": "",
-        "target": "payload.target",
-        "x": 990,
-        "y": 500,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "176d29a.6f648d6",
-        "type": "server",
-        "name": "Home Assistant",
-        "addon": true,
-        "rejectUnauthorizedCerts": true,
-        "ha_boolean": [],
-        "connectionDelay": false,
-        "cacheJson": true,
-        "heartbeat": false,
-        "heartbeatInterval": "",
-        "statusSeparator": "",
-        "enableGlobalContextStore": true
-    },
-    {
-        "id": "c13506ce4b4c81a2",
-        "type": "global-config",
-        "env": [],
-        "modules": {
-            "node-red-contrib-home-assistant-websocket": "0.80.3"
-        }
-    },
-    {
-        "id": "set_pv_ems_latest_insight",
-        "type": "api-call-service",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Set insight row",
-        "server": "176d29a.6f648d6",
-        "version": 7,
-        "debugenabled": false,
-        "action": "{{$payload.action}}",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [],
-        "labelId": [],
-        "data": "payload.data",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "",
-        "service": "",
-        "target": "payload.target",
-        "x": 980,
-        "y": 455,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "hpvc_settings_changed",
-        "type": "server-state-changed",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Settings changed",
-        "server": "176d29a.6f648d6",
-        "version": 6,
-        "outputs": 1,
-        "exposeAsEntityConfig": "",
-        "entities": {
-            "entity": [
-                "input_select.pv_ems_grid_power_sensor_picker",
-                "input_select.pv_ems_market_price_sensor_picker",
-                "input_select.pv_ems_all_in_price_sensor_picker",
-                "input_select.pv_ems_pv_power_sensor_picker",
-                "input_boolean.pv_ems_enabled",
-                "input_boolean.pv_ems_notifications",
-                "input_boolean.pv_ems_control_hbc_strategy",
-                "input_boolean.pv_ems_debug",
-                "input_number.pv_ems_inverter_count",
-                "input_number.pv_ems_pv_limiting_price",
-                "input_number.pv_ems_battery_charge_price",
-                "input_number.pv_ems_battery_expensive_price",
-                "input_number.pv_ems_battery_price_hysteresis",
-                "input_number.pv_ems_export_start_threshold",
-                "input_number.pv_ems_export_stop_threshold",
-                "input_number.pv_ems_import_restore_threshold",
-                "input_number.pv_ems_pv_min_power_for_control",
-                "input_number.pv_ems_pv_night_restore_power",
-                "input_number.pv_ems_cooldown_seconds",
-                "input_number.pv_ems_pv_adjust_deadband",
-                "input_select.pv_ems_balanced_strategy",
-                "input_select.pv_ems_expensive_strategy",
-                "input_select.pv_ems_pv1_limit_number_picker",
-                "input_number.pv_ems_pv1_full_limit",
-                "input_number.pv_ems_pv1_low_limit",
-                "input_select.pv_ems_pv2_limit_number_picker",
-                "input_number.pv_ems_pv2_full_limit",
-                "input_number.pv_ems_pv2_low_limit",
-                "input_select.pv_ems_pv3_limit_number_picker",
-                "input_number.pv_ems_pv3_full_limit",
-                "input_number.pv_ems_pv3_low_limit",
-                "input_select.pv_ems_pv4_limit_number_picker",
-                "input_number.pv_ems_pv4_full_limit",
-                "input_number.pv_ems_pv4_low_limit",
-                "input_select.pv_ems_pv5_limit_number_picker",
-                "input_number.pv_ems_pv5_full_limit",
-                "input_number.pv_ems_pv5_low_limit",
-                "input_select.pv_ems_pv6_limit_number_picker",
-                "input_number.pv_ems_pv6_full_limit",
-                "input_number.pv_ems_pv6_low_limit",
-                "input_select.pv_ems_pv7_limit_number_picker",
-                "input_number.pv_ems_pv7_full_limit",
-                "input_number.pv_ems_pv7_low_limit",
-                "input_select.pv_ems_pv8_limit_number_picker",
-                "input_number.pv_ems_pv8_full_limit",
-                "input_number.pv_ems_pv8_low_limit",
-                "input_select.pv_ems_pv9_limit_number_picker",
-                "input_number.pv_ems_pv9_full_limit",
-                "input_number.pv_ems_pv9_low_limit",
-                "input_select.pv_ems_pv10_limit_number_picker",
-                "input_number.pv_ems_pv10_full_limit",
-                "input_number.pv_ems_pv10_low_limit",
-                "input_select.pv_ems_battery_strategy_entity_picker",
-                "input_text.pv_ems_battery_strategy_entity"
-            ],
-            "substring": [],
-            "regex": []
-        },
-        "outputInitially": false,
-        "stateType": "str",
-        "ifState": "",
-        "ifStateType": "str",
-        "ifStateOperator": "is",
-        "outputOnlyOnStateChange": true,
-        "for": "",
-        "forType": "num",
-        "forUnits": "minutes",
-        "ignorePrevStateNull": false,
-        "ignorePrevStateUnknown": false,
-        "ignorePrevStateUnavailable": false,
-        "ignoreCurrentStateUnknown": false,
-        "ignoreCurrentStateUnavailable": false,
-        "outputProperties": [
-            {
-                "property": "payload",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entityState"
-            },
-            {
-                "property": "topic",
-                "propertyType": "msg",
-                "value": "settings",
-                "valueType": "str"
-            }
-        ],
-        "x": 170,
-        "y": 240,
-        "wires": [
-            [
-                "b6018e413112474a"
-            ]
-        ]
-    },
-    {
-        "id": "hpvc_trigger_design_note",
-        "type": "comment",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "Trigger design",
-        "info": "PV cooldown is flow-owned and strict: every PV write starts cooldown; no PV write is allowed while active; the first evaluation after cooldown only logs finished, and the next evaluation may change PV again.",
-        "x": 170,
-        "y": 60,
-        "wires": []
-    },
-    {
-        "id": "hbc_control_guard_service",
-        "type": "api-call-service",
-        "z": "pvemsg_37a2e50fb4",
-        "name": "HBC detection/status",
-        "server": "176d29a.6f648d6",
-        "version": 7,
-        "debugenabled": false,
-        "action": "{{$payload.action}}",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [],
-        "labelId": [],
-        "data": "payload.data",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "",
-        "service": "",
-        "target": "payload.target",
-        "x": 790,
-        "y": 455,
-        "wires": [
-            []
-        ]
+  {
+    "id": "pvemsg_37a2e50fb4",
+    "type": "tab",
+    "label": "Home PV Control",
+    "disabled": false,
+    "info": "Standalone Home PV Control for Home Battery Control users. Controls configured PV limit entities and can optionally select the HBC strategy.",
+    "env": []
+  },
+  {
+    "id": "fea529e6b9b34321",
+    "type": "inject",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Every 15 seconds",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "15",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "10",
+    "topic": "timer",
+    "payload": "",
+    "payloadType": "date",
+    "x": 150,
+    "y": 120,
+    "wires": [
+      [
+        "b6018e413112474a"
+      ]
+    ]
+  },
+  {
+    "id": "aa055ca1f8cc472e",
+    "type": "inject",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "On deploy / startup",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "5",
+    "topic": "startup",
+    "payload": "",
+    "payloadType": "date",
+    "x": 160,
+    "y": 180,
+    "wires": [
+      [
+        "b6018e413112474a"
+      ]
+    ]
+  },
+  {
+    "id": "b6018e413112474a",
+    "type": "function",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Home PV Control logic",
+    "func": "// Home PV Control users.\n// Blueprint-compatible multi-inverter version with main/debug dashboard configuration.\n// HBC remains untouched except optional selection of input_select.house_battery_strategy.\n\nfunction states() {\n    return global.get('homeassistant.homeAssistant.states') || {};\n}\n\nfunction getState(entity, fallback = undefined) {\n    const s = states();\n    if (!entity || !s[entity]) return fallback;\n    return s[entity].state;\n}\n\nfunction numEntity(entity, fallback = 0) {\n    const v = parseFloat(getState(entity, fallback));\n    return Number.isFinite(v) ? v : fallback;\n}\n\nfunction strEntity(entity, fallback = '') {\n    const v = getState(entity, fallback);\n    return v === undefined || v === null ? fallback : String(v);\n}\n\n// Configuration helper wrappers. Kept separate from numEntity()/strEntity() for readability\n// and future helper-specific validation.\nfunction helperNum(entity, fallback = 0) {\n    return numEntity(entity, fallback);\n}\n\nfunction helperStr(entity, fallback = '') {\n    return strEntity(entity, fallback);\n}\n\nfunction clamp(v, min, max) {\n    return Math.min(Math.max(v, min), max);\n}\n\n\nfunction distributeIncreaseTargets(inverters, totalIncrease, deadband) {\n    const desiredIncrease = Math.round(Math.max(0, totalIncrease));\n    const targets = inverters.map(inv => ({\n        name: inv.name,\n        entity: inv.limit_entity,\n        current: inv.current,\n        target: inv.current,\n        full_power: inv.full_power,\n        minimum_power: inv.minimum_power,\n        changed: false\n    }));\n\n    if (desiredIncrease <= 0 || targets.length === 0) return targets;\n\n    const capacity = targets.map(t => Math.max(0, t.full_power - t.current));\n    const maxIncrease = Math.round(capacity.reduce((s, v) => s + v, 0));\n    const targetIncrease = Math.min(desiredIncrease, maxIncrease);\n    if (targetIncrease <= 0) return targets;\n\n    let deltas = targets.map(() => 0);\n    let remaining = targetIncrease;\n\n    // First pass: distribute proportionally by inverter size while respecting remaining headroom.\n    for (let guard = 0; guard < 10 && remaining > 0.5; guard++) {\n        const active = targets\n            .map((t, i) => ({ i, weight: t.full_power, cap: Math.max(0, capacity[i] - deltas[i]) }))\n            .filter(x => x.cap > 0.5);\n        if (active.length === 0) break;\n\n        const weightTotal = active.reduce((s, x) => s + x.weight, 0);\n        let allocated = 0;\n        for (const x of active) {\n            const add = Math.min(x.cap, remaining * (x.weight / weightTotal));\n            deltas[x.i] += add;\n            allocated += add;\n        }\n        if (allocated <= 0.5) break;\n        remaining -= allocated;\n    }\n\n    // Round to whole watts and correct rounding drift so the requested total step is preserved.\n    deltas = deltas.map((d, i) => Math.min(capacity[i], Math.round(d)));\n    let diff = targetIncrease - deltas.reduce((s, d) => s + d, 0);\n    for (let guard = 0; diff !== 0 && guard < 100; guard++) {\n        if (diff > 0) {\n            let best = -1;\n            let bestCap = 0;\n            for (let i = 0; i < deltas.length; i++) {\n                const capLeft = capacity[i] - deltas[i];\n                if (capLeft > bestCap) {\n                    bestCap = capLeft;\n                    best = i;\n                }\n            }\n            if (best < 0 || bestCap <= 0) break;\n            deltas[best] += 1;\n            diff -= 1;\n        } else {\n            let best = -1;\n            let bestDelta = 0;\n            for (let i = 0; i < deltas.length; i++) {\n                if (deltas[i] > bestDelta) {\n                    bestDelta = deltas[i];\n                    best = i;\n                }\n            }\n            if (best < 0 || bestDelta <= 0) break;\n            deltas[best] -= 1;\n            diff += 1;\n        }\n    }\n\n    // Deadband-aware reveal: if an inverter's share is too small to be written,\n    // move those watts to inverter(s) that can make a meaningful change.\n    let skipped = 0;\n    for (let i = 0; i < deltas.length; i++) {\n        if (deltas[i] > 0 && deltas[i] <= deadband) {\n            skipped += deltas[i];\n            deltas[i] = 0;\n        }\n    }\n    for (let guard = 0; skipped > 0 && guard < 100; guard++) {\n        let best = -1;\n        let bestScore = -1;\n        for (let i = 0; i < deltas.length; i++) {\n            const capLeft = capacity[i] - deltas[i];\n            if (capLeft <= 0) continue;\n            // Prefer inverters already above deadband, then the largest remaining capacity.\n            const score = (deltas[i] > deadband ? 1000000 : 0) + capLeft;\n            if (score > bestScore) {\n                bestScore = score;\n                best = i;\n            }\n        }\n        if (best < 0) break;\n        const add = Math.min(skipped, capacity[best] - deltas[best]);\n        if (add <= 0) break;\n        deltas[best] += add;\n        skipped -= add;\n    }\n\n    return targets.map((t, i) => {\n        const target = Math.round(clamp(t.current + deltas[i], t.minimum_power, t.full_power));\n        return {\n            ...t,\n            target,\n            changed: Math.abs(t.current - target) > deadband\n        };\n    });\n}\n\nfunction serviceMsg(domain, service, data, target) {\n    return { payload: { action: `${domain}.${service}`, data, target } };\n}\n\nfunction validEntity(entity) {\n    return typeof entity === 'string' && entity.includes('.');\n}\n\nfunction entityExists(entity) {\n    if (!validEntity(entity)) return false;\n    const s = states();\n    if (!s[entity]) return false;\n    const st = String(s[entity].state || '').trim().toLowerCase();\n    return !['unknown', 'unavailable', 'none', ''].includes(st);\n}\n\nfunction stateIsNumeric(entity) {\n    const st = states()[entity] && states()[entity].state;\n    if (st === undefined || st === null) return false;\n    const text = String(st).trim().toLowerCase();\n    if (['unknown', 'unavailable', 'none', ''].includes(text)) return false;\n    return Number.isFinite(parseFloat(text));\n}\n\nfunction pickedEntity(pickerEntity, textEntity, fallback = '') {\n    const picked = helperStr(pickerEntity, '').trim();\n    if (validEntity(picked) && picked !== 'select_entity_first') return picked;\n\n    // Fallback to legacy/manual input_text entity fields when the dropdown is not set yet.\n    const typed = helperStr(textEntity, '').trim();\n    if (validEntity(typed) && typed !== 'select_entity_first') return typed;\n\n    return validEntity(fallback) ? fallback : '';\n}\n\n\nfunction insightTime() {\n    const d = new Date();\n    const hh = String(d.getHours()).padStart(2, '0');\n    const mm = String(d.getMinutes()).padStart(2, '0');\n    const ss = String(d.getSeconds()).padStart(2, '0');\n    return `${hh}:${mm}:${ss}`;\n}\n\nfunction insight(source, node, message) {\n    const body = `${source} | ${node} | ${message}`;\n    const line = `${insightTime()} | ${body}`;\n    const key = body.trim();\n    // Deduplicate inside one EMS run as well as against stored history.\n    if (!newInsights.some(item => item.key === key)) {\n        newInsights.push({ line, key });\n    }\n}\n\nfunction insightBody(line) {\n    const parts = String(line || '').split('|').map(p => p.trim());\n    return parts.length >= 4 ? parts.slice(1).join(' | ').trim() : String(line || '').trim();\n}\n\nconst now = Date.now();\nconst enabled = strEntity('input_boolean.pv_ems_enabled', 'on') === 'on';\nconst notify = strEntity('input_boolean.pv_ems_notifications', 'on') === 'on';\nconst hbcControlRequested = strEntity('input_boolean.pv_ems_control_hbc_strategy', 'off') === 'on';\n\n// Configurable entity IDs\nconst gridEntity = pickedEntity('input_select.pv_ems_grid_power_sensor_picker', 'input_text.pv_ems_grid_power_sensor', '');\nconst marketEntity = pickedEntity('input_select.pv_ems_market_price_sensor_picker', 'input_text.pv_ems_market_price_sensor', '');\nconst allInEntity = pickedEntity('input_select.pv_ems_all_in_price_sensor_picker', 'input_text.pv_ems_all_in_price_sensor', '');\nconst pvPowerEntity = pickedEntity('input_select.pv_ems_pv_power_sensor_picker', 'input_text.pv_ems_pv_power_sensor', '');\nconst hbcStrategyEntity = pickedEntity('input_select.pv_ems_battery_strategy_entity_picker', 'input_text.pv_ems_battery_strategy_entity', 'input_select.house_battery_strategy');\nconst hasHbc = entityExists(hbcStrategyEntity);\nconst controlHbc = hbcControlRequested && hasHbc;\n\n// Live values\nconst market = numEntity(marketEntity, 999);\nconst allIn = numEntity(allInEntity, 999);\nconst grid = numEntity(gridEntity, 0);        // negative export, positive import\nconst pvPower = numEntity(pvPowerEntity, 0);\n\n\n// Settings\nconst limitingPrice = helperNum('input_number.pv_ems_pv_limiting_price', 0.00);\nconst chargePrice = helperNum('input_number.pv_ems_battery_charge_price', 0.10);\nconst expensivePrice = helperNum('input_number.pv_ems_battery_expensive_price', 0.35);\nconst hysteresis = helperNum('input_number.pv_ems_battery_price_hysteresis', 0.02);\n\nconst exportStart = helperNum('input_number.pv_ems_export_start_threshold', -200);\nconst exportTarget = helperNum('input_number.pv_ems_export_stop_threshold', -25);\nconst importRecalc = helperNum('input_number.pv_ems_import_restore_threshold', 200);\nconst revealStepWatts = Math.round(clamp(helperNum('input_number.pv_ems_hidden_pv_reveal_step', 100), 50, 250));\nconst minPvPower = helperNum('input_number.pv_ems_pv_min_power_for_control', 100);\nconst nightRestorePower = helperNum('input_number.pv_ems_pv_night_restore_power', 10);\nconst cooldownSeconds = helperNum('input_number.pv_ems_cooldown_seconds', 60);\nconst deadband = helperNum('input_number.pv_ems_pv_adjust_deadband', 25);\n\nconst balancedStrategy = strEntity('input_select.pv_ems_balanced_strategy', 'Dynamic 2');\nconst expensiveStrategy = strEntity('input_select.pv_ems_expensive_strategy', 'Sell');\nconst currentStrategy = strEntity(hbcStrategyEntity, 'unknown');\n\n\nfunction hbcBatteryPowerEntity(index) {\n    return `sensor.marstek_m${index}_ac_power`;\n}\n\nfunction hbcBatteryMaxChargePowerEntity(index) {\n    return `number.marstek_m${index}_max_charge_power`;\n}\n\nfunction hbcBatteryPowerSummary(count) {\n    let total = 0;\n    let charging = false;\n    let chargeHeadroom = false;\n    let atMaxChargePower = false;\n    const maxChargeMargin = 0.95;\n\n    for (let i = 1; i <= count; i++) {\n        const entity = hbcBatteryPowerEntity(i);\n        if (stateIsNumeric(entity)) {\n            const power = numEntity(entity, 0);\n            total += power;\n\n            if (power < 0) {\n                charging = true;\n                const maxEntity = hbcBatteryMaxChargePowerEntity(i);\n                if (stateIsNumeric(maxEntity)) {\n                    const maxChargePower = Math.abs(numEntity(maxEntity, 0));\n                    if (maxChargePower > 0 && Math.abs(power) >= (maxChargePower * maxChargeMargin)) {\n                        atMaxChargePower = true;\n                    } else {\n                        chargeHeadroom = true;\n                    }\n                } else {\n                    // If max-charge-power is unavailable, keep backwards-compatible behaviour.\n                    chargeHeadroom = true;\n                }\n            }\n        }\n    }\n\n    return { total, charging, chargeHeadroom, atMaxChargePower: charging && !chargeHeadroom && atMaxChargePower };\n}\n\n\n// Inverter configuration from blueprint-compatible helpers.\n// User selects inverter count (1-10). Only the first N slots are used.\nconst inverterCount = Math.round(clamp(helperNum('input_number.pv_ems_inverter_count', 1), 1, 10));\nconst configuredInverters = [];\nfor (let i = 1; i <= inverterCount; i++) {\n    configuredInverters.push({\n        name: `PV${i}`,\n        limit_entity: pickedEntity(`input_select.pv_ems_pv${i}_limit_number_picker`, `input_text.pv_ems_pv${i}_limit_number`, ''),\n        full_power: helperNum(`input_number.pv_ems_pv${i}_full_limit`, 0),\n        minimum_power: helperNum(`input_number.pv_ems_pv${i}_low_limit`, 0)\n    });\n}\n\nlet inverters = configuredInverters\n    .filter(inv => validEntity(inv.limit_entity) && inv.full_power > 0 && inv.minimum_power >= 0)\n    .map(inv => ({ ...inv, current: numEntity(inv.limit_entity, inv.full_power) }));\n\nconst outputs = Array(9).fill(null);\n// outputs:\n// 0 generic inverter limit calls, 1 status, 2 reason, 3 last action,\n// 4 targets json, 5 notification, 6 HBC strategy, 7 rolling insights, 8 force HBC toggle off\n\nlet status = 'Idle';\nlet reason = 'No action';\nlet pvAction = 'none';\nlet batteryOption = null;\nlet notification = null;\nlet notificationCalls = [];\nlet targetTotal = 0;\nlet targets = [];\nlet selectedBatteryPowerTotal = 0;\nlet selectedBatteryIsCharging = false;\nlet selectedBatteryHasChargeHeadroom = false;\nlet selectedBatteryAtMaxChargePower = false;\nlet revealHiddenPv = false;\nlet hiddenPvRevealPaused = false;\nlet hiddenPvRevealResumed = false;\nlet hiddenPvRevealCompleted = false;\nlet hiddenPvRevealCompletedResumed = false;\nlet hbcBatteryCountFallbackActive = false;\nlet newInsights = [];\nlet hbcStatusText = hasHbc ? `HBC detected: ${hbcStrategyEntity}` : 'HBC not detected';\n\nif (hbcControlRequested && !hasHbc) {\n    hbcStatusText = 'HBC not detected - HBC control forced off';\n    outputs[8] = serviceMsg('input_boolean', 'turn_off', {}, { entity_id: 'input_boolean.pv_ems_control_hbc_strategy' });\n    insight('Home PV Control', 'HBC detection', 'HBC strategy entity not found; HBC control forced off');\n}\n\nconst marketValid = stateIsNumeric(marketEntity);\nconst allInValid = stateIsNumeric(allInEntity);\nconst totalFull = inverters.reduce((s, inv) => s + inv.full_power, 0);\nconst totalMin = inverters.reduce((s, inv) => s + inv.minimum_power, 0);\n\n// Strict PV cooldown gate.\n// Every PV write starts a flow-owned cooldown window. During that window no PV action is allowed.\n// As soon as the cooldown window has expired, the current evaluation may make a new PV decision.\nconst cooldownMs = Math.max(0, cooldownSeconds * 1000);\nconst cooldownUntilMs = Number(flow.get('homePvControlCooldownUntilMs') || 0);\nconst previousCooldownActive = flow.get('homePvControlCooldownActive') === true;\nconst cooldownActiveComputed = cooldownUntilMs > now;\nconst cooldownJustFinished = previousCooldownActive && !cooldownActiveComputed;\nconst canChangePv = !cooldownActiveComputed;\nlet cooldownActiveNow = cooldownActiveComputed;\n\nconst wantsMinimumPv = allInValid && allIn <= 0;\nconst atMinimumPv = inverters.length > 0 && inverters.every(inv => inv.current <= (inv.minimum_power + deadband));\nconst wasNegativeMinimumMode = flow.get('homePvControlNegativeMinimumActive') === true;\n\n// Required setup validation. Empty helpers stay empty; no personal/default entities are injected.\nlet missing = [];\nif (!validEntity(gridEntity)) missing.push('Grid power sensor');\nif (!validEntity(marketEntity)) missing.push('Market price sensor');\nif (!validEntity(allInEntity)) missing.push('All-in price sensor');\nif (!validEntity(pvPowerEntity)) missing.push('PV power sensor');\nif (hbcControlRequested && !hasHbc) missing.push('HBC strategy entity');\nfor (const inv of configuredInverters) {\n    if (!validEntity(inv.limit_entity)) missing.push(`${inv.name} limit entity`);\n    if (!(inv.full_power > 0)) missing.push(`${inv.name} max/full limit`);\n    if (inv.full_power > 0 && inv.minimum_power >= inv.full_power) missing.push(`${inv.name} minimum must be lower than full limit`);\n}\n\n// After Home Assistant restart/reload, helpers and dropdown selections can take\n// a short time to restore. Do not report configuration errors immediately.\nconst restoreGraceMs = 90000;\nconst nowMs = Date.now();\nlet missingSinceMs = flow.get('hpvc_missing_since_ms') || 0;\nconst inputsRestoredNow = missing.length === 0 && missingSinceMs > 0;\nif (missing.length === 0) {\n    if (inputsRestoredNow) {\n        insight('Home PV Control', 'Startup', 'Home Assistant inputs restored; control resumed');\n    }\n    flow.set('hpvc_missing_since_ms', 0);\n    missingSinceMs = 0;\n} else if (!missingSinceMs) {\n    missingSinceMs = nowMs;\n    flow.set('hpvc_missing_since_ms', missingSinceMs);\n}\nconst waitingForRestore = missing.length > 0 && (nowMs - missingSinceMs) < restoreGraceMs;\n\nif (!enabled) {\n    status = 'Disabled';\n    reason = 'Home PV Control is disabled';\n    insight('Home PV Control', 'Master control', 'Home PV Control disabled; no PV or HBC actions sent');\n} else if (waitingForRestore) {\n    status = 'Waiting for restore';\n    reason = 'Waiting for Home Assistant inputs to restore';\n    insight('Home PV Control', 'Startup', 'Waiting for Home Assistant inputs to restore');\n} else if (missing.length > 0) {\n    status = 'Configuration error';\n    reason = `Missing: ${missing.join(', ')}`;\n    insight('Home PV Control', 'Configuration', reason);\n} else if (inverters.length === 0 || totalFull <= 0) {\n    status = 'Configuration error';\n    reason = 'No valid PV inverter limit entities configured';\n    insight('Home PV Control', 'Configuration', 'No valid PV inverter limit entities configured');\n} else {\n    // Target total PV limit: PV power + grid power - target grid power.\n    // Example export: PV 2500, grid -600, target -25 => 2500 - 600 + 25 = 1925.\n    // Direction-aware import recovery:\n    // - When importing while PV is already limited, use the current PV limit as available PV.\n    //   This lets HPVC raise the limit after cooldown instead of waiting while buying grid power.\n    // - When exporting or balanced, keep using actual PV power so HPVC does not restore while already exporting.\n    // Hidden-PV reveal for grid-following batteries:\n    // - If PV is limited and grid is above export_start (small export, zero export, or slight import),\n    //   reveal more PV in small capped steps instead of restoring straight to full power.\n    // - Reveal is only for the near-zero / small-import zone. Heavy import uses normal import-recalc.\n    // - Mixed inverter states are excluded to avoid reducing a full inverter while raising a limited one.\n    const currentLimitTotal = inverters.reduce((s, inv) => s + inv.current, 0);\n    const anyBelowFullNow = inverters.some(inv => inv.current < (inv.full_power - deadband));\n    const allBelowFullNow = inverters.length > 0 && inverters.every(inv => inv.current < (inv.full_power - deadband));\n    const hbcBatteryCountEntity = 'input_number.house_battery_count';\n    const hasHbcBatteryCount = entityExists(hbcBatteryCountEntity);\n    const hbcBatteryCount = controlHbc\n        ? (hasHbcBatteryCount\n            ? Math.round(clamp(helperNum(hbcBatteryCountEntity, 0), 0, 10))\n            : 1)\n        : 0;\n    hbcBatteryCountFallbackActive = controlHbc && !hasHbcBatteryCount;\n    const hbcBatterySummary = hbcBatteryPowerSummary(hbcBatteryCount);\n    selectedBatteryPowerTotal = hbcBatterySummary.total;\n    selectedBatteryIsCharging = hbcBatterySummary.charging;\n    selectedBatteryHasChargeHeadroom = hbcBatterySummary.chargeHeadroom;\n    selectedBatteryAtMaxChargePower = hbcBatterySummary.atMaxChargePower;\n    const pvFullyRestoredNow = inverters.length > 0 && currentLimitTotal >= (totalFull - deadband);\n    const hiddenPvRevealWindow = controlHbc && !pvFullyRestoredNow && allBelowFullNow && grid > exportStart && grid < importRecalc;\n    revealHiddenPv = hiddenPvRevealWindow && selectedBatteryIsCharging && selectedBatteryHasChargeHeadroom;\n    const previousHiddenPvRevealPaused = flow.get('homePvControlHiddenPvRevealPaused') === true;\n    const previousHiddenPvRevealActive = flow.get('homePvControlHiddenPvRevealActive') === true;\n    const previousHiddenPvRevealCompleted = flow.get('homePvControlHiddenPvRevealCompleted') === true;\n    hiddenPvRevealPaused = hiddenPvRevealWindow && (!selectedBatteryIsCharging || !selectedBatteryHasChargeHeadroom);\n    hiddenPvRevealResumed = previousHiddenPvRevealPaused && revealHiddenPv;\n    hiddenPvRevealCompleted = previousHiddenPvRevealActive && pvFullyRestoredNow;\n    hiddenPvRevealCompletedResumed = previousHiddenPvRevealCompleted && revealHiddenPv;\n    const previousHbcBatteryCountFallbackActive = flow.get('homePvControlHbcBatteryCountFallbackActive') === true;\n    if (hbcBatteryCountFallbackActive && !previousHbcBatteryCountFallbackActive) {\n        insight('Home PV Control', 'HBC battery count', 'input_number.house_battery_count missing; using 1 battery fallback for hidden PV reveal');\n    }\n    if (hiddenPvRevealCompleted) {\n        insight('Home PV Control', 'PV limit', 'Hidden PV reveal completed; PV output has been fully restored');\n    }\n    if (hiddenPvRevealCompletedResumed) {\n        insight('Home PV Control', 'PV limit', 'Hidden PV reveal resumed; PV is limited again and HBC battery charging capacity is available');\n    }\n    const revealIncrease = revealHiddenPv\n        ? Math.min(revealStepWatts, Math.max(0, grid - exportStart))\n        : 0;\n    const pvForTarget = (grid > importRecalc && anyBelowFullNow)\n        ? Math.max(pvPower, currentLimitTotal)\n        : pvPower;\n    const rawTarget = revealHiddenPv\n        ? currentLimitTotal + revealIncrease\n        : pvForTarget + grid - exportTarget;\n    targetTotal = Math.round(clamp(rawTarget, totalMin, totalFull));\n\n    if (revealHiddenPv) {\n        targets = distributeIncreaseTargets(inverters, targetTotal - currentLimitTotal, deadband);\n    } else {\n        targets = inverters.map(inv => {\n            const ratio = totalFull > 0 ? inv.full_power / totalFull : 0;\n            const target = Math.round(clamp(targetTotal * ratio, inv.minimum_power, inv.full_power));\n            return {\n                name: inv.name,\n                entity: inv.limit_entity,\n                current: inv.current,\n                target,\n                full_power: inv.full_power,\n                minimum_power: inv.minimum_power,\n                changed: Math.abs(inv.current - target) > deadband\n            };\n        });\n    }\n\n    const anyBelowFull = anyBelowFullNow;\n    const targetChanged = targets.some(t => t.changed);\n    const targetIsFull = targets.length > 0 && targets.every(t => t.target >= (t.full_power - deadband));\n    const targetIsMinimum = targets.length > 0 && targets.every(t => t.target <= (t.minimum_power + deadband));\n    const shouldForceMinimum =\n    canChangePv &&\n    !atMinimumPv &&\n    (\n        wantsMinimumPv ||\n        (\n            targetIsMinimum &&\n            marketValid &&\n            market <= limitingPrice &&\n            pvPower > minPvPower &&\n            grid < exportStart\n        )\n    );\n\n    const shouldRestore =\n        anyBelowFull &&\n        !wantsMinimumPv &&\n        canChangePv &&\n        (\n            (wasNegativeMinimumMode && atMinimumPv) ||\n            !marketValid ||\n            market > limitingPrice ||\n            pvPower < nightRestorePower ||\n            targetIsFull\n        );\n\n    const shouldAdjust =\n        !targetIsFull &&\n        !targetIsMinimum &&\n        !wantsMinimumPv &&\n        marketValid &&\n        targetChanged &&\n        market <= limitingPrice &&\n        pvPower > minPvPower &&\n        canChangePv &&\n        (\n            revealHiddenPv ||\n            grid < exportStart ||\n            grid > importRecalc\n        );\n\n    if (shouldForceMinimum) {\n        pvAction = 'minimum';\n        status = wantsMinimumPv ? 'PV minimum - negative price' : 'PV minimum limit';\n        reason = wantsMinimumPv\n            ? 'All-in price is zero or negative; force PV to minimum'\n            : 'Calculated target is minimum power';\n    } else if (shouldRestore) {\n        pvAction = 'restore';\n        status = 'PV restored';\n        if (wasNegativeMinimumMode && atMinimumPv) reason = 'Leaving negative price minimum mode';\n        else if (!marketValid) reason = 'Market price unavailable';\n        else if (pvPower < nightRestorePower) reason = 'Night / low PV production';\n        else if (market > limitingPrice) reason = 'Market price recovered';\n        else if (targetIsFull) reason = 'Calculated target is full power';\n        else reason = 'Restore condition';\n    } else if (shouldAdjust) {\n        pvAction = 'adjust';\n        status = 'PV dynamically adjusted';\n        if (revealHiddenPv) reason = `PV limited while export is small; revealing up to ${revealStepWatts}W more PV for grid-following battery charging`;\n        else if (grid < exportStart) reason = 'Export above threshold';\n        else if (grid > importRecalc) reason = 'Import above recalculation threshold';\n        else reason = 'Dynamic adjustment';\n    } else {\n        status = wantsMinimumPv ? 'PV minimum active' : (market <= limitingPrice ? 'Monitoring low price' : 'PV full / price OK');\n        if (hiddenPvRevealPaused) {\n            reason = selectedBatteryAtMaxChargePower\n                ? 'PV limited while export is small; HBC battery is at or near max charge power so hidden PV reveal is skipped'\n                : 'PV limited while export is small; HBC battery is not charging so hidden PV reveal is skipped';\n            if (!previousHiddenPvRevealPaused) {\n                insight('Home PV Control', 'PV limit', reason);\n            }\n        } else if (revealHiddenPv) {\n            reason = 'PV reveal active; increase below deadband - waiting for export to ease';\n        } else {\n            reason = targetIsMinimum && atMinimumPv\n                ? 'PV already at minimum; waiting until higher target is needed'\n                : (canChangePv ? 'No target change needed' : 'PV cooldown active');\n        }\n    }\n\n    // Track whether the current minimum state came from negative-price mode.\n    // This prevents the export-limiting minimum path from restoring and limiting in a loop.\n    if (wantsMinimumPv) {\n        flow.set('homePvControlNegativeMinimumActive', true);\n    } else if (wasNegativeMinimumMode && (pvAction === 'restore' || !atMinimumPv)) {\n        flow.set('homePvControlNegativeMinimumActive', false);\n    }\n\n    // Build inverter service messages as a list for split node.\n    let calls = [];\n    if (pvAction === 'minimum') {\n        let changedMinimum = [];\n        for (const inv of inverters) {\n            if (inv.current > (inv.minimum_power + deadband)) {\n                calls.push(serviceMsg('number', 'set_value', { value: inv.minimum_power }, { entity_id: inv.limit_entity }));\n                changedMinimum.push(`${inv.name} ${inv.current}→${inv.minimum_power}W`);\n            }\n        }\n        if (changedMinimum.length > 0) insight('Home PV Control', 'Negative price', `all-in=${allIn} €/kWh; ${changedMinimum.join(', ')}`);\n        if (notify) {\n            notification = {\n                title: 'PV minimum - negative price',\n                message:\n`PV forced to minimum.\n\nReason: ${reason}\n\nAll-in price: ${allIn} €/kWh\nMarket price: ${market} €/kWh\nPV power: ${pvPower} W\nGrid power: ${grid} W\n\nInverters changed: ${calls.length}`\n            };\n        }\n    } else if (pvAction === 'restore') {\n        let changedRestore = [];\n        for (const inv of inverters) {\n            if (inv.current < (inv.full_power - deadband)) {\n                calls.push(serviceMsg('number', 'set_value', { value: inv.full_power }, { entity_id: inv.limit_entity }));\n                changedRestore.push(`${inv.name} ${inv.current}→${inv.full_power}W`);\n            }\n        }\n        if (changedRestore.length > 0) insight('Home PV Control', 'Restore', `${reason}; ${changedRestore.join(', ')}`);\n        if (notify) {\n            notification = {\n                title: 'PV restored',\n                message:\n`PV restored to full power.\n\nReason: ${reason}\n\nMarket price: ${market} €/kWh\nPV power: ${pvPower} W\nGrid power: ${grid} W\n\nInverters changed: ${calls.length}`\n            };\n        }\n    } else if (pvAction === 'adjust') {\n        let changedAdjust = [];\n        for (const t of targets) {\n            if (t.changed) {\n                calls.push(serviceMsg('number', 'set_value', { value: t.target }, { entity_id: t.entity }));\n                changedAdjust.push(`${t.name} ${t.current}→${t.target}W`);\n            }\n        }\n        if (hiddenPvRevealResumed) {\n            insight('Home PV Control', 'PV limit', 'HBC battery charging capacity is available again; hidden PV reveal resumed');\n        }\n        if (changedAdjust.length > 0) insight('Home PV Control', 'PV limit', `${reason}; target ${targetTotal}W; ${changedAdjust.join(', ')}`);\n        if (notify) {\n            notification = {\n                title: 'PV dynamically adjusted',\n                message:\n`PV dynamically adjusted.\n\nReason: ${reason}\n\nMarket price: ${market} €/kWh\nPV power: ${pvPower} W\nGrid power: ${grid} W\n\nTarget total PV limit: ${targetTotal} W\nInverters changed: ${calls.length}`\n            };\n        }\n    }\n\n    if (calls.length > 0) {\n        outputs[0] = calls;\n        if (['adjust', 'minimum', 'restore'].includes(pvAction)) {\n            flow.set('homePvControlLastPvWriteMs', now);\n            flow.set('homePvControlCooldownUntilMs', now + cooldownMs);\n            cooldownActiveNow = cooldownMs > 0;\n            if (cooldownMs > 0) {\n                const cooldownDate = new Date(now + cooldownMs);\n                const cooldownUntilText = `${String(cooldownDate.getHours()).padStart(2, '0')}:${String(cooldownDate.getMinutes()).padStart(2, '0')}:${String(cooldownDate.getSeconds()).padStart(2, '0')}`;\n                insight('Home PV Control', 'Cooldown', `Active (${cooldownSeconds}s); next change after ${cooldownUntilText}`);\n            }\n        }\n    }\n\n    // Battery strategy switching via HBC strategy selector.\n    if (controlHbc) {\n        const chargeEnter = chargePrice;\n        const chargeExit = chargePrice + hysteresis;\n        const expensiveEnter = expensivePrice;\n        const expensiveExit = expensivePrice - hysteresis;\n\n        const wantsCharge =\n            allInValid &&\n            (\n                allIn < chargeEnter ||\n                (currentStrategy === 'Charge' && allIn < chargeExit)\n            );\n\n        const wantsExpensive =\n            allInValid &&\n            (\n                allIn >= expensiveEnter ||\n                (currentStrategy === expensiveStrategy && allIn >= expensiveExit)\n            );\n\n        const wantsBalanced = allInValid && !wantsCharge && !wantsExpensive;\n\n        if (wantsCharge && currentStrategy !== 'Charge') {\n            batteryOption = 'Charge';\n        } else if (wantsExpensive && currentStrategy !== expensiveStrategy) {\n            batteryOption = expensiveStrategy;\n        } else if (wantsBalanced && currentStrategy !== balancedStrategy) {\n            batteryOption = balancedStrategy;\n        }\n\n        if (batteryOption) {\n            insight('Battery Strategy', 'Selected', `${currentStrategy} → ${batteryOption}`);\n            outputs[6] = serviceMsg('input_select', 'select_option', { option: batteryOption }, { entity_id: hbcStrategyEntity });\n            if (notify) {\n                let batteryReason = '';\n                if (batteryOption === 'Charge') {\n                    const trigger = allIn < chargeEnter\n                        ? `below charge entry threshold ${chargeEnter}`\n                        : `inside charge hysteresis exit ${chargeExit}`;\n                    batteryReason = `all-in price ${allIn} €/kWh is ${trigger} €/kWh.`;\n                } else if (batteryOption === expensiveStrategy) {\n                    const trigger = allIn >= expensiveEnter\n                        ? `at or above expensive entry threshold ${expensiveEnter}`\n                        : `inside expensive hysteresis exit ${expensiveExit}`;\n                    batteryReason = `all-in price ${allIn} €/kWh is ${trigger} €/kWh.`;\n                } else {\n                    batteryReason = `all-in price ${allIn} €/kWh is in the balanced price zone.`;\n                }\n                notificationCalls.push(serviceMsg('persistent_notification', 'create', {\n                    notification_id: 'battery_ems_status',\n                    title: 'Battery strategy changed',\n                    message: `Battery strategy changed to ${batteryOption}.\\n\\nReason: ${batteryReason}\\n\\nPrevious strategy: ${currentStrategy}`\n                }, {}));\n            }\n        }\n    }\n}\n\n// Do not log cooldown-finished entries in Insights; this keeps the history focused on actions.\n// The first evaluation after cooldown expiry may already make a new PV decision.\nflow.set('homePvControlCooldownActive', cooldownActiveNow);\nif (cooldownJustFinished) {\n    flow.set('homePvControlCooldownUntilMs', 0);\n}\n\n// Track hidden-PV reveal state so Insights only logs pause/resume/completed changes.\nflow.set('homePvControlHiddenPvRevealPaused', hiddenPvRevealPaused);\nflow.set('homePvControlHbcBatteryCountFallbackActive', hbcBatteryCountFallbackActive);\nif (!controlHbc || wantsMinimumPv) {\n    flow.set('homePvControlHiddenPvRevealActive', false);\n    flow.set('homePvControlHiddenPvRevealCompleted', false);\n} else if (hiddenPvRevealCompleted) {\n    flow.set('homePvControlHiddenPvRevealActive', false);\n    flow.set('homePvControlHiddenPvRevealCompleted', true);\n} else if (revealHiddenPv) {\n    flow.set('homePvControlHiddenPvRevealActive', true);\n    flow.set('homePvControlHiddenPvRevealCompleted', false);\n}\n\n// Helper/status updates\n// outputs[8] may already carry the HBC toggle-off message from above.\noutputs[1] = serviceMsg('input_text', 'set_value', { value: String(status).slice(0,255) }, { entity_id: 'input_text.pv_ems_status' });\noutputs[2] = serviceMsg('input_text', 'set_value', { value: String(reason).slice(0,255) }, { entity_id: 'input_text.pv_ems_reason' });\noutputs[3] = serviceMsg('input_text', 'set_value', { value: (new Date().toLocaleString() + ' - ' + status).slice(0,255) }, { entity_id: 'input_text.pv_ems_last_action' });\noutputs[4] = serviceMsg('input_text', 'set_value', { value: JSON.stringify({\n    cooldown_active: cooldownActiveNow,\n    pv_limited: inverters.some(inv => inv.current < (inv.full_power - deadband)),\n    negative_price_mode: wantsMinimumPv,\n    at_minimum_pv: atMinimumPv,\n    hbc_detected: hasHbc,\n    hbc_enabled: controlHbc,\n    target_total: targetTotal,\n    bat_w: Math.round(selectedBatteryPowerTotal),\n    bat_chg: selectedBatteryIsCharging,\n    chg_headroom: selectedBatteryHasChargeHeadroom,\n    at_max_chg: selectedBatteryAtMaxChargePower\n}).slice(0,255) }, { entity_id: 'input_text.pv_ems_last_targets_json' });\n\nif (strEntity('input_text.pv_ems_hbc_status', '') !== hbcStatusText) {\n    const hbcStatusMsg = serviceMsg('input_text', 'set_value', { value: hbcStatusText.slice(0,255) }, { entity_id: 'input_text.pv_ems_hbc_status' });\n    outputs[8] = outputs[8] ? [outputs[8], hbcStatusMsg] : hbcStatusMsg;\n}\n// Rolling insight log: keep last 20 unique decisions in HBC-like rows.\n// Duplicate detection ignores the timestamp, so repeated monitor/cooldown messages do not fill the list.\nlet insightCalls = [];\nconst oldInsights = [];\nfor (let i = 1; i <= 20; i++) {\n    oldInsights.push(strEntity(`input_text.pv_ems_insight_${i}`, ''));\n}\n\nconst merged = [];\nconst seenBodies = new Set();\nfor (const item of [...newInsights].reverse()) {\n    if (!seenBodies.has(item.key)) {\n        merged.push(item.line);\n        seenBodies.add(item.key);\n    }\n}\nfor (const line of oldInsights) {\n    const body = insightBody(line);\n    if (line && body && !seenBodies.has(body)) {\n        merged.push(line);\n        seenBodies.add(body);\n    }\n}\nconst nextInsights = merged.slice(0, 20);\nlet changedInsights = false;\nfor (let i = 1; i <= 20; i++) {\n    const value = String(nextInsights[i - 1] || '').slice(0,255);\n    if (value !== String(oldInsights[i - 1] || '')) changedInsights = true;\n    insightCalls.push(serviceMsg('input_text', 'set_value', {\n        value\n    }, { entity_id: `input_text.pv_ems_insight_${i}` }));\n}\noutputs[7] = changedInsights ? insightCalls : null;\n\nif (notification) {\n    notificationCalls.push(serviceMsg('persistent_notification', 'create', {\n        notification_id: 'home_pv_control_status',\n        title: notification.title,\n        message: notification.message\n    }, {}));\n}\noutputs[5] = notificationCalls.length > 0 ? notificationCalls : null;\n\n\nreturn outputs;",
+    "outputs": 9,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 480,
+    "y": 220,
+    "wires": [
+      [
+        "e1c936397b244505"
+      ],
+      [
+        "01e07c219b49438d"
+      ],
+      [
+        "5c4ca22000dc41e2"
+      ],
+      [
+        "83132d46ae334992"
+      ],
+      [
+        "6e5b0732a25442c1"
+      ],
+      [
+        "f92d6aeb5dc24204"
+      ],
+      [
+        "6d0a5ff8950049cd"
+      ],
+      [
+        "set_pv_ems_latest_insight"
+      ],
+      [
+        "hbc_control_guard_service"
+      ]
+    ]
+  },
+  {
+    "id": "e1c936397b244505",
+    "type": "api-call-service",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Set inverter limit",
+    "server": "176d29a.6f648d6",
+    "version": 7,
+    "debugenabled": false,
+    "action": "{{$payload.action}}",
+    "floorId": [],
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "labelId": [],
+    "data": "payload.data",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "blockInputOverrides": false,
+    "domain": "",
+    "service": "",
+    "target": "payload.target",
+    "x": 980,
+    "y": 60,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "01e07c219b49438d",
+    "type": "api-call-service",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Set status",
+    "server": "176d29a.6f648d6",
+    "version": 7,
+    "debugenabled": false,
+    "action": "{{$payload.action}}",
+    "floorId": [],
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "labelId": [],
+    "data": "payload.data",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "blockInputOverrides": false,
+    "domain": "",
+    "service": "",
+    "target": "payload.target",
+    "x": 760,
+    "y": 120,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "5c4ca22000dc41e2",
+    "type": "api-call-service",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Set reason",
+    "server": "176d29a.6f648d6",
+    "version": 7,
+    "debugenabled": false,
+    "action": "{{$payload.action}}",
+    "floorId": [],
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "labelId": [],
+    "data": "payload.data",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "blockInputOverrides": false,
+    "domain": "",
+    "service": "",
+    "target": "payload.target",
+    "x": 760,
+    "y": 160,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "83132d46ae334992",
+    "type": "api-call-service",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Set last action",
+    "server": "176d29a.6f648d6",
+    "version": 7,
+    "debugenabled": false,
+    "action": "{{$payload.action}}",
+    "floorId": [],
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "labelId": [],
+    "data": "payload.data",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "blockInputOverrides": false,
+    "domain": "",
+    "service": "",
+    "target": "payload.target",
+    "x": 760,
+    "y": 200,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "6e5b0732a25442c1",
+    "type": "api-call-service",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Set targets JSON",
+    "server": "176d29a.6f648d6",
+    "version": 7,
+    "debugenabled": false,
+    "action": "{{$payload.action}}",
+    "floorId": [],
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "labelId": [],
+    "data": "payload.data",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "blockInputOverrides": false,
+    "domain": "",
+    "service": "",
+    "target": "payload.target",
+    "x": 760,
+    "y": 280,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "f92d6aeb5dc24204",
+    "type": "api-call-service",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Persistent notification",
+    "server": "176d29a.6f648d6",
+    "version": 7,
+    "debugenabled": false,
+    "action": "{{$payload.action}}",
+    "floorId": [],
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "labelId": [],
+    "data": "payload.data",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "blockInputOverrides": false,
+    "domain": "",
+    "service": "",
+    "target": "payload.target",
+    "x": 790,
+    "y": 340,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "6d0a5ff8950049cd",
+    "type": "api-call-service",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Set HBC strategy",
+    "server": "176d29a.6f648d6",
+    "version": 7,
+    "debugenabled": false,
+    "action": "{{$payload.action}}",
+    "floorId": [],
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "labelId": [],
+    "data": "payload.data",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "blockInputOverrides": false,
+    "domain": "",
+    "service": "",
+    "target": "payload.target",
+    "x": 780,
+    "y": 400,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "d7a7d0a9f5e14a10",
+    "type": "inject",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Refresh entity dropdowns",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "60",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "15",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 170,
+    "y": 500,
+    "wires": [
+      [
+        "c0a78fd9e1dd4a98"
+      ]
+    ]
+  },
+  {
+    "id": "c0a78fd9e1dd4a98",
+    "type": "function",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Build entity dropdown options - safe v3",
+    "func": "// Build dropdown options for main dashboard entity selectors.\n// Safe v3: fast startup, preserves selected entities after HA reload/restart,\n// and does NOT cut the list alphabetically.\nfunction states() {\n    return global.get('homeassistant.homeAssistant.states') || {};\n}\nfunction isRealEntity(e) {\n    return typeof e === 'string' && e.includes('.') && !['unknown', 'unavailable', 'select_entity_first', ''].includes(e);\n}\nfunction currentOptions(entity_id) {\n    const ent = states()[entity_id];\n    const opts = ent && ent.attributes && Array.isArray(ent.attributes.options) ? ent.attributes.options : [];\n    return opts.filter(isRealEntity);\n}\nfunction uniqueKeepOrder(arr) {\n    const seen = new Set();\n    const out = [];\n    for (const e of arr) {\n        if (isRealEntity(e) && !seen.has(e)) {\n            seen.add(e);\n            out.push(e);\n        }\n    }\n    return out;\n}\nfunction alpha(arr) {\n    return Array.from(arr).sort((a,b) => a.localeCompare(b));\n}\nfunction svc(entity_id, preferred, fallback) {\n    const s = states();\n    const current = s[entity_id] && s[entity_id].state;\n    const memoryKey = `hpvc_selected_${entity_id}`;\n\n    if (isRealEntity(current)) {\n        flow.set(memoryKey, current);\n    }\n\n    const remembered = flow.get(memoryKey);\n    const selected = isRealEntity(current) ? current : (isRealEntity(remembered) ? remembered : '');\n\n    // Order matters:\n    // 1 selected/remembered value\n    // 2 old dropdown options\n    // 3 best matching entities\n    // 4 all fallback entities\n    // No 250 cut: cutting caused lists to stop around sensor.i* alphabetically.\n    let list = uniqueKeepOrder([\n        selected,\n        current,\n        ...currentOptions(entity_id),\n        ...alpha(preferred || []),\n        ...alpha(fallback || [])\n    ]);\n\n    list = ['select_entity_first', ...list.filter(e => e !== 'select_entity_first')];\n\n    const out = [{\n        payload: {\n            action: 'input_select.set_options',\n            target: { entity_id },\n            data: { options: list }\n        }\n    }];\n\n    // If HA temporarily reset the picker to select_entity_first after a reload,\n    // reselect the last known real entity after restoring the option list.\n    if (isRealEntity(selected) && current !== selected) {\n        out.push({\n            payload: {\n                action: 'input_select.select_option',\n                target: { entity_id },\n                data: { option: selected }\n            }\n        });\n    }\n\n    return out;\n}\n\nconst s = states();\nconst all = Object.keys(s);\nconst sensors = all.filter(e => e.startsWith('sensor.'));\nconst numbers = all.filter(e => e.startsWith('number.'));\nconst inputNumbers = all.filter(e => e.startsWith('input_number.') && !e.startsWith('input_number.pv_ems_'));\nconst inputSelects = all.filter(e => e.startsWith('input_select.') && !e.startsWith('input_select.pv_ems_'));\nconst selects = all.filter(e => e.startsWith('select.'));\nconst switches = all.filter(e => e.startsWith('switch.'));\nconst binarySensors = all.filter(e => e.startsWith('binary_sensor.'));\n\n// Only block when HA states are really almost empty during reload/startup.\n// This keeps the dropdown fast but prevents overwriting with only select_entity_first.\nif (all.length < 30 || sensors.length < 3) {\n    node.warn(`Home Assistant states not ready yet (${all.length} entities, ${sensors.length} sensors). Dropdowns kept unchanged. Will retry in 60s.`);\n    return null;\n}\n\nconst powerSensors = sensors.filter(e => /power|meter|grid|p1|pv|solar|opendtu|ac_power|watt/i.test(e));\nconst priceSensors = sensors.filter(e => /price|tibber|energy|electricity|market|tariff|cost|eur|kwh/i.test(e));\nconst pvPowerSensors = sensors.filter(e => /pv|solar|opendtu|inverter|ac_power|power|hms/i.test(e));\nconst inverterNumbers = numbers.filter(e => /limit|power|inverter|hms|opendtu|pv|solar|watt/i.test(e));\nconst strategyEntities = [\n    'input_select.house_battery_strategy',\n    ...inputSelects,\n    ...selects\n];\n\nlet msgs = [];\nmsgs.push(...svc('input_select.pv_ems_grid_power_sensor_picker', powerSensors, sensors));\nmsgs.push(...svc('input_select.pv_ems_market_price_sensor_picker', priceSensors, sensors));\nmsgs.push(...svc('input_select.pv_ems_all_in_price_sensor_picker', priceSensors, sensors));\nmsgs.push(...svc('input_select.pv_ems_pv_power_sensor_picker', pvPowerSensors, sensors));\nmsgs.push(...svc('input_select.pv_ems_battery_strategy_entity_picker', strategyEntities, [...inputSelects, ...selects]));\n\n\nfor (let i = 1; i <= 10; i++) {\n    msgs.push(...svc(`input_select.pv_ems_pv${i}_limit_number_picker`, inverterNumbers, [...numbers, ...inputNumbers]));\n}\n\nreturn [msgs];",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 480,
+    "y": 500,
+    "wires": [
+      [
+        "a8f0ed0b23724bb4"
+      ]
+    ]
+  },
+  {
+    "id": "a8f0ed0b23724bb4",
+    "type": "api-call-service",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Set dropdown options",
+    "server": "176d29a.6f648d6",
+    "version": 7,
+    "debugenabled": false,
+    "action": "{{$payload.action}}",
+    "floorId": [],
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "labelId": [],
+    "data": "payload.data",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "blockInputOverrides": false,
+    "domain": "",
+    "service": "",
+    "target": "payload.target",
+    "x": 990,
+    "y": 500,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "176d29a.6f648d6",
+    "type": "server",
+    "name": "Home Assistant",
+    "addon": true,
+    "rejectUnauthorizedCerts": true,
+    "ha_boolean": [],
+    "connectionDelay": false,
+    "cacheJson": true,
+    "heartbeat": false,
+    "heartbeatInterval": "",
+    "statusSeparator": "",
+    "enableGlobalContextStore": true
+  },
+  {
+    "id": "c13506ce4b4c81a2",
+    "type": "global-config",
+    "env": [],
+    "modules": {
+      "node-red-contrib-home-assistant-websocket": "0.80.3"
     }
+  },
+  {
+    "id": "set_pv_ems_latest_insight",
+    "type": "api-call-service",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Set insight row",
+    "server": "176d29a.6f648d6",
+    "version": 7,
+    "debugenabled": false,
+    "action": "{{$payload.action}}",
+    "floorId": [],
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "labelId": [],
+    "data": "payload.data",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "blockInputOverrides": false,
+    "domain": "",
+    "service": "",
+    "target": "payload.target",
+    "x": 980,
+    "y": 455,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "hpvc_settings_changed",
+    "type": "server-state-changed",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Settings changed",
+    "server": "176d29a.6f648d6",
+    "version": 6,
+    "outputs": 1,
+    "exposeAsEntityConfig": "",
+    "entities": {
+      "entity": [
+        "input_select.pv_ems_grid_power_sensor_picker",
+        "input_select.pv_ems_market_price_sensor_picker",
+        "input_select.pv_ems_all_in_price_sensor_picker",
+        "input_select.pv_ems_pv_power_sensor_picker",
+        "input_boolean.pv_ems_enabled",
+        "input_boolean.pv_ems_notifications",
+        "input_boolean.pv_ems_control_hbc_strategy",
+        "input_boolean.pv_ems_debug",
+        "input_number.pv_ems_inverter_count",
+        "input_number.house_battery_count",
+        "input_number.pv_ems_pv_limiting_price",
+        "input_number.pv_ems_battery_charge_price",
+        "input_number.pv_ems_battery_expensive_price",
+        "input_number.pv_ems_battery_price_hysteresis",
+        "input_number.pv_ems_export_start_threshold",
+        "input_number.pv_ems_export_stop_threshold",
+        "input_number.pv_ems_import_restore_threshold",
+        "input_number.pv_ems_hidden_pv_reveal_step",
+        "input_number.pv_ems_pv_min_power_for_control",
+        "input_number.pv_ems_pv_night_restore_power",
+        "input_number.pv_ems_cooldown_seconds",
+        "input_number.pv_ems_pv_adjust_deadband",
+        "input_select.pv_ems_balanced_strategy",
+        "input_select.pv_ems_expensive_strategy",
+        "input_select.pv_ems_pv1_limit_number_picker",
+        "input_number.pv_ems_pv1_full_limit",
+        "input_number.pv_ems_pv1_low_limit",
+        "input_select.pv_ems_pv2_limit_number_picker",
+        "input_number.pv_ems_pv2_full_limit",
+        "input_number.pv_ems_pv2_low_limit",
+        "input_select.pv_ems_pv3_limit_number_picker",
+        "input_number.pv_ems_pv3_full_limit",
+        "input_number.pv_ems_pv3_low_limit",
+        "input_select.pv_ems_pv4_limit_number_picker",
+        "input_number.pv_ems_pv4_full_limit",
+        "input_number.pv_ems_pv4_low_limit",
+        "input_select.pv_ems_pv5_limit_number_picker",
+        "input_number.pv_ems_pv5_full_limit",
+        "input_number.pv_ems_pv5_low_limit",
+        "input_select.pv_ems_pv6_limit_number_picker",
+        "input_number.pv_ems_pv6_full_limit",
+        "input_number.pv_ems_pv6_low_limit",
+        "input_select.pv_ems_pv7_limit_number_picker",
+        "input_number.pv_ems_pv7_full_limit",
+        "input_number.pv_ems_pv7_low_limit",
+        "input_select.pv_ems_pv8_limit_number_picker",
+        "input_number.pv_ems_pv8_full_limit",
+        "input_number.pv_ems_pv8_low_limit",
+        "input_select.pv_ems_pv9_limit_number_picker",
+        "input_number.pv_ems_pv9_full_limit",
+        "input_number.pv_ems_pv9_low_limit",
+        "input_select.pv_ems_pv10_limit_number_picker",
+        "input_number.pv_ems_pv10_full_limit",
+        "input_number.pv_ems_pv10_low_limit"
+      ],
+      "substring": [],
+      "regex": []
+    },
+    "outputInitially": false,
+    "stateType": "str",
+    "ifState": "",
+    "ifStateType": "str",
+    "ifStateOperator": "is",
+    "outputOnlyOnStateChange": true,
+    "for": "",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "topic",
+        "propertyType": "msg",
+        "value": "settings",
+        "valueType": "str"
+      }
+    ],
+    "x": 170,
+    "y": 240,
+    "wires": [
+      [
+        "b6018e413112474a"
+      ]
+    ]
+  },
+  {
+    "id": "hpvc_trigger_design_note",
+    "type": "comment",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "Trigger design",
+    "info": "PV cooldown is flow-owned and strict: every PV write starts cooldown; no PV write is allowed while active; the first evaluation after cooldown expiry may change PV immediately. Hidden-PV reveal is available only when HBC strategy control is enabled, uses a user-configurable capped step, and uses a deadband-aware allocator so small reveal steps are not lost on multi-inverter setups.",
+    "x": 170,
+    "y": 60,
+    "wires": []
+  },
+  {
+    "id": "hbc_control_guard_service",
+    "type": "api-call-service",
+    "z": "pvemsg_37a2e50fb4",
+    "name": "HBC detection/status",
+    "server": "176d29a.6f648d6",
+    "version": 7,
+    "debugenabled": false,
+    "action": "{{$payload.action}}",
+    "floorId": [],
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "labelId": [],
+    "data": "payload.data",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "blockInputOverrides": false,
+    "domain": "",
+    "service": "",
+    "target": "payload.target",
+    "x": 790,
+    "y": 455,
+    "wires": [
+      []
+    ]
+  }
 ]
