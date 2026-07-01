@@ -65,8 +65,8 @@ Lowest limit Home PV Control may set for this inverter.
 
 ## Notes
 
-The Node-RED flow reads the configured entity IDs from helpers. The two wake-up event nodes still default to common sensor names. If you use different grid/market sensors, either edit those trigger nodes or rely on the 1-minute timer.
+The Node-RED flow reads the configured entity IDs from `input_text` helpers, so no Node-RED deploy-time entity discovery is needed. The flow runs on a 15-second timer plus an on-deploy/startup trigger; a separate `server-state-changed` node re-runs the flow immediately whenever one of the configuration helpers itself changes (for example, when you update an inverter limit entity or a threshold). Changes to the live grid/market/PV sensors are picked up on the next 15-second cycle rather than triggering an immediate run.
 
-## Entity dropdowns
+## Entity configuration
 
-The grid power, prices, PV power and PV limits helpers are dropdowns, not text fields. After importing the Node-RED flow, deploy it once or click **Refresh entity dropdowns**. Node-RED will populate the dropdowns from Home Assistant entities so you can select instead of typing.
+The grid power, prices, PV power, PV limit, and HBC strategy entities are plain `input_text` fields rather than dropdowns. Paste the entity ID directly into each field (for example `sensor.p1_meter_power` or `number.hms_2000_4t_limit_nonpersistent_absolute`). This avoids generating large dynamic dropdown option lists on installations with many entities. If a field is left empty or contains an invalid entity ID, Home PV Control treats that input as unconfigured and reports a configuration error rather than guessing.

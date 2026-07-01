@@ -13,7 +13,7 @@ views:
         type: markdown
         text_only: true
         content: >-
-          ## Home PV Control (v1.1.0)
+          ## Home PV Control (v1.1.1)
 
           #### Standalone PV optimization for dynamic energy contracts. Optional
           HBC integration.
@@ -43,23 +43,15 @@ views:
     sections:
       - type: grid
         cards:
-          - type: heading
-            heading: PV Master Control
-            heading_style: title
-            icon: mdi:gamepad-variant-outline
+          - type: markdown
+            content: |
+              ### 🎛️ PV Master Control
           - type: markdown
             text_only: true
             content: >-
               <ha-alert title="Standalone module" alert-type="info">Home PV
               Control works as PV-only export control. HBC is optional and can
               be enabled when a valid HBC is detected.</ha-alert>
-          - type: markdown
-            text_only: true
-            content: >-
-              <ha-alert title="Negative price protection"
-              alert-type="warning">When all-in price ≤ 0, PV output is reduced
-              to the configured minimum limits. Set those to 0 W if you want PV
-              fully off. </ha-alert>
           - type: tile
             entity: input_boolean.pv_ems_enabled
             name: Home PV Control enabled
@@ -80,35 +72,33 @@ views:
             name: Show debug info
             icon: mdi:bug-outline
             hide_state: true
-          - type: entities
-            title: HPVC status
-            entities:
-              - entity: input_text.pv_ems_status
-                name: Status
-            show_header_toggle: false
+          - type: markdown
+            content: |
+              ### HPVC status
+
+              <ha-alert alert-type="info">
+                <b>{{ states('input_text.pv_ems_status') }}</b>
+              </ha-alert>
           - type: conditional
             conditions:
               - entity: input_boolean.pv_ems_control_hbc_strategy
                 state: "on"
             card:
-              type: entities
-              title: HBC status
-              entities:
-                - entity: sensor.pv_ems_debug_hbc_strategy
-                  name: Current HBC strategy
-              show_header_toggle: false
+              type: markdown
+              content: |
+                ### HBC status
+
+                <ha-alert alert-type="info">
+                  <b>HBC strategy:</b> {{ states('sensor.pv_ems_debug_hbc_strategy') }}
+                </ha-alert>
       - type: grid
         cards:
-          - type: heading
-            heading: Entity Configuration
-            heading_style: title
-            icon: mdi:cog-outline
+          - type: markdown
+            content: |
+              ### 📡 Core Sensor Configuration
           - type: markdown
             text_only: true
             content: >-
-              <ha-alert title="" alert-type="info">Entities may take a few
-              seconds to reappear after a HA restart or reload.</ha-alert>
-
               **Grid**: current grid power. Negative is export, positive is
               import (W).
 
@@ -122,53 +112,67 @@ views:
 
 
               **Solar power**: current total PV power from active inverters (W).
+
+
+              Paste (Ctrl + V) the entity IDs in the fields below. 
+
+              Example: `sensor.p1_meter_power`
           - type: entities
-            title: Core sensors
             entities:
-              - entity: input_select.pv_ems_grid_power_sensor_picker
+              - entity: input_text.pv_ems_grid_power_sensor
                 name: Grid
-              - entity: input_select.pv_ems_market_price_sensor_picker
+              - entity: input_text.pv_ems_market_price_sensor
                 name: Market price
-              - entity: input_select.pv_ems_all_in_price_sensor_picker
+              - entity: input_text.pv_ems_all_in_price_sensor
                 name: All-in price
-              - entity: input_select.pv_ems_pv_power_sensor_picker
+              - entity: input_text.pv_ems_pv_power_sensor
                 name: Solar power
             show_header_toggle: false
-          - type: markdown
-            title: Optional HBC setup
-            content: >-
-              {% set hbc = states('input_text.pv_ems_hbc_status') %}
+          - type: vertical-stack
+            cards:
+              - type: markdown
+                content: >
+                  ### 🧩 Optional HBC Setup
 
-              {% if hbc.startswith('HBC detected') %} <ha-alert title="🟢 HBC
-              available" alert-type="success"> HBC strategy control can be
-              enabled/disabled in PV Master Control. </ha-alert> {% else %}
-              <ha-alert title="🔴 HBC not available" alert-type="warning"> Home
-              PV Control is running in standalone mode. </ha-alert> {% endif %}
-          - type: conditional
-            conditions:
-              - entity: input_boolean.pv_ems_control_hbc_strategy
-                state: "on"
-            card:
-              type: entities
-              title: HBC settings
-              entities:
-                - entity: input_select.pv_ems_battery_strategy_entity_picker
-                  name: HBC strategy entity
-              show_header_toggle: false
+                  {% set hbc = states('input_text.pv_ems_hbc_status') %}
+
+                  {% if hbc.startswith('HBC detected') %} <ha-alert title="HBC
+                  detected" alert-type="success"> HBC strategy control is
+                  available. Enable or disable it in <b>PV Master Control</b>.
+                  </ha-alert> {% else %} <ha-alert title="Standalone mode"
+                  alert-type="warning">No HBC was detected.
+
+                  Enter your HBC strategy entity below to enable optional HBC
+                  strategy control. </ha-alert> {% endif %}
+              - type: entities
+                show_header_toggle: false
+                entities:
+                  - entity: input_text.pv_ems_battery_strategy_entity
+                    name: HBC strategy entity
+                    icon: mdi:battery-sync
       - type: grid
         cards:
-          - type: heading
-            heading: Inverter Configuration
-            heading_style: title
-            icon: mdi:solar-panel
+          - type: markdown
+            content: |
+              ### 🔆 Inverter Configuration
           - type: markdown
             text_only: true
             content: >-
               Set the number of active inverter limit entities (max 10).
 
 
-              For each inverter: select the limit number entity, set full/max
+              For each inverter: enter the limit number entity, set full/max
               power, and set the minimum allowed power.
+
+
+              Paste (Ctrl + V) the entity IDs in the fields below.
+          - type: markdown
+            text_only: true
+            content: >-
+              <ha-alert title="Negative price protection"
+              alert-type="warning">When all-in price ≤ 0, PV output is reduced
+              to the configured minimum limits. Set those to 0 W if you want PV
+              fully off. </ha-alert>
           - type: entities
             entities:
               - entity: input_number.pv_ems_inverter_count
@@ -179,177 +183,146 @@ views:
               - entity: binary_sensor.pv_ems_show_inverter_slot_1
                 state: "on"
             card:
-              type: vertical-stack
-              cards:
-                - type: entities
-                  title: PV1
-                  entities:
-                    - entity: input_select.pv_ems_pv1_limit_number_picker
-                      name: Limit entity
-                    - entity: input_number.pv_ems_pv1_full_limit
-                      name: Max power
-                    - entity: input_number.pv_ems_pv1_low_limit
-                      name: Min power
-                  show_header_toggle: false
+              type: entities
+              show_header_toggle: false
+              entities:
+                - entity: input_text.pv_ems_pv1_limit_number
+                  name: PV1 – Limit entity
+                - entity: input_number.pv_ems_pv1_full_limit
+                  name: PV1 Max power
+                - entity: input_number.pv_ems_pv1_low_limit
+                  name: PV1 Min power
           - type: conditional
             conditions:
               - entity: binary_sensor.pv_ems_show_inverter_slot_2
                 state: "on"
             card:
-              type: vertical-stack
-              cards:
-                - type: entities
-                  title: PV2
-                  entities:
-                    - entity: input_select.pv_ems_pv2_limit_number_picker
-                      name: Limit entity
-                    - entity: input_number.pv_ems_pv2_full_limit
-                      name: Max power
-                    - entity: input_number.pv_ems_pv2_low_limit
-                      name: Min power
-                  show_header_toggle: false
+              type: entities
+              show_header_toggle: false
+              entities:
+                - entity: input_text.pv_ems_pv2_limit_number
+                  name: PV2 – Limit entity
+                - entity: input_number.pv_ems_pv2_full_limit
+                  name: PV2 Max power
+                - entity: input_number.pv_ems_pv2_low_limit
+                  name: PV2 Min power
           - type: conditional
             conditions:
               - entity: binary_sensor.pv_ems_show_inverter_slot_3
                 state: "on"
             card:
-              type: vertical-stack
-              cards:
-                - type: entities
-                  title: PV3
-                  entities:
-                    - entity: input_select.pv_ems_pv3_limit_number_picker
-                      name: Limit entity
-                    - entity: input_number.pv_ems_pv3_full_limit
-                      name: Max power
-                    - entity: input_number.pv_ems_pv3_low_limit
-                      name: Min power
-                  show_header_toggle: false
+              type: entities
+              show_header_toggle: false
+              entities:
+                - entity: input_text.pv_ems_pv3_limit_number
+                  name: PV3 – Limit entity
+                - entity: input_number.pv_ems_pv3_full_limit
+                  name: PV3 Max power
+                - entity: input_number.pv_ems_pv3_low_limit
+                  name: PV3 Min power
           - type: conditional
             conditions:
               - entity: binary_sensor.pv_ems_show_inverter_slot_4
                 state: "on"
             card:
-              type: vertical-stack
-              cards:
-                - type: entities
-                  title: PV4
-                  entities:
-                    - entity: input_select.pv_ems_pv4_limit_number_picker
-                      name: Limit entity
-                    - entity: input_number.pv_ems_pv4_full_limit
-                      name: Max power
-                    - entity: input_number.pv_ems_pv4_low_limit
-                      name: Min power
-                  show_header_toggle: false
+              type: entities
+              show_header_toggle: false
+              entities:
+                - entity: input_text.pv_ems_pv4_limit_number
+                  name: PV4 – Limit entity
+                - entity: input_number.pv_ems_pv4_full_limit
+                  name: PV4 Max power
+                - entity: input_number.pv_ems_pv4_low_limit
+                  name: PV4 Min power
           - type: conditional
             conditions:
               - entity: binary_sensor.pv_ems_show_inverter_slot_5
                 state: "on"
             card:
-              type: vertical-stack
-              cards:
-                - type: entities
-                  title: PV5
-                  entities:
-                    - entity: input_select.pv_ems_pv5_limit_number_picker
-                      name: Limit entity
-                    - entity: input_number.pv_ems_pv5_full_limit
-                      name: Max power
-                    - entity: input_number.pv_ems_pv5_low_limit
-                      name: Min power
-                  show_header_toggle: false
+              type: entities
+              show_header_toggle: false
+              entities:
+                - entity: input_text.pv_ems_pv5_limit_number
+                  name: PV5 – Limit entity
+                - entity: input_number.pv_ems_pv5_full_limit
+                  name: PV5 Max power
+                - entity: input_number.pv_ems_pv5_low_limit
+                  name: PV5 Min power
           - type: conditional
             conditions:
               - entity: binary_sensor.pv_ems_show_inverter_slot_6
                 state: "on"
             card:
-              type: vertical-stack
-              cards:
-                - type: entities
-                  title: PV6
-                  entities:
-                    - entity: input_select.pv_ems_pv6_limit_number_picker
-                      name: Limit entity
-                    - entity: input_number.pv_ems_pv6_full_limit
-                      name: Max power
-                    - entity: input_number.pv_ems_pv6_low_limit
-                      name: Min power
-                  show_header_toggle: false
+              type: entities
+              show_header_toggle: false
+              entities:
+                - entity: input_text.pv_ems_pv6_limit_number
+                  name: PV6 – Limit entity
+                - entity: input_number.pv_ems_pv6_full_limit
+                  name: PV6 Max power
+                - entity: input_number.pv_ems_pv6_low_limit
+                  name: PV6 Min power
           - type: conditional
             conditions:
               - entity: binary_sensor.pv_ems_show_inverter_slot_7
                 state: "on"
             card:
-              type: vertical-stack
-              cards:
-                - type: entities
-                  title: PV7
-                  entities:
-                    - entity: input_select.pv_ems_pv7_limit_number_picker
-                      name: Limit entity
-                    - entity: input_number.pv_ems_pv7_full_limit
-                      name: Max power
-                    - entity: input_number.pv_ems_pv7_low_limit
-                      name: Min power
-                  show_header_toggle: false
+              type: entities
+              show_header_toggle: false
+              entities:
+                - entity: input_text.pv_ems_pv7_limit_number
+                  name: PV7 – Limit entity
+                - entity: input_number.pv_ems_pv7_full_limit
+                  name: PV7 Max power
+                - entity: input_number.pv_ems_pv7_low_limit
+                  name: PV7 Min power
           - type: conditional
             conditions:
               - entity: binary_sensor.pv_ems_show_inverter_slot_8
                 state: "on"
             card:
-              type: vertical-stack
-              cards:
-                - type: entities
-                  title: PV8
-                  entities:
-                    - entity: input_select.pv_ems_pv8_limit_number_picker
-                      name: Limit entity
-                    - entity: input_number.pv_ems_pv8_full_limit
-                      name: Max power
-                    - entity: input_number.pv_ems_pv8_low_limit
-                      name: Min power
-                  show_header_toggle: false
+              type: entities
+              show_header_toggle: false
+              entities:
+                - entity: input_text.pv_ems_pv8_limit_number
+                  name: PV8 – Limit entity
+                - entity: input_number.pv_ems_pv8_full_limit
+                  name: PV8 Max power
+                - entity: input_number.pv_ems_pv8_low_limit
+                  name: PV8 Min power
           - type: conditional
             conditions:
               - entity: binary_sensor.pv_ems_show_inverter_slot_9
                 state: "on"
             card:
-              type: vertical-stack
-              cards:
-                - type: entities
-                  title: PV9
-                  entities:
-                    - entity: input_select.pv_ems_pv9_limit_number_picker
-                      name: Limit entity
-                    - entity: input_number.pv_ems_pv9_full_limit
-                      name: Max power
-                    - entity: input_number.pv_ems_pv9_low_limit
-                      name: Min power
-                  show_header_toggle: false
+              type: entities
+              show_header_toggle: false
+              entities:
+                - entity: input_text.pv_ems_pv9_limit_number
+                  name: PV9 – Limit entity
+                - entity: input_number.pv_ems_pv9_full_limit
+                  name: PV9 Max power
+                - entity: input_number.pv_ems_pv9_low_limit
+                  name: PV9 Min power
           - type: conditional
             conditions:
               - entity: binary_sensor.pv_ems_show_inverter_slot_10
                 state: "on"
             card:
-              type: vertical-stack
-              cards:
-                - type: entities
-                  title: PV10
-                  entities:
-                    - entity: input_select.pv_ems_pv10_limit_number_picker
-                      name: Limit entity
-                    - entity: input_number.pv_ems_pv10_full_limit
-                      name: Max power
-                    - entity: input_number.pv_ems_pv10_low_limit
-                      name: Min power
-                  show_header_toggle: false
+              type: entities
+              show_header_toggle: false
+              entities:
+                - entity: input_text.pv_ems_pv10_limit_number
+                  name: PV10 – Limit entity
+                - entity: input_number.pv_ems_pv10_full_limit
+                  name: PV10 Max power
+                - entity: input_number.pv_ems_pv10_low_limit
+                  name: PV10 Min power
       - type: grid
         cards:
-          - type: heading
-            heading: Price Strategy
-            heading_style: title
-            icon: mdi:cash
+          - type: markdown
+            content: |
+              ### 📈 Price Strategy
           - type: markdown
             text_only: true
             content: >-
@@ -377,7 +350,6 @@ views:
               **Price hysteresis**: prevents rapid switching around configured
               price thresholds.
           - type: entities
-            title: Price strategy
             entities:
               - entity: input_number.pv_ems_pv_limiting_price
                 name: PV limit price
@@ -414,10 +386,9 @@ views:
             show_header_toggle: false
       - type: grid
         cards:
-          - type: heading
-            heading: Power Flow Control
-            heading_style: title
-            icon: mdi:transmission-tower-export
+          - type: markdown
+            content: |
+              ### ⚡ Power Flow Control
           - type: markdown
             text_only: true
             content: >-
@@ -450,7 +421,6 @@ views:
                 **Hidden PV reveal step**: extra PV power revealed while an HBC
                 battery charges. Lower = smoother, higher = faster.
           - type: entities
-            title: Power flow control
             entities:
               - entity: input_number.pv_ems_export_start_threshold
                 name: Export start
@@ -472,10 +442,9 @@ views:
             show_header_toggle: false
       - type: grid
         cards:
-          - type: heading
-            heading: Control Tuning
-            heading_style: title
-            icon: mdi:tune
+          - type: markdown
+            content: |
+              ### 🎚️ Control Tuning
           - type: markdown
             text_only: true
             content: >-
@@ -486,7 +455,6 @@ views:
               **Deadband**: ignore small PV limit corrections so the EMS does
               not react to tiny changes.
           - type: entities
-            title: Control tuning
             entities:
               - entity: input_number.pv_ems_cooldown_seconds
                 name: Cooldown
@@ -507,17 +475,23 @@ views:
                 state: "off"
             card:
               type: markdown
-              content: |-
-                ## Debug disabled
+              content: >
+                <ha-alert title="Debug disabled" alert-type="info">
 
-                Enable **Show debug info** on the Main tab to view diagnostics.
+                Turn on <b>Show debug info</b> in <b>PV Master Control</b> to
+                display:<br><br>
+
+                • Decision details<br> • Live inputs<br> • Control state<br> •
+                Power history<br> • BC Strategy Price Zones<br> • Insights
+
+                </ha-alert>
           - type: conditional
             conditions:
               - entity: input_boolean.pv_ems_debug
                 state: "on"
             card:
               type: entities
-              title: Decision
+              title: 💡 Decision Details
               entities:
                 - entity: input_text.pv_ems_status
                   name: Status
@@ -536,7 +510,7 @@ views:
                 state: "on"
             card:
               type: entities
-              title: Live inputs
+              title: 📡 Live Inputs
               entities:
                 - entity: sensor.pv_ems_debug_market_price
                   name: Market price
@@ -589,7 +563,7 @@ views:
                 state: "on"
             card:
               type: entities
-              title: HBC live status
+              title: 🔋 HBC Live Status
               entities:
                 - entity: sensor.pv_ems_debug_hbc_strategy
                   name: HBC strategy
@@ -682,7 +656,7 @@ views:
                 state: "on"
             card:
               type: entities
-              title: Control state
+              title: ⚙️ Control State
               entities:
                 - entity: binary_sensor.pv_ems_pv_limited
                   name: PV limited
@@ -706,7 +680,7 @@ views:
                   name: Grid power
                 - entity: sensor.pv_ems_debug_pv_power
                   name: Total solar power
-              title: Home PV Control power history
+              title: 📈 Power History
               hours_to_show: 4
       - type: grid
         cards:
@@ -721,7 +695,7 @@ views:
               header:
                 show: true
                 show_states: false
-                title: HBC Strategy Price Zones (all-in price)
+                title: 💰 HBC Strategy Price Zones
               graph_span: 48h
               span:
                 start: day
@@ -838,7 +812,7 @@ views:
                 state: "on"
             card:
               type: markdown
-              title: 📋 Insights (last 20 items)
+              title: 📋 Insights
               content: >-
                 | Time |  | Flow | Node | Explanation |
 
@@ -883,3 +857,4 @@ views:
                 {% endif %}
 
                 {% endfor %}
+    cards: []

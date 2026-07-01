@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.1.1
+
+- Maintenance release based on v1.1.0.
+- Updated `pv_ems_config.yaml`, `pv_ems_dashboard.yaml`, and `node-red/pv_ems_flow.json` with the latest uploaded fixes.
+- Keeps the v1.1.x helper names compatible while improving input-text based entity configuration.
+- Changed recommended `initial:` values to all Home Assistant helpers.
+- Minor dashboard fixes and cleanup.
+
 ## v1.1.0
 
 > v1.0.7 was never released. All planned v1.0.7 work has been merged into this v1.1.0 release. Users can upgrade directly from v1.0.6 to v1.1.0.
@@ -112,11 +120,3 @@
 ## v1.0.0
 
 - Initial public release.
-
-- Fixed HBC battery power summary so missing battery sensors are ignored instead of counted as 0 W.
-
-- Hidden PV Reveal now logs a one-time pause when HBC batteries are at/near max charge power and a resume insight when charging capacity is available again.
-- Hidden PV Reveal now logs a one-time completion insight when PV output has been fully restored, and resumes cleanly if PV becomes limited again.
-
-- Debug target JSON now exposes battery max-charge state using compact keys to avoid input_text truncation.
-- Fixed hidden PV reveal scope so startup/waiting states cannot throw `revealHiddenPv is not defined`.

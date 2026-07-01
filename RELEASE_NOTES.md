@@ -1,3 +1,13 @@
+# Home PV Control v1.1.1
+
+## Changes
+
+- Removed the dynamic input dropdown dependency and replaced with an input-text based entity configuration, keeping the existing helper names.
+- Changed recommended `initial:` values to all Home Assistant helpers.
+- Minor dashboard fixes and cleanup.
+
+---
+
 # Home PV Control v1.1.0
 
 > v1.0.7 was never released. This v1.1.0 package includes all changes originally planned for v1.0.7 plus the final v1.1.0 HBC battery-aware Hidden PV Reveal improvements.

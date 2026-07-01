@@ -1,15 +1,19 @@
 input_boolean:
   pv_ems_enabled:
     name: Home PV Control Enabled
+    initial: true
     icon: mdi:solar-power
   pv_ems_notifications:
     name: Home PV Control Notifications
+    initial: true
     icon: mdi:bell-outline
   pv_ems_control_hbc_strategy:
     name: Enable HBC Strategy Control
+    initial: true
     icon: mdi:battery-sync
   pv_ems_debug:
     name: Home PV Control Debug
+    initial: false
     icon: mdi:bug-outline
 input_text:
   pv_ems_market_price_sensor:
@@ -134,9 +138,50 @@ input_text:
     name: Home PV Control Insight 20
     icon: mdi:lightbulb-on-outline
     max: 255
+  pv_ems_pv1_limit_number:
+    name: PV1 Limit Entity
+    icon: mdi:solar-panel
+    max: 255
+  pv_ems_pv2_limit_number:
+    name: PV2 Limit Entity
+    icon: mdi:solar-panel
+    max: 255
+  pv_ems_pv3_limit_number:
+    name: PV3 Limit Entity
+    icon: mdi:solar-panel
+    max: 255
+  pv_ems_pv4_limit_number:
+    name: PV4 Limit Entity
+    icon: mdi:solar-panel
+    max: 255
+  pv_ems_pv5_limit_number:
+    name: PV5 Limit Entity
+    icon: mdi:solar-panel
+    max: 255
+  pv_ems_pv6_limit_number:
+    name: PV6 Limit Entity
+    icon: mdi:solar-panel
+    max: 255
+  pv_ems_pv7_limit_number:
+    name: PV7 Limit Entity
+    icon: mdi:solar-panel
+    max: 255
+  pv_ems_pv8_limit_number:
+    name: PV8 Limit Entity
+    icon: mdi:solar-panel
+    max: 255
+  pv_ems_pv9_limit_number:
+    name: PV9 Limit Entity
+    icon: mdi:solar-panel
+    max: 255
+  pv_ems_pv10_limit_number:
+    name: PV10 Limit Entity
+    icon: mdi:solar-panel
+    max: 255
 input_select:
   pv_ems_balanced_strategy:
     name: Balanced Strategy
+    initial: Dynamic 2
     icon: mdi:battery-sync
     options:
     - Full stop
@@ -153,6 +198,7 @@ input_select:
     - Standby / peak shave
   pv_ems_expensive_strategy:
     name: Expensive Strategy
+    initial: Sell
     icon: mdi:battery-arrow-up
     options:
     - Full stop
@@ -167,84 +213,10 @@ input_select:
     - Standby
     - Peak shave
     - Standby / peak shave
-  pv_ems_grid_power_sensor_picker:
-    name: Grid Power Sensor Picker
-    icon: mdi:transmission-tower
-    options:
-    - select_entity_first
-  pv_ems_market_price_sensor_picker:
-    name: Market / Export Price Sensor Picker
-    icon: mdi:cash
-    options:
-    - select_entity_first
-  pv_ems_all_in_price_sensor_picker:
-    name: All-in Import Price Sensor Picker
-    icon: mdi:cash-multiple
-    options:
-    - select_entity_first
-  pv_ems_pv_power_sensor_picker:
-    name: Total PV Power Sensor Picker
-    icon: mdi:solar-power
-    options:
-    - select_entity_first
-  pv_ems_battery_strategy_entity_picker:
-    name: HBC Strategy Entity Picker
-    icon: mdi:battery-sync
-    options:
-    - input_select.house_battery_strategy
-  pv_ems_pv1_limit_number_picker:
-    name: PV1 Limit Entity Picker
-    icon: mdi:solar-panel
-    options:
-    - select_entity_first
-  pv_ems_pv2_limit_number_picker:
-    name: PV2 Limit Entity Picker
-    icon: mdi:solar-panel
-    options:
-    - select_entity_first
-  pv_ems_pv3_limit_number_picker:
-    name: PV3 Limit Entity Picker
-    icon: mdi:solar-panel
-    options:
-    - select_entity_first
-  pv_ems_pv4_limit_number_picker:
-    name: PV4 Limit Entity Picker
-    icon: mdi:solar-panel
-    options:
-    - select_entity_first
-  pv_ems_pv5_limit_number_picker:
-    name: PV5 Limit Entity Picker
-    icon: mdi:solar-panel
-    options:
-    - select_entity_first
-  pv_ems_pv6_limit_number_picker:
-    name: PV6 Limit Entity Picker
-    icon: mdi:solar-panel
-    options:
-    - select_entity_first
-  pv_ems_pv7_limit_number_picker:
-    name: PV7 Limit Entity Picker
-    icon: mdi:solar-panel
-    options:
-    - select_entity_first
-  pv_ems_pv8_limit_number_picker:
-    name: PV8 Limit Entity Picker
-    icon: mdi:solar-panel
-    options:
-    - select_entity_first
-  pv_ems_pv9_limit_number_picker:
-    name: PV9 Limit Entity Picker
-    icon: mdi:solar-panel
-    options:
-    - select_entity_first
-  pv_ems_pv10_limit_number_picker:
-    name: PV10 Limit Entity Picker
-    icon: mdi:solar-panel
-    options:
-    - select_entity_first
 input_number:
   pv_ems_inverter_count:
     name: Number of PV Inverters
+    initial: 1
     min: 1
     max: 10
     step: 1
@@ -255,6 +227,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -263,6 +236,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -271,6 +245,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -279,6 +254,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -287,6 +263,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -295,6 +272,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -303,6 +281,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -311,6 +290,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -319,6 +299,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -327,6 +308,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -335,6 +317,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -343,6 +326,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -351,6 +335,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -359,6 +344,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -367,6 +353,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -375,6 +362,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -383,6 +371,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -391,6 +380,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -399,6 +389,7 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -407,11 +398,13 @@ input_number:
     min: 0
     max: 10000
     step: 1
+    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
   pv_ems_pv_limiting_price:
     name: PV Limiting Price
+    initial: 0.025
     min: -0.5
     max: 0.2
     step: 0.01
@@ -420,6 +413,7 @@ input_number:
     icon: mdi:cash
   pv_ems_battery_charge_price:
     name: Battery Charge All-in Price
+    initial: 0.1
     min: -0.2
     max: 0.5
     step: 0.01
@@ -428,6 +422,7 @@ input_number:
     icon: mdi:battery-charging
   pv_ems_battery_expensive_price:
     name: Expensive All-in Price
+    initial: 0.35
     min: 0.05
     max: 1.0
     step: 0.01
@@ -436,6 +431,7 @@ input_number:
     icon: mdi:cash-plus
   pv_ems_battery_price_hysteresis:
     name: Battery Price Hysteresis
+    initial: 0.02
     min: 0.0
     max: 0.1
     step: 0.01
@@ -444,6 +440,7 @@ input_number:
     icon: mdi:swap-horizontal
   pv_ems_export_start_threshold:
     name: Export Start Threshold
+    initial: -150
     min: -10000
     max: 0
     step: 10
@@ -452,6 +449,7 @@ input_number:
     icon: mdi:transmission-tower-export
   pv_ems_export_stop_threshold:
     name: Export Stop Threshold
+    initial: -25
     min: -5000
     max: 0
     step: 5
@@ -460,6 +458,7 @@ input_number:
     icon: mdi:target
   pv_ems_import_restore_threshold:
     name: Import Restore Threshold
+    initial: 150
     min: 0
     max: 5000
     step: 10
@@ -477,6 +476,7 @@ input_number:
     icon: mdi:eye-plus-outline
   pv_ems_pv_min_power_for_control:
     name: PV Minimum Power For Control
+    initial: 100
     min: 0
     max: 5000
     step: 10
@@ -485,6 +485,7 @@ input_number:
     icon: mdi:solar-power
   pv_ems_pv_night_restore_power:
     name: PV Night Restore Power
+    initial: 10
     min: 0
     max: 1000
     step: 5
@@ -493,6 +494,7 @@ input_number:
     icon: mdi:weather-night
   pv_ems_cooldown_seconds:
     name: PV Cooldown (sec)
+    initial: 60
     min: 15
     max: 900
     step: 15
@@ -501,6 +503,7 @@ input_number:
     icon: mdi:timer-outline
   pv_ems_pv_adjust_deadband:
     name: PV Adjustment Deadband
+    initial: 25
     min: 1
     max: 500
     step: 1
@@ -513,108 +516,80 @@ template:
     unique_id: pv_ems_debug_market_price
     unit_of_measurement: €/kWh
     icon: mdi:cash
-    state: '{{ states(states(''input_select.pv_ems_market_price_sensor_picker''))
-      | float(0) }}'
+    state: '{{ states(states(''input_text.pv_ems_market_price_sensor'')) | float(0) }}'
   - name: PV EMS Debug All In Price
     unique_id: pv_ems_debug_all_in_price
     unit_of_measurement: €/kWh
     icon: mdi:cash-multiple
-    state: '{{ states(states(''input_select.pv_ems_all_in_price_sensor_picker''))
-      | float(0) }}'
+    state: '{{ states(states(''input_text.pv_ems_all_in_price_sensor'')) | float(0) }}'
   - name: PV EMS Debug Grid Power
     unique_id: pv_ems_debug_grid_power
     unit_of_measurement: W
     icon: mdi:transmission-tower
-    state: '{{ states(states(''input_select.pv_ems_grid_power_sensor_picker'')) |
-      float(0) | round(0) }}'
+    state: '{{ states(states(''input_text.pv_ems_grid_power_sensor'')) | float(0) | round(0) }}'
   - name: PV EMS Debug PV Power
     unique_id: pv_ems_debug_pv_power
     unit_of_measurement: W
     icon: mdi:solar-power
-    state: '{{ states(states(''input_select.pv_ems_pv_power_sensor_picker'')) | float(0)
-      | round(0) }}'
+    state: '{{ states(states(''input_text.pv_ems_pv_power_sensor'')) | float(0) | round(0) }}'
   - name: PV EMS Debug HBC Strategy
     unique_id: pv_ems_debug_hbc_strategy
     icon: mdi:battery-sync
-    state: '{{ states(states(''input_select.pv_ems_battery_strategy_entity_picker''))
-      }}'
+    state: '{{ states(states(''input_text.pv_ems_battery_strategy_entity'')) }}'
   - name: PV EMS Last Calculation
     unique_id: pv_ems_last_calculation
     icon: mdi:calculator-variant-outline
-    state: '{% set grid = states(states(''input_select.pv_ems_grid_power_sensor_picker''))|float(0)
-      %} {% set target = states(''input_number.pv_ems_export_stop_threshold'')|float(-25)
-      %} {% set error = (target - grid)|round(0) %} Grid={{ grid|round(0) }}W Target={{
-      target|round(0) }}W Error={{ error }}W'
+    state: '{% set grid = states(states(''input_text.pv_ems_grid_power_sensor''))|float(0) %} {% set target = states(''input_number.pv_ems_export_stop_threshold'')|float(-25) %} {% set error = (target - grid)|round(0) %} Grid={{ grid|round(0) }}W Target={{ target|round(0) }}W Error={{ error }}W'
   - name: PV EMS PV1 Actual Limit
     unique_id: pv_ems_pv1_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv1_limit_number_picker'') %}
-      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
-      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_text.pv_ems_pv1_limit_number'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV2 Actual Limit
     unique_id: pv_ems_pv2_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv2_limit_number_picker'') %}
-      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
-      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_text.pv_ems_pv2_limit_number'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV3 Actual Limit
     unique_id: pv_ems_pv3_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv3_limit_number_picker'') %}
-      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
-      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_text.pv_ems_pv3_limit_number'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV4 Actual Limit
     unique_id: pv_ems_pv4_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv4_limit_number_picker'') %}
-      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
-      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_text.pv_ems_pv4_limit_number'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV5 Actual Limit
     unique_id: pv_ems_pv5_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv5_limit_number_picker'') %}
-      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
-      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_text.pv_ems_pv5_limit_number'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV6 Actual Limit
     unique_id: pv_ems_pv6_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv6_limit_number_picker'') %}
-      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
-      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_text.pv_ems_pv6_limit_number'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV7 Actual Limit
     unique_id: pv_ems_pv7_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv7_limit_number_picker'') %}
-      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
-      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_text.pv_ems_pv7_limit_number'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV8 Actual Limit
     unique_id: pv_ems_pv8_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv8_limit_number_picker'') %}
-      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
-      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_text.pv_ems_pv8_limit_number'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV9 Actual Limit
     unique_id: pv_ems_pv9_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv9_limit_number_picker'') %}
-      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
-      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_text.pv_ems_pv9_limit_number'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   - name: PV EMS PV10 Actual Limit
     unique_id: pv_ems_pv10_actual_limit
     unit_of_measurement: W
     icon: mdi:solar-panel
-    state: '{% set ent = states(''input_select.pv_ems_pv10_limit_number_picker'')
-      %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{%
-      else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
+    state: '{% set ent = states(''input_text.pv_ems_pv10_limit_number'') %} {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}unknown{% else %}{{ states(ent)|float(0)|round(0) }}{% endif %}'
   binary_sensor:
   - name: PV EMS Show Inverter Slot 1
     unique_id: pv_ems_show_inverter_slot_1
@@ -660,40 +635,20 @@ template:
   - name: PV EMS PV Limited
     unique_id: pv_ems_pv_limited
     icon: mdi:solar-power-variant
-    state: "{% set bad = ['unknown','unavailable','select_entity_first',''] %}\n{%\
-      \ set count = states('input_number.pv_ems_inverter_count')|int(1) %}\n{% set\
-      \ db = states('input_number.pv_ems_pv_adjust_deadband')|float(25) %}\n{% set\
-      \ ns = namespace(limited=false) %}\n{% for i in range(1, count + 1) %}\n  {%\
-      \ set ent = states('input_select.pv_ems_pv' ~ i ~ '_limit_number_picker') %}\n\
-      \  {% set full = states('input_number.pv_ems_pv' ~ i ~ '_full_limit')|float(0)\
-      \ %}\n  {% if ent not in bad and full > 0 and states(ent)|float(full) < (full\
-      \ - db) %}{% set ns.limited = true %}{% endif %}\n{% endfor %}\n{{ ns.limited\
-      \ }}"
+    state: "{% set bad = ['unknown','unavailable','select_entity_first',''] %}\n{% set count = states('input_number.pv_ems_inverter_count')|int(1) %}\n{% set db = states('input_number.pv_ems_pv_adjust_deadband')|float(25) %}\n{% set ns = namespace(limited=false) %}\n{% for i in range(1, count + 1) %}\n  {% set ent = states('input_text.pv_ems_pv' ~ i ~ '_limit_number') %}\n  {% set full = states('input_number.pv_ems_pv' ~ i ~ '_full_limit')|float(0) %}\n  {% if ent not in bad and full > 0 and states(ent)|float(full) < (full - db) %}{% set ns.limited = true %}{% endif %}\n{% endfor %}\n{{ ns.limited }}"
   - name: PV EMS Cooldown Active
     unique_id: pv_ems_cooldown_active
     icon: mdi:timer-sand
-    state: '{% set data = states(''input_text.pv_ems_last_targets_json'') | from_json(default={})
-      %} {{ data.get(''cooldown_active'', false) }}
+    state: '{% set data = states(''input_text.pv_ems_last_targets_json'') | from_json(default={}) %} {{ data.get(''cooldown_active'', false) }}
 
       '
   - name: PV EMS Negative Price Mode
     unique_id: pv_ems_negative_price_mode
     icon: mdi:cash-minus
-    state: '{% set ent = states(''input_select.pv_ems_all_in_price_sensor_picker'')
-      %}
+    state: '{% set ent = states(''input_text.pv_ems_all_in_price_sensor'') %}
 
-      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}false{%
-      else %}{{ states(ent)|float(999) <= 0 }}{% endif %}'
+      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}false{% else %}{{ states(ent)|float(999) <= 0 }}{% endif %}'
   - name: PV EMS At Minimum PV
     unique_id: pv_ems_at_minimum_pv
     icon: mdi:solar-power-variant-outline
-    state: "{% set bad = ['unknown','unavailable','select_entity_first',''] %}\n{%\
-      \ set count = states('input_number.pv_ems_inverter_count')|int(1) %}\n{% set\
-      \ db = states('input_number.pv_ems_pv_adjust_deadband')|float(25) %}\n{% set\
-      \ ns = namespace(any=false, all_min=true) %}\n{% for i in range(1, count + 1)\
-      \ %}\n  {% set ent = states('input_select.pv_ems_pv' ~ i ~ '_limit_number_picker')\
-      \ %}\n  {% set full = states('input_number.pv_ems_pv' ~ i ~ '_full_limit')|float(0)\
-      \ %}\n  {% set low = states('input_number.pv_ems_pv' ~ i ~ '_low_limit')|float(0)\
-      \ %}\n  {% if ent not in bad and full > 0 %}\n    {% set ns.any = true %}\n\
-      \    {% if states(ent)|float(full) > (low + db) %}{% set ns.all_min = false\
-      \ %}{% endif %}\n  {% endif %}\n{% endfor %}\n{{ ns.any and ns.all_min }}"
+    state: "{% set bad = ['unknown','unavailable','select_entity_first',''] %}\n{% set count = states('input_number.pv_ems_inverter_count')|int(1) %}\n{% set db = states('input_number.pv_ems_pv_adjust_deadband')|float(25) %}\n{% set ns = namespace(any=false, all_min=true) %}\n{% for i in range(1, count + 1) %}\n  {% set ent = states('input_text.pv_ems_pv' ~ i ~ '_limit_number') %}\n  {% set full = states('input_number.pv_ems_pv' ~ i ~ '_full_limit')|float(0) %}\n  {% set low = states('input_number.pv_ems_pv' ~ i ~ '_low_limit')|float(0) %}\n  {% if ent not in bad and full > 0 %}\n    {% set ns.any = true %}\n    {% if states(ent)|float(full) > (low + db) %}{% set ns.all_min = false %}{% endif %}\n  {% endif %}\n{% endfor %}\n{{ ns.any and ns.all_min }}"

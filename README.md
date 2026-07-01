@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="releases/v1.1.0/release.md"><img src="https://img.shields.io/badge/release-v1.1.0-blue" alt="release"></a>
+  <a href="releases/v1.1.1/release.md"><img src="https://img.shields.io/badge/release-v1.1.1-blue" alt="release"></a>
   <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant"></a>
   <a href="https://nodered.org/"><img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED"></a>
   <a href="https://github.com/gitcodebob/marstek-venus-rs485-node-red"><img src="https://img.shields.io/badge/HBC-compatible-22C55E" alt="HBC compatible"></a>
@@ -116,14 +116,17 @@ Each inverter is clamped to its own `minimum_power`.
 
 | Setting | Recommended |
 |---|---:|
-| PV Limiting Price | `0.00 €/kWh` |
-| Start Limiting Export | `-200 W` |
-| Target Export | `-25 W` |
-| Import Recalculation | `200 W` |
-| Minimum PV Power | `100 W` |
+| PV limit price | `0.025 €/kWh` |
+| Charge price | `0.10 €/kWh` |
+| Expensive price | `0.35 €/kWh` |
+| Price hysteresis | `0.02 €/kWh` |
+| Export start| `-150 W` |
+| Target export | `-25 W` |
+| Import restore | `150 W` |
+| Min PV for control | `100 W` |
 | Night Restore | `10 W` |
 | Hidden PV Reveal Step | `100 W` |
-| Minimum PV Change | `1 min` |
+| Cooldown | `1 min` |
 | Deadband | `25 W` |
 
 ## Trigger design
