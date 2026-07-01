@@ -5,7 +5,6 @@
 - Maintenance release based on v1.1.0.
 - Updated `pv_ems_config.yaml`, `pv_ems_dashboard.yaml`, and `node-red/pv_ems_flow.json` with the latest uploaded fixes.
 - Keeps the v1.1.x helper names compatible while improving input-text based entity configuration.
-- Changed recommended `initial:` values to all Home Assistant helpers.
 - Minor dashboard fixes and cleanup.
 
 ## v1.1.0
