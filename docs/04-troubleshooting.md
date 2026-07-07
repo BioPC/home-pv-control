@@ -6,7 +6,7 @@ Check:
 
 - Home PV Control Enabled is on
 - Market price is at or below PV Limiting Price
-- Grid power is more negative than Start Limiting Export
+- Grid power is more negative than Export Start Threshold
 - PV power is above Minimum PV Power
 - Cooldown has passed
 - PV inverter helpers is valid
@@ -40,9 +40,9 @@ Check:
 
 - full_power values
 - minimum_power values
-- enabled flags
-- total configured full power sensor
-- total configured minimum power sensor
+- configured inverter count and inverter entity helpers
+- PVx Full Limit helper values
+- PVx Low Limit helper values
 
 ## HBC strategy changes unexpectedly
 

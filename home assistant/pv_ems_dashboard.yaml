@@ -13,7 +13,7 @@ views:
         type: markdown
         text_only: true
         content: >-
-          ## Home PV Control (v1.1.1)
+          ## Home PV Control (v1.2.0)
 
           #### Standalone PV optimization for dynamic energy contracts. Optional
           HBC integration.
@@ -72,25 +72,6 @@ views:
             name: Show debug info
             icon: mdi:bug-outline
             hide_state: true
-          - type: markdown
-            content: |
-              ### HPVC status
-
-              <ha-alert alert-type="info">
-                <b>{{ states('input_text.pv_ems_status') }}</b>
-              </ha-alert>
-          - type: conditional
-            conditions:
-              - entity: input_boolean.pv_ems_control_hbc_strategy
-                state: "on"
-            card:
-              type: markdown
-              content: |
-                ### HBC status
-
-                <ha-alert alert-type="info">
-                  <b>HBC strategy:</b> {{ states('sensor.pv_ems_debug_hbc_strategy') }}
-                </ha-alert>
       - type: grid
         cards:
           - type: markdown
@@ -169,10 +150,13 @@ views:
           - type: markdown
             text_only: true
             content: >-
-              <ha-alert title="Negative price protection"
-              alert-type="warning">When all-in price ≤ 0, PV output is reduced
-              to the configured minimum limits. Set those to 0 W if you want PV
-              fully off. </ha-alert>
+              <ha-alert title="Negative price protection" alert-type="info">
+
+              When the all-in price is ≤ 0 €/kWh, PV is limited to the
+              configured minimum. Set it to <b>0 W</b> for full shutdown during
+              negative prices.
+
+              </ha-alert>
           - type: entities
             entities:
               - entity: input_number.pv_ems_inverter_count
@@ -410,36 +394,21 @@ views:
 
               **Night restore**: restore full inverter limits when PV production
               is low.
-          - type: conditional
-            conditions:
-              - entity: input_boolean.pv_ems_control_hbc_strategy
-                state: "on"
-            card:
-              type: markdown
-              text_only: true
-              content: >-
-                **Hidden PV reveal step**: extra PV power revealed while an HBC
-                battery charges. Lower = smoother, higher = faster.
-          - type: entities
-            entities:
-              - entity: input_number.pv_ems_export_start_threshold
-                name: Export start
-              - entity: input_number.pv_ems_export_stop_threshold
-                name: Target export
-              - entity: input_number.pv_ems_import_restore_threshold
-                name: Import restore
-              - entity: input_number.pv_ems_pv_min_power_for_control
-                name: Min PV for control
-              - entity: input_number.pv_ems_pv_night_restore_power
-                name: Night restore
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.pv_ems_control_hbc_strategy
-                    state: "on"
-                row:
-                  entity: input_number.pv_ems_hidden_pv_reveal_step
-                  name: Hidden PV reveal step
-            show_header_toggle: false
+          - type: vertical-stack
+            cards:
+              - type: entities
+                show_header_toggle: false
+                entities:
+                  - entity: input_number.pv_ems_export_start_threshold
+                    name: Export start
+                  - entity: input_number.pv_ems_export_stop_threshold
+                    name: Target export
+                  - entity: input_number.pv_ems_import_restore_threshold
+                    name: Import restore
+                  - entity: input_number.pv_ems_pv_min_power_for_control
+                    name: Min PV for control
+                  - entity: input_number.pv_ems_pv_night_restore_power
+                    name: Night restore
       - type: grid
         cards:
           - type: markdown
@@ -482,7 +451,7 @@ views:
                 display:<br><br>
 
                 • Decision details<br> • Live inputs<br> • Control state<br> •
-                Power history<br> • BC Strategy Price Zones<br> • Insights
+                Power history<br> • HBC Strategy Price Zones<br> • Insights
 
                 </ha-alert>
           - type: conditional
@@ -702,8 +671,19 @@ views:
               now:
                 show: true
                 color: "#009ac7"
-                label: Now
               apex_config:
+                annotations:
+                  xaxis:
+                    - x: EVAL:new Date().getTime()
+                      borderColor: "#009ac7"
+                      strokeDashArray: 0
+                      label:
+                        text: Now
+                        orientation: horizontal
+                        offsetY: -12
+                        style:
+                          background: "#009ac7"
+                          color: "#ffffff"
                 plotOptions:
                   bar:
                     borderRadius: 2
@@ -759,7 +739,7 @@ views:
                       if (isNow) return '#009ac7';
                       if (price < 0) return '#e53935';
                       if (price <= chargePrice) return '#4caf50';
-                      if (price < expensivePrice) return '#fff107';
+                      if (price < expensivePrice) return '#ffe107';
                       return '#ff9800';
                     };
 
@@ -772,7 +752,6 @@ views:
 
                       let color = colorForPrice(price, iv.is_now);
 
-                      // Make tomorrow's bars semi-transparent (≈27% opacity)
                       if (isTomorrow) {
                         color += '60';
                       }

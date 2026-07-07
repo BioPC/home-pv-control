@@ -1,20 +1,19 @@
 input_boolean:
   pv_ems_enabled:
     name: Home PV Control Enabled
-    initial: true
     icon: mdi:solar-power
   pv_ems_notifications:
     name: Home PV Control Notifications
-    initial: true
     icon: mdi:bell-outline
   pv_ems_control_hbc_strategy:
     name: Enable HBC Strategy Control
-    initial: true
     icon: mdi:battery-sync
   pv_ems_debug:
     name: Home PV Control Debug
-    initial: false
     icon: mdi:bug-outline
+  pv_ems_defaults_applied:
+    name: Home PV Control Defaults Applied
+    icon: mdi:check-circle-outline
 input_text:
   pv_ems_market_price_sensor:
     name: Market / Export Price Sensor
@@ -32,7 +31,6 @@ input_text:
     name: Battery Strategy Entity
     icon: mdi:battery-sync
     max: 255
-    initial: input_select.house_battery_strategy
   pv_ems_pv_power_sensor:
     name: Total PV Power Sensor
     icon: mdi:solar-power
@@ -57,7 +55,6 @@ input_text:
     name: HBC Detection Status
     icon: mdi:battery-check
     max: 255
-    initial: HBC not detected
   pv_ems_insight_1:
     name: Home PV Control Insight 1
     icon: mdi:lightbulb-on-outline
@@ -181,7 +178,6 @@ input_text:
 input_select:
   pv_ems_balanced_strategy:
     name: Balanced Strategy
-    initial: Dynamic 2
     icon: mdi:battery-sync
     options:
     - Full stop
@@ -198,7 +194,6 @@ input_select:
     - Standby / peak shave
   pv_ems_expensive_strategy:
     name: Expensive Strategy
-    initial: Sell
     icon: mdi:battery-arrow-up
     options:
     - Full stop
@@ -216,7 +211,6 @@ input_select:
 input_number:
   pv_ems_inverter_count:
     name: Number of PV Inverters
-    initial: 1
     min: 1
     max: 10
     step: 1
@@ -227,7 +221,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -236,7 +229,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -245,7 +237,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -254,7 +245,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -263,7 +253,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -272,7 +261,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -281,7 +269,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -290,7 +277,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -299,7 +285,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -308,7 +293,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -317,7 +301,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -326,7 +309,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -335,7 +317,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -344,7 +325,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -353,7 +333,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -362,7 +341,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -371,7 +349,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -380,7 +357,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -389,7 +365,6 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
@@ -398,13 +373,11 @@ input_number:
     min: 0
     max: 10000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: W
     icon: mdi:solar-panel
   pv_ems_pv_limiting_price:
     name: PV Limiting Price
-    initial: 0.025
     min: -0.5
     max: 0.2
     step: 0.01
@@ -413,7 +386,6 @@ input_number:
     icon: mdi:cash
   pv_ems_battery_charge_price:
     name: Battery Charge All-in Price
-    initial: 0.1
     min: -0.2
     max: 0.5
     step: 0.01
@@ -422,7 +394,6 @@ input_number:
     icon: mdi:battery-charging
   pv_ems_battery_expensive_price:
     name: Expensive All-in Price
-    initial: 0.35
     min: 0.05
     max: 1.0
     step: 0.01
@@ -431,7 +402,6 @@ input_number:
     icon: mdi:cash-plus
   pv_ems_battery_price_hysteresis:
     name: Battery Price Hysteresis
-    initial: 0.02
     min: 0.0
     max: 0.1
     step: 0.01
@@ -440,7 +410,6 @@ input_number:
     icon: mdi:swap-horizontal
   pv_ems_export_start_threshold:
     name: Export Start Threshold
-    initial: -150
     min: -10000
     max: 0
     step: 10
@@ -449,7 +418,6 @@ input_number:
     icon: mdi:transmission-tower-export
   pv_ems_export_stop_threshold:
     name: Export Stop Threshold
-    initial: -25
     min: -5000
     max: 0
     step: 5
@@ -458,25 +426,14 @@ input_number:
     icon: mdi:target
   pv_ems_import_restore_threshold:
     name: Import Restore Threshold
-    initial: 150
     min: 0
     max: 5000
     step: 10
     mode: box
     unit_of_measurement: W
     icon: mdi:transmission-tower-import
-  pv_ems_hidden_pv_reveal_step:
-    name: Hidden PV Reveal Step
-    min: 50
-    max: 250
-    step: 25
-    mode: slider
-    initial: 100
-    unit_of_measurement: W
-    icon: mdi:eye-plus-outline
   pv_ems_pv_min_power_for_control:
     name: PV Minimum Power For Control
-    initial: 100
     min: 0
     max: 5000
     step: 10
@@ -485,7 +442,6 @@ input_number:
     icon: mdi:solar-power
   pv_ems_pv_night_restore_power:
     name: PV Night Restore Power
-    initial: 10
     min: 0
     max: 1000
     step: 5
@@ -494,7 +450,6 @@ input_number:
     icon: mdi:weather-night
   pv_ems_cooldown_seconds:
     name: PV Cooldown (sec)
-    initial: 60
     min: 15
     max: 900
     step: 15
@@ -503,7 +458,6 @@ input_number:
     icon: mdi:timer-outline
   pv_ems_pv_adjust_deadband:
     name: PV Adjustment Deadband
-    initial: 25
     min: 1
     max: 500
     step: 1
@@ -536,6 +490,14 @@ template:
     unique_id: pv_ems_debug_hbc_strategy
     icon: mdi:battery-sync
     state: '{{ states(states(''input_text.pv_ems_battery_strategy_entity'')) }}'
+  - name: HPVC Advanced Debug
+    unique_id: hpvc_advanced_debug
+    icon: mdi:bug-check
+    state: >-
+      {{ states('input_text.pv_ems_status') }}
+    attributes:
+      data: >-
+        {{ states('input_text.pv_ems_last_targets_json') }}
   - name: PV EMS Last Calculation
     unique_id: pv_ems_last_calculation
     icon: mdi:calculator-variant-outline
@@ -639,7 +601,7 @@ template:
   - name: PV EMS Cooldown Active
     unique_id: pv_ems_cooldown_active
     icon: mdi:timer-sand
-    state: '{% set data = states(''input_text.pv_ems_last_targets_json'') | from_json(default={}) %} {{ data.get(''cooldown_active'', false) }}
+    state: '{% set data = states(''input_text.pv_ems_last_targets_json'') | from_json(default={}) %} {{ data.get(''cd'', false) }}
 
       '
   - name: PV EMS Negative Price Mode
@@ -652,3 +614,110 @@ template:
     unique_id: pv_ems_at_minimum_pv
     icon: mdi:solar-power-variant-outline
     state: "{% set bad = ['unknown','unavailable','select_entity_first',''] %}\n{% set count = states('input_number.pv_ems_inverter_count')|int(1) %}\n{% set db = states('input_number.pv_ems_pv_adjust_deadband')|float(25) %}\n{% set ns = namespace(any=false, all_min=true) %}\n{% for i in range(1, count + 1) %}\n  {% set ent = states('input_text.pv_ems_pv' ~ i ~ '_limit_number') %}\n  {% set full = states('input_number.pv_ems_pv' ~ i ~ '_full_limit')|float(0) %}\n  {% set low = states('input_number.pv_ems_pv' ~ i ~ '_low_limit')|float(0) %}\n  {% if ent not in bad and full > 0 %}\n    {% set ns.any = true %}\n    {% if states(ent)|float(full) > (low + db) %}{% set ns.all_min = false %}{% endif %}\n  {% endif %}\n{% endfor %}\n{{ ns.any and ns.all_min }}"
+
+automation:
+  - id: pv_ems_apply_recommended_defaults_on_first_install
+    alias: PV EMS - Apply recommended defaults on first install
+    mode: single
+    trigger:
+      - platform: homeassistant
+        event: start
+    condition:
+      - condition: state
+        entity_id: input_boolean.pv_ems_defaults_applied
+        state: "off"
+    action:
+      - delay: "00:00:10"
+      - service: input_boolean.turn_on
+        target:
+          entity_id:
+            - input_boolean.pv_ems_enabled
+            - input_boolean.pv_ems_notifications
+            - input_boolean.pv_ems_control_hbc_strategy
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pv_ems_debug
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.pv_ems_battery_strategy_entity
+        data:
+          value: input_select.house_battery_strategy
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.pv_ems_hbc_status
+        data:
+          value: HBC not detected
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.pv_ems_balanced_strategy
+        data:
+          option: Dynamic 2
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.pv_ems_expensive_strategy
+        data:
+          option: Sell
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.pv_ems_inverter_count
+        data:
+          value: 1
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.pv_ems_pv_limiting_price
+        data:
+          value: 0.025
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.pv_ems_battery_charge_price
+        data:
+          value: 0.1
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.pv_ems_battery_expensive_price
+        data:
+          value: 0.35
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.pv_ems_battery_price_hysteresis
+        data:
+          value: 0.02
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.pv_ems_export_start_threshold
+        data:
+          value: -150
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.pv_ems_export_stop_threshold
+        data:
+          value: -25
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.pv_ems_import_restore_threshold
+        data:
+          value: 150
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.pv_ems_pv_min_power_for_control
+        data:
+          value: 100
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.pv_ems_pv_night_restore_power
+        data:
+          value: 10
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.pv_ems_cooldown_seconds
+        data:
+          value: 60
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.pv_ems_pv_adjust_deadband
+        data:
+          value: 25
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.pv_ems_defaults_applied
+
