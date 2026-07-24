@@ -9,7 +9,9 @@
     "input_text",
     "sensor",
     "binary_sensor",
-    "automation"
+    "automation",
+    "input_button",
+    "script"
   ],
   "homeassistant": "2024.8.0"
 }

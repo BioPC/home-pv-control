@@ -1,3 +1,152 @@
+# Changelog
+
+## v1.3.0
+
+### Entity renaming and migration
+- Renamed all active runtime entities from `pv_ems_*` to `hpvc_*`.
+- Renamed diagnostic entities to `sensor.hpvc_diag_*`.
+- Migrated `sensor.hpvc_diag_market_price` to `sensor.hpvc_diag_market_export_price` and added an explicit fresh-install entity ID.
+- Renamed the Settings helper to `input_boolean.hpvc_config`.
+- Added migration and upgrade guidance for renamed helpers, dashboards, automations, and external references.
+
+### Latest fixes
+
+- Prevented duplicate HBC-options pause Insights while the configured HBC entity or option list remains unavailable; only availability transitions are logged.
+- Added live HBC strategy-option synchronization. HPVC refreshes the HBC option list automatically at startup, after entity changes, and once per minute, prefers `Charge` / `Dynamic` only when available, preserves valid selections, and skips invalid writes. If the HBC entity or its options are unavailable, the user's HBC toggle remains unchanged; only HBC strategy control and battery-assisted reveal pause while normal PV control continues. When HBC is not detected and the toggle is off, periodic checks skip the option-update script while retaining automatic later detection.
+- Isolated optional HBC availability from core PV validation: an unavailable strategy entity or empty option list no longer blocks PV limiting/restore or forces the user's HBC toggle off.
+- Removed the repeated system-log warning from the minute option synchronizer; Node-RED now reports availability transitions without log spam.
+- Removed the obsolete hard-coded HBC strategy-name assumption and added a configurable Charge-zone strategy selector.
+- Corrected multi-battery Hidden PV Reveal documentation so eligible idle batteries are described as SOC-capped bootstrap contributors.
+- Removed an unused missing-sensor accumulator from support-report generation.
+- Reordered Decision evaluation so **PV currently limited** appears immediately before **Negative-price mode** in both HTML and TXT reports.
+- Removed the duplicate `/docs/wiki` content and consolidated all user documentation under `/docs`.
+- Reorganized installation, settings, How it works, and troubleshooting pages with consistent navigation, terminology, symptom-based troubleshooting, and current v1.3.0 behavior.
+- Clarified report decision evaluation by separating the export-limiting condition from the actual current PV-limited state.
+- Corrected the high-SOC Reveal documentation and source comments to match the implemented 200/100/50/25 W SOC bands.
+- Enforced the documented 1,000-entry cap on the current-day Node-RED Insights log while preserving the newest entries.
+- Aligned the Node-RED Export Start and Import Restore safety fallbacks with the shipped `−150 W` and `150 W` defaults.
+- Cached one Home Assistant state snapshot per Node-RED evaluation for consistent reads and fewer global-context lookups.
+- Restored change-only publishing for status, reason, last action, and accuracy diagnostics to reduce unnecessary Home Assistant state writes.
+- Fixed `input_text.hpvc_last_action` change detection so repeated control adjustments with the same broad status still refresh when the reason or target changes.
+- Removed unused diagnostic and report calculations that had no runtime effect.
+- Fixed the support-report status dot so it reflects the actual HPVC enabled state.
+- Removed obsolete report parsing and unused HBC diagnostic context writes.
+- Fixed HTML support-report generation after the cleanup left the report header referencing the removed `reportLines` array.
+- Improved Target Accuracy attribution while retaining the existing four-factor structure.
+
+### Upgrade notes
+- Replace the Home Assistant package, dashboard, and Node-RED flow together.
+- Update external references that still use `pv_ems_*`, `sensor.hpvc_debug_*`, or `input_boolean.hpvc_debug`.
+- Review renamed helper values before enabling HPVC.
+- Generate a new report after upgrading to verify the final three-state report workflow.
+
+### Reliability and control safety
+- Fixed **Restore defaults** so it preserves the user's current HBC Strategy Control on/off state instead of forcing HBC control off.
+- Separated configuration validation from temporary live-input readiness.
+- Required numeric grid, price, PV, and active inverter-limit values before control can run.
+- Prevented inverter writes while required live inputs are unavailable.
+- Resumed control automatically after all required values recover.
+- Preserved the intended priority of negative-price mode, Import Restore, export limiting, cooldown, and `sun.sun` night restore.
+- Improved restart handling, validation, cooldown behavior, and safe state cleanup.
+- Fixed the `rememberedMaxChargePowers is not defined` runtime error that stopped battery processing, inverter writes, and Insights.
+- Flattened multi-message output batching for the HBC detection/status port so Node-RED always receives a valid one-level message array.
+- Corrected Reveal Accuracy attribution to use the real `adjust` action instead of the unreachable `limit` action.
+- Added report build/write error handling that resets report-state helpers and creates a persistent notification.
+- Initialized report-state helpers to off after Home Assistant restart or reload, preventing stale View or Generating states.
+
+### Charge Priority and multi-battery control
+- Added per-battery Charge Priority using each battery's SOC, charging power, and known charge headroom.
+- Added SOC hysteresis, adaptive high-SOC taper handling, and independent startup and telemetry recovery per battery.
+- Excluded unavailable or nonnumeric battery telemetry individually without blocking remaining valid batteries.
+- Kept stable numeric SOC and power values eligible even when unchanged; post-reveal response credit still requires a new power sample after a probe.
+- Treated fresh battery-power telemetry as the authoritative freshness signal while allowing slower SOC updates.
+- Retained the last valid maximum charge-power setting through temporary entity unavailability.
+- Calculated and summed reveal allowance independently for every eligible battery.
+- Added SOC-based reveal probes: 200 W at 90–94%, 100 W at 95–96%, 50 W at 97–98%, 25 W at 99%, and 0 W at 100%.
+- Allowed eligible idle batteries to start charging with an SOC-capped first probe when the request exceeds the inverter deadband.
+- Excluded batteries with unknown maximum charge power from Reveal headroom.
+- Prevented unrestricted full-PV priority when available headroom is small or uncertain.
+- Added independent inverter availability so one unavailable inverter does not block the others.
+- Added 5 W per-inverter write suppression, post-clamp target rebalancing, and per-inverter verification diagnostics.
+
+### Hidden PV Reveal
+- Weighted Daily Reveal Accuracy by requested reveal watts, so larger probes contribute more than tiny probes.
+- Based Reveal penalties on an independently estimated achievable PV increase captured before each probe; the observed response can no longer reduce its own scoring denominator.
+- Excluded evaluations with stale grid/PV telemetry or unsettled inverter-limit writes from Reveal Accuracy and stability scoring.
+- Made Hidden PV Reveal fully automatic and adaptive across multiple batteries.
+- Improved reveal sizing from grid target, measured battery response, available headroom, and high-SOC limits.
+- Added stronger response detection, pause and recovery behavior, and stability handling.
+- Required two consecutive poor responses before entering a low-stability pause.
+- Increased response settling time to reduce false telemetry penalties.
+- Added a Reveal Insight when fresh grid telemetry does not arrive before the evaluation timeout; the skipped probe is not scored.
+- Prevented additional PV from being revealed when it mainly becomes unnecessary export.
+- Kept normal export limiting and Import Restore active whenever full-PV priority is not justified.
+- Corrected Reveal Insights to show `Grid → Target` without reversed above/below wording.
+- Tracked the actual Reveal pause reason so recovery Insights match the original cause.
+- Changed Reveal Accuracy to measure movement toward Target Export.
+- Counted overshoot only after grid power passes beyond Target Export and deadband.
+- Recorded Reveal Accuracy only when `revealEffectiveness` is finite; inactive cycles remain unavailable instead of being counted as 0%.
+
+### Price-source guidance
+- Renamed the configured **Market price** display label to **Market/export price** without changing `input_text.hpvc_market_price_sensor`.
+- Clarified that the same helper may contain either a raw market-price sensor or a net export-price sensor.
+- Changed the shipped PV limit price default and Node-RED fallback from `€0.02/kWh` to the neutral `€0.00/kWh`; the threshold remains fully adjustable.
+- Added supplier- and country-aware guidance, including clearly marked Netherlands examples for 2026 saldering and non-saldering situations.
+
+### Diagnostics and reports
+- Rebuilt the HTML and TXT support reports around one shared data model so labels, values, and ordering remain synchronized.
+- Added executive status, decision-trigger evaluation, directional grid power, expanded inverter and battery diagnostics, Reveal blocking reasons, sensor health, and existing Insights.
+- Added per-battery status, telemetry age, reason, raw charger headroom, and current Reveal allowance.
+- Added configured inverter maximum and minimum power to both report formats.
+- Displayed requested inverter target only when a write is pending; otherwise the report shows an em dash.
+- Fixed inverter diagnostics so calculated targets are not reported as requested writes when no action is allowed.
+- Fixed Control settings showing `unavailable` because the HTML renderer searched obsolete TXT labels.
+- Fixed the Reveal diagnostics extractor for **Reveal stability score**, **Response guard**, and **PV recovery detected**.
+- Fixed TXT **Response evaluation** so it matches the HTML report (`Pending` or `Inactive`).
+- Fixed Daily Target Accuracy so samples are collected only when active inverter limits are physically binding; low solar availability no longer lowers accuracy.
+- Added availability handling so missing accuracy samples remain unavailable while a genuine measured 0% remains numeric.
+- Removed inverter entity IDs from the HTML inverter table and retained only inverter names and values.
+- Made the HTML report responsive with stacked mobile cards, reflowed Sensor Health, a compact header, collapsible sections, and quick navigation.
+- Kept all report diagnostics limited to existing entities, runtime state, flow context, and already-calculated HPVC values.
+- Replaced background report refresh with an on-demand three-state workflow: **Generate report**, **Generating…**, and **View report**.
+- Added `input_boolean.hpvc_report_ready` and `input_boolean.hpvc_report_generating`.
+- Removed startup, periodic, telemetry-driven, and event-driven report generation.
+- Prevented report rewrites from following the 15-second control cycle so an open report remains stable while being read.
+- Added one-time no-cache revalidation when viewing a generated report so mobile browsers do not show an older cached snapshot.
+- Added automatic reset to **Generate report** through a same-origin Home Assistant webhook after the report is opened.
+- Kept the report workflow free of browser token handling and exposed Node-RED ports.
+
+### Dashboard and onboarding
+- Fixed the HBC Price Zones tooltip marker so it uses the selected column’s actual zone colour and displays as a rounded dot.
+- Kept the original single-series HBC Price Zones presentation, including the horizontal **Now** annotation, original spacing, automatic Y-axis and per-column zone colours.
+- Added a one-minute chart refresh so the custom current-time annotation does not remain stale between 15-minute HBC price updates.
+- Preserved the 48-hour forecast and market-to-all-in conversion: a valid sensor-owned learned model is preferred, with the current `all-in − market` difference used as fallback while learning or relearning.
+- Synchronized the dynamic price-type indicator with the graph by using the same cents/euros normalization and the same finite-coefficient validation before reporting a learned conversion.
+- Kept the JavaScript generator in a literal YAML block (`|`) so line boundaries remain intact and the graph does not hang on **Loading…**.
+- Improved HBC Price Zones source handling: forecast values are normalized to €/kWh, the current timestamped interval is preferred, invalid or stale sources fall back safely, and exact zero prices remain valid.
+- Detected Market forecasts use a restart-safe learned all-in formula after at least 12 hours, eight distinct prices and €0.05/kWh spread; the graph stays live with the current `all-in − market` fallback while learning or relearning.
+- Learning uses averaged repeated values and the four lowest/highest distinct prices, preserves exact sensor ownership, and validates monthly with three aligned pairs; graph status, Insights and support-report diagnostics remain synchronized.
+- Reorganized Main, Settings, diagnostics, graphs, accuracy, and Insights.
+- Renamed the **Restore recommended settings** dashboard action to **Restore defaults** without changing its behavior.
+- Added guided first-install onboarding while keeping HBC optional.
+- Kept Main dashboard content hidden until onboarding is complete.
+- Restored native top badges in the order Status, Inverters, HBC strategy, and Batteries.
+- Hid HBC strategy and battery status when HBC control is off.
+- Used broadly supported icons for HBC strategy and battery status.
+- Restored the native Home Assistant Power Flow history graph and omitted HBC-only series when HBC control is off.
+- Simplified the Debug accuracy area to two current-day native accuracy tiles.
+- Used tile-card availability behavior so missing accuracy samples show unavailable while valid 0–100% values remain visible.
+- Added a compact 6-column report control with amber Generate, orange Generating, and green View states.
+- Ensured tapping either the View tile body or icon opens the generated report.
+- Reorganized the Node-RED canvas into labeled control-trigger, control-output, dashboard/diagnostics, and on-demand report sections without changing runtime wiring.
+
+### Documentation
+- Updated installation, configuration, How it Works, and troubleshooting documentation.
+- Updated entity migration and upgrade instructions.
+- Updated the entity inventories for the final report helpers and workflow.
+- Synchronized the README, changelog, release notes, and v1.3.0 release page.
+- Removed obsolete references to periodic, automatic, event-driven, or token-based report generation.
+
 ## v1.2.0
 
 > v1.1.2 was never released. All work that was temporarily staged as v1.1.2 is included in this v1.2.0 public release. Users can upgrade directly from v1.1.1 to v1.2.0.
@@ -11,7 +160,7 @@
 
 ### Cooldown debug sensor fix
 - Added compact `cd` cooldown flag to the last-calculation JSON.
-- Updated `binary_sensor.pv_ems_cooldown_active` to read the compact cooldown flag so the dashboard Cooldown active indicator works again.
+- Updated `binary_sensor.hpvc_cooldown_active` to read the compact cooldown flag so the dashboard Cooldown active indicator works again.
 
 ### Reveal deadband handling
 - Hidden PV Reveal now applies the PV Adjustment Deadband to the total reveal request instead of each inverter share.
@@ -20,7 +169,7 @@
 
 ### First-run defaults persistence fix
 - Removed Node-RED flow-context default initialization.
-- Added `input_boolean.pv_ems_defaults_applied` as a Home Assistant first-run marker.
+- Added `input_boolean.hpvc_defaults_applied` as a Home Assistant first-run marker.
 - Added a Home Assistant startup automation that applies recommended defaults only once on a new install.
 - Helpers still have no `initial:` values, so user-edited values restore normally after Home Assistant restarts.
 
@@ -36,7 +185,7 @@
 - Honored explicit `input_number.house_battery_count = 0`; fallback is used only when the helper is missing.
 - Ignored missing HBC battery power sensors instead of treating them as idle `0 W` batteries.
 - Added HBC max-charge awareness using `number.marstek_mX_max_charge_power`.
-- Used the active charging-battery headroom instead of summing all battery headroom, matching HBC behavior where only one battery charges at a time.
+- Used the effective active charging-battery headroom instead of summing all battery headroom, matching HBC behavior where only one battery charges at a time.
 
 ### Automatic Adaptive Hidden PV Reveal
 - Removed the old user-configurable Hidden PV Reveal step / Maximum Hidden PV Reveal Step helper before public release.
@@ -45,7 +194,7 @@
 - Hidden PV Reveal is now fully automatic with no user-configured reveal power.
 - Added an internal non-configurable **800 W safety cap**.
 - Balanced reveal amount is calculated from:
-  - active charging-battery headroom,
+  - effective active charging-battery headroom,
   - Target Export margin plus dynamic tolerance,
   - remaining hidden PV,
   - internal 800 W safety cap.
@@ -55,11 +204,9 @@
 - Target Export decides the reveal recovery window.
 
 ### Reveal stability and solar response
-- Added a real-PV response guard.
 - After each reveal, HPVC verifies that actual PV production increased enough.
 - If raising inverter limits does not increase real PV production, HPVC pauses further reveal instead of repeatedly increasing limits when the sun cannot produce more.
-- Added reveal response history so one noisy sample does not immediately pause reveal.
-- Added a reveal stability score from **0–100%**:
+- Added reveal accuracy history so one noisy sample does not immediately pause reveal.
   - good response raises the score,
   - weak response lowers it slightly,
   - poor response lowers it strongly,
@@ -75,9 +222,8 @@
 ### Diagnostics and dashboard
 - Added improved Insights for reveal pause, resume and completion decisions.
 - Pause Insights now include measured PV response, required PV response and stability score.
-- Added compact debug JSON fields for reveal diagnostics.
-- Added `sensor.hpvc_advanced_debug`, based on compact JSON from `input_text.pv_ems_last_targets_json`.
-- Kept debug JSON compact so it fits the Home Assistant input-text length limit.
+- Added compact diagnostics JSON fields for reveal diagnostics.
+- Kept diagnostics JSON compact so it fits the Home Assistant input-text length limit.
 
 ### Runtime and packaging fixes
 - Fixed Node-RED function scope issues so debug fields cannot crash the function node.
@@ -85,13 +231,13 @@
 ## v1.1.1
 
 - Maintenance release based on v1.1.0.
-- Updated `pv_ems_config.yaml`, `pv_ems_dashboard.yaml`, and `node-red/pv_ems_flow.json` with the latest uploaded fixes.
+- Updated `hpvc_config.yaml`, `hpvc_dashboard.yaml`, and `node-red/hpvc_flow.json` with the latest uploaded fixes.
 - Keeps the v1.1.x helper names compatible while improving input-text based entity configuration.
 - Changed recommended `initial:` values to all Home Assistant helpers.
 - Minor dashboard fixes and cleanup.
-- Added `input_text.pv_ems_battery_strategy_entity` to the settings-changed watch list so editing the HBC strategy entity re-runs the flow immediately instead of waiting up to 15s.
+- Added `input_text.hpvc_battery_strategy_entity` to the settings-changed watch list so editing the HBC strategy entity re-runs the flow immediately instead of waiting up to 15s.
 - Added explicit validation for a negative inverter minimum power (`low_limit`); it is now reported as a configuration error instead of silently dropping the inverter from control.
-- Aligned `pv_ems_config.yaml` default values, the documentation's default-values table, and `hacs.json` domain list (removed unused `automation`, added `binary_sensor`) so shipped config, docs, and packaging metadata all agree.
+- Aligned `hpvc_config.yaml` default values, the documentation's default-values table, and the `hacs.json` domain list; added the required `binary_sensor` domain while retaining `automation` for the included Home Assistant automations.
 
 ## v1.1.0
 
@@ -100,7 +246,7 @@
 ### Timeline of changes
 
 #### Debug and dashboard polish
-- Expanded Debug Insights from 10 to 20 items.
+- Expanded Insights from 10 to 20 items.
 - Removed repetitive cooldown-finished entries from Insights so the history stays focused on useful events.
 - Fixed cooldown insight time formatting to use 24-hour `HH:MM:SS` format.
 - Added a 48-hour HBC strategy price graph using all-in prices in €/kWh.
@@ -137,8 +283,8 @@
 
 #### Startup and diagnostics
 - Added a startup Insight when Home Assistant inputs finish restoring and HPVC resumes control.
-- Added compact debug JSON fields for battery power, battery charging state, charge headroom and max-charge state.
-- Added compact `at_max_chg` debug JSON field for max-charge reveal diagnostics.
+- Added compact diagnostics JSON fields for battery power, battery charging state, charge headroom and max-charge state.
+- Added compact `at_max_chg` diagnostics JSON field for max-charge reveal diagnostics.
 - Fixed Hidden PV Reveal scope so startup or waiting states cannot throw `revealHiddenPv is not defined`.
 
 #### Internal cleanup
@@ -184,7 +330,7 @@
 
 ## v1.0.3
 
-- Rebranded from PV EMS to Home PV Control.
+- Rebranded from HPVC to Home PV Control.
 - Updated banner and logo.
 - Improved HBC integration.
 - Dashboard improvements and cleanup.
