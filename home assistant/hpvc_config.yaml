@@ -244,9 +244,9 @@ input_select:
     name: Expensive Strategy
     icon: mdi:battery-arrow-up
     options:
+    - Self-consumption
     - Dynamic
     - Full stop
-    - Self-consumption
     - Timed
     - Charge
     - Charge PV
@@ -962,9 +962,9 @@ script:
           {% else %}{{ balanced_current }}{% endif %}
         expensive_target: >-
           {% set options = live_options %}
-          {% if prefer_defaults_value and 'Dynamic' in options %}Dynamic
+          {% if prefer_defaults_value and 'Self-consumption' in options %}Self-consumption
           {% elif expensive_current in options %}{{ expensive_current }}
-          {% elif 'Dynamic' in options %}Dynamic
+          {% elif 'Self-consumption' in options %}Self-consumption
           {% elif hbc_current in options %}{{ hbc_current }}
           {% elif options | count > 0 %}{{ options[0] }}
           {% else %}{{ expensive_current }}{% endif %}
