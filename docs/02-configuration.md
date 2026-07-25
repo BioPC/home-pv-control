@@ -79,7 +79,7 @@ These values are safe starting points, not universal recommendations. Review the
 
 | Battery strategy entity | `input_select.house_battery_strategy` |
 
-The Charge, Balanced, and Expensive selectors mirror the live options from the configured HBC strategy entity. `Charge` and `Dynamic` are preferred defaults only when those exact options exist. When HBC temporarily exposes no valid options—or the strategy entity is unavailable—HPVC preserves the selectors and the **Enable HBC** preference, pauses only HBC strategy control and battery-assisted reveal, and continues normal PV control. When HBC is not detected and **Enable HBC** is off, the periodic check skips option updates. Automatic detection still resumes within one minute when a valid option list appears.
+The Charge strategy is automatically managed and shown read-only in Settings. HPVC always uses `Charge` when that exact live HBC option exists. Balanced and Expensive remain user-selectable and mirror the live options from the configured HBC strategy entity; `Dynamic` is their preferred default when available. When HBC temporarily exposes no valid options—or the strategy entity is unavailable—HPVC preserves the selectors and the **Enable HBC** preference, pauses only HBC strategy control and battery-assisted reveal, and continues normal PV control. When HBC is not detected and **Enable HBC** is off, the periodic check skips option updates. Automatic detection still resumes within one minute when a valid option list appears.
 
 
 

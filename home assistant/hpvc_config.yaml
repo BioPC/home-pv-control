@@ -947,9 +947,8 @@ script:
         expensive_current: "{{ states('input_select.hpvc_expensive_strategy') }}"
         charge_target: >-
           {% set options = live_options %}
-          {% if prefer_defaults_value and 'Charge' in options %}Charge
+          {% if 'Charge' in options %}Charge
           {% elif charge_current in options %}{{ charge_current }}
-          {% elif 'Charge' in options %}Charge
           {% elif hbc_current in options %}{{ hbc_current }}
           {% elif options | count > 0 %}{{ options[0] }}
           {% else %}{{ charge_current }}{% endif %}

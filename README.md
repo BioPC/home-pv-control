@@ -240,7 +240,6 @@ Home PV Control is free and open source. If you find it useful, you can support 
   <a href="https://paypal.me/MPerezCabrera"><img src="https://img.shields.io/badge/PayPal-Support%20me-003087?logo=paypal&logoColor=white" alt="Support with PayPal"></a>
 </p>
 
-GitHub also displays these options through the repository’s **Sponsor** button.
 
 ## Repository structure
 

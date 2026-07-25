@@ -308,7 +308,7 @@ For example, with Charge `0.10`, Expensive `0.35`, and hysteresis `0.02` €/kWh
 
 ## Live HBC strategy options
 
-HPVC mirrors the configured HBC strategy entity's live option list into the Charge, Balanced, and Expensive selectors. It prefers `Charge` for the Charge zone and `Dynamic` for the Balanced and Expensive zones only when those options exist. Otherwise it preserves a valid selection, uses HBC's current valid strategy, or falls back to the first available option.
+HPVC mirrors the configured HBC strategy entity's live option list into its strategy helpers. The Charge strategy is automatically managed and shown read-only: HPVC always uses `Charge` when that exact option exists. Balanced and Expensive remain user-selectable and prefer `Dynamic` when available. If a preferred option does not exist, HPVC preserves a valid fallback, uses HBC's current valid strategy, or selects the first available option.
 
 If the configured HBC entity or its option list is unavailable, HPVC leaves the selectors and **Enable HBC** preference unchanged. HBC strategy writes and battery-assisted reveal pause, while normal PV limiting and restore continue. HPVC checks at startup, after the configured entity changes, and once per minute. When HBC is not detected and **Enable HBC** is off, it skips the option-update script; valid options discovered later are still adopted automatically.
 

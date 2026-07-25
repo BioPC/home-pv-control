@@ -11,10 +11,10 @@
 ## Latest fixes
 
 - Prevented duplicate HBC-options pause Insights while the configured HBC entity or option list remains unavailable; only availability transitions are logged.
-- Added live HBC strategy-option synchronization. HPVC refreshes the HBC option list automatically at startup, after entity changes, and once per minute, prefers `Charge` / `Dynamic` only when available, preserves valid selections, and skips invalid writes. If the HBC entity or its options are unavailable, the user's HBC toggle remains unchanged; only HBC strategy control and battery-assisted reveal pause while normal PV control continues. When HBC is not detected and the toggle is off, periodic checks skip the option-update script while retaining automatic later detection.
+- Added live HBC strategy-option synchronization. HPVC refreshes the HBC option list automatically at startup, after entity changes, and once per minute. The read-only Charge strategy always prefers `Charge` when available; Balanced and Expensive prefer `Dynamic`, preserve valid selections, and skip invalid writes. If the HBC entity or its options are unavailable, the user's HBC toggle remains unchanged; only HBC strategy control and battery-assisted reveal pause while normal PV control continues. When HBC is not detected and the toggle is off, periodic checks skip the option-update script while retaining automatic later detection.
 - Isolated optional HBC availability from core PV validation: an unavailable strategy entity or empty option list no longer blocks PV limiting/restore or forces the user's HBC toggle off.
 - Removed the repeated system-log warning from the minute option synchronizer; Node-RED now reports availability transitions without log spam.
-- Removed the obsolete hard-coded HBC strategy-name assumption and added a configurable Charge-zone strategy selector.
+- Removed the obsolete hard-coded HBC strategy-name assumption. The Charge-zone strategy is now automatically managed and read-only, always preferring `Charge` when available; Balanced and Expensive remain user-selectable.
 - Corrected multi-battery Hidden PV Reveal documentation so eligible idle batteries are described as SOC-capped bootstrap contributors.
 - Removed an unused missing-sensor accumulator from support-report generation.
 - Reordered Decision evaluation so **PV currently limited** appears immediately before **Negative-price mode** in both HTML and TXT reports.
@@ -75,8 +75,8 @@
 ## Price-source guidance
 - Renamed the configured **Market price** display label to **Market/export price**.
 - Clarified that the configured field accepts either a raw market-price sensor or a net export-price sensor.
-- Changed the shipped PV limit price default and Node-RED fallback from `€0.02/kWh` to the neutral `€0.00/kWh`; the value remains fully adjustable.
-- Added supplier- and country-aware guidance, including clearly marked Netherlands examples.
+- Standardized the shipped PV limiting price and Node-RED fallback at `€0.00/kWh`.
+- Added sensor-type-aware guidance for raw market-price and net export-price sensors.
 
 ## Diagnostics and reports
 - HTML and TXT reports now use the same data model.

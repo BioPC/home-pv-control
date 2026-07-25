@@ -2034,8 +2034,14 @@ views:
                         - unavailable
                         - ""
                   row:
+                    type: simple-entity
                     entity: input_select.hpvc_charge_strategy
                     name: Charge strategy
+                    icon: mdi:battery-charging
+                    tap_action:
+                      action: none
+                    hold_action:
+                      action: none
                 - type: conditional
                   conditions:
                     - entity: input_boolean.hpvc_control_hbc_strategy
