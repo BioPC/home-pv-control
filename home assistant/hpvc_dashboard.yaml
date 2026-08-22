@@ -1,0 +1,1804 @@
+title: Home PV Control
+views:
+- type: sections
+  title: Main
+  path: home-pv-control
+  icon: mdi:solar-power-variant
+  max_columns: 3
+  header:
+    layout: center
+    badges_position: top
+    badges_wrap: wrap
+    card:
+      type: vertical-stack
+      cards:
+      - type: markdown
+        text_only: true
+        content: '<div align="center">
+
+
+          ## Home PV Control (v1.4.0)
+
+          #### Standalone PV optimization for dynamic energy contracts. Optional HBC integration.
+
+          </div>
+
+          '
+      - type: markdown
+        text_only: true
+        content: "<div align=\"center\">\n  <sup>\n    <font color=\"#888888\">\n      ☆ &nbsp; Like this project? Consider giving a star! &nbsp; ›\n    </font>\n  </sup>\n  &nbsp;\n  <a href=\"https://github.com/BioPC/home-pv-control\">\n    <img src=\"https://img.shields.io/github/stars/BioPC/home-pv-control?style=flat&logo=github&label=Stars&logoColor=white&color=3a3a3a&labelColor=242424\">\n  </a>\n</div>\n"
+        tap_action:
+          action: url
+          url_path: https://github.com/BioPC/home-pv-control
+  badges:
+  - type: entity
+    show_name: true
+    show_state: true
+    show_icon: true
+    entity: input_text.hpvc_status
+    name: HPVC Status
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_onboarding_complete
+      state: 'on'
+  - type: entity
+    show_name: true
+    show_state: true
+    show_icon: true
+    entity: binary_sensor.hpvc_negative_price_mode
+    name: Negative Price
+    visibility:
+    - condition: state
+      entity: binary_sensor.hpvc_negative_price_mode
+      state_not: 'off'
+  - type: entity
+    show_name: true
+    show_state: true
+    show_icon: true
+    entity: input_number.hpvc_inverter_count
+    name: Inverters
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_onboarding_complete
+      state: 'on'
+  - type: entity
+    show_name: true
+    show_state: true
+    show_icon: true
+    entity: input_number.house_battery_count
+    name: Batteries
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_onboarding_complete
+      state: 'on'
+    - condition: state
+      entity: input_boolean.hpvc_control_hbc_strategy
+      state: 'on'
+    - condition: state
+      entity: binary_sensor.hpvc_hbc_available
+      state: 'on'
+  - type: entity
+    entity: input_select.house_battery_strategy
+    show_name: true
+    name: HBC Strategy
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_control_hbc_strategy
+      state: 'on'
+    - condition: state
+      entity: binary_sensor.hpvc_hbc_available
+      state: 'on'
+  - type: entity
+    entity: input_text.house_battery_strategy_active_sub_strategy
+    show_name: true
+    name: HBC Executing
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_control_hbc_strategy
+      state: 'on'
+    - condition: state
+      entity: binary_sensor.hpvc_hbc_available
+      state: 'on'
+    - condition: or
+      conditions:
+      - condition: state
+        entity: input_select.house_battery_strategy
+        state: Dynamic
+      - condition: state
+        entity: input_select.house_battery_strategy
+        state: Timed
+  sections:
+  - type: grid
+    columns: 1
+    square: false
+    cards:
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: input_boolean.hpvc_onboarding_complete
+        state: 'off'
+      card:
+        type: markdown
+        content: "{% set bad = ['unknown', 'unavailable', 'none', 'select_entity_first', ''] %}\n{% set core = [\n  ('Grid sensor', states('input_text.hpvc_grid_power_sensor')),\n  ('Market/export price', states('input_text.hpvc_market_price_sensor')),\n  ('All-in price', states('input_text.hpvc_all_in_price_sensor')),\n  ('Solar power', states('input_text.hpvc_pv_power_sensor'))\n] %}\n{% set ns = namespace(done=0, total=4) %}\n<ha-alert title=\"Welcome to Home PV Control\" alert-type=\"warning\">\nOpen the <b>Settings</b> tab using the <b>⚙️ Settings</b> button in the navigation bar and complete the required configuration. Once setup and all required live inputs are valid, HPVC switches on automatically. </ha-alert>\n<p><b>Setup progress:</b></p>\n{% for label, ent in core %}\n{% set normalized = ent | trim | lower %}\n{% set configured = normalized not in bad and (normalized | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) %}\n{% set valid = configured and states(normalized) not in bad and is_number(states(normalized)) %}\n{% if valid %}{% set ns.done = ns.done + 1 %}✅{% else %}❌{% endif %} **{{ label }}**\n{% endfor %}\n{% set count = states('input_number.hpvc_inverter_count') | int(0) %}\n{% set inv = namespace(valid=count > 0, entities=[]) %}\n{% for i in range(1, count + 1) %}\n  {% set ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') %}\n  {% set normalized = ent | trim | lower %}\n  {% set full = states('input_number.hpvc_pv' ~ i ~ '_full_limit') | float(0) %}\n  {% set low = states('input_number.hpvc_pv' ~ i ~ '_low_limit') | float(-1) %}\n  {% set configured = normalized not in bad and (normalized | regex_match('^number[.][a-z0-9_]+$')) and normalized not in inv.entities and full > 0 and low >= 0 and low < full %}\n  {% set live = configured and states(normalized) not in bad and is_number(states(normalized)) %}\n  {% if not live %}\n    {% set inv.valid = false %}\n  {% else %}\n    {% set inv.entities = inv.entities + [normalized] %}\n  {% endif %}\n{% endfor %}\n{% set ns.total = ns.total + 1 %}\n{% if inv.valid %}{% set ns.done = ns.done + 1 %}✅{% else %}❌{% endif %} **Inverter setup**\n  \n\n{% set ns.total = ns.total + 1 %} {% set setup_ready =\n  is_state('input_boolean.hpvc_defaults_applied', 'on')\n  and is_state('binary_sensor.hpvc_configuration_valid', 'on')\n%} {% if setup_ready %}{% set ns.done = ns.done + 1 %}✅{% else %}❌{% endif %} **Control settings**\n<p><b>{{ ns.done }}/{{ ns.total }} complete</b></p>"
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: input_boolean.hpvc_onboarding_complete
+        state: 'on'
+      - condition: or
+        conditions:
+        - condition: state
+          entity: binary_sensor.hpvc_configuration_valid
+          state: 'off'
+        - condition: state
+          entity: binary_sensor.hpvc_required_inputs_ready
+          state: 'off'
+      card:
+        type: markdown
+        content: "{% set bad = ['unknown', 'unavailable', 'none', 'select_entity_first', ''] %}\n{% set config_ok =\n  is_state('binary_sensor.hpvc_configuration_valid', 'on')\n%}\n{% set inputs_ok =\n  is_state('binary_sensor.hpvc_required_inputs_ready', 'on')\n%}\n{% set core = [\n  ('Grid power', states('input_text.hpvc_grid_power_sensor')),\n  ('Market/export price', states('input_text.hpvc_market_price_sensor')),\n  ('All-in price', states('input_text.hpvc_all_in_price_sensor')),\n  ('Solar power', states('input_text.hpvc_pv_power_sensor'))\n] %}\n<ha-alert title=\"Home PV Control unavailable\" alert-type=\"warning\"> {% if not config_ok and not inputs_ok %} One or more required configuration values or live inputs are missing, invalid, unavailable, or unknown. Open <b>Settings</b> and correct the items marked with ❌. HPVC remains off until the configuration and all required inputs are healthy. {% elif not config_ok %} One or more required configuration values are missing or invalid. Open <b>Settings</b> and correct the items marked with ❌. {% elif is_state('input_boolean.hpvc_auto_resume_pending', 'on') %} A required live input is unavailable, unknown, or invalid. HPVC was switched off automatically and will switch on again after the configuration and all required inputs have remained healthy for 5 seconds. {% elif is_state('input_boolean.hpvc_enabled', 'on') %} A required live input is unavailable, unknown, or invalid. HPVC is being switched off automatically for safety. {% else %} A required live input is unavailable, unknown, or invalid. HPVC is off. It will resume automatically only if it was running before the problem. A manual switch-off remains off. {% endif %} </ha-alert>\n<p><b>Configuration and required inputs:</b></p>\n{% for label, ent in core %}\n  {% set normalized = ent | trim | lower %}\n  {% set configured =\n    normalized not in bad\n    and (normalized | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))\n  %}\n  {% set live =\n    configured\n    and states(normalized) not in bad\n    and is_number(states(normalized))\n  %}\n  {% set valid = configured and live %}\n\n  {% if valid %}✅{% else %}❌{% endif %} **{{ label }}**\n  {% if configured %} — `{{ normalized }}`{% endif %}\n{% endfor %}\n{% set count =\n  states('input_number.hpvc_inverter_count') | int(0)\n%}\n{% set inv = namespace(entities=[]) %}\n{% for i in range(1, count + 1) %}\n  {% set ent =\n    states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim\n  %}\n  {% set normalized = ent | lower %}\n  {% set full =\n    states('input_number.hpvc_pv' ~ i ~ '_full_limit') | float(0)\n  %}\n  {% set low =\n    states('input_number.hpvc_pv' ~ i ~ '_low_limit') | float(-1)\n  %}\n\n  {% set configured =\n    normalized not in bad\n    and (normalized | regex_match('^number[.][a-z0-9_]+$'))\n    and normalized not in inv.entities\n    and full > 0\n    and low >= 0\n    and low < full\n  %}\n\n  {% set live =\n    configured\n    and states(normalized) not in bad\n    and is_number(states(normalized))\n  %}\n\n  {% set valid = configured and live %}\n\n  {% if configured %}\n    {% set inv.entities = inv.entities + [normalized] %}\n  {% endif %}\n\n  {% if valid %}✅{% else %}❌{% endif %} **PV{{ i }} limit**\n  {% if normalized not in bad %} — `{{ normalized }}`{% endif %}\n{% endfor %}\n{% set export_start =\n  states('input_number.hpvc_export_start_threshold') | float(999999)\n%}\n{% set target_export =\n  states('input_number.hpvc_export_stop_threshold') | float(999999)\n%}\n{% set import_restore =\n  states('input_number.hpvc_import_restore_threshold') | float(-1)\n%}\n{% set thresholds_valid =\n  export_start < target_export\n  and target_export < import_restore\n  and import_restore >= 0\n%}\n{% if thresholds_valid %}✅{% else %}❌{% endif %} **Power control settings**"
+      grid_options:
+        columns: 12
+        rows: auto
+    grid_options:
+      columns: 12
+      rows: auto
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+    - type: markdown
+      content: '### 🎛️ PV Master Control
+
+        '
+      grid_options:
+        columns: 12
+    - type: markdown
+      text_only: true
+      content: "<ha-alert title=\"Standalone module\" alert-type=\"info\">\n  Home PV Control works as PV-only export control.\n  HBC is optional and can be enabled when a valid HBC is detected.\n</ha-alert>\n"
+      visibility:
+      - condition: state
+        entity: input_boolean.hpvc_onboarding_complete
+        state: 'off'
+      - condition: state
+        entity: binary_sensor.hpvc_hbc_available
+        state: 'off'
+      grid_options:
+        columns: 12
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: input_boolean.hpvc_onboarding_complete
+        state: 'on'
+      - condition: state
+        entity: input_boolean.hpvc_enabled
+        state: 'off'
+      - condition: state
+        entity: binary_sensor.hpvc_required_inputs_ready
+        state: 'on'
+      - condition: state
+        entity: input_boolean.hpvc_auto_resume_pending
+        state: 'off'
+      card:
+        type: markdown
+        text_only: true
+        content: <ha-alert title="HPVC manually disabled" alert-type="info"> All required inputs are ready, but HPVC is off because it was switched off manually. Press <b>Enable HPVC</b> to start Home PV Control. </ha-alert>
+      grid_options:
+        columns: 12
+        rows: auto
+    - type: tile
+      entity: input_boolean.hpvc_enabled
+      name: Enable HPVC
+      icon: mdi:solar-power-variant
+      hide_state: true
+      vertical: false
+      features_position: inline
+      features:
+      - type: toggle
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: input_boolean.hpvc_enabled
+        state: 'on'
+      - condition: state
+        entity: binary_sensor.hpvc_hbc_available
+        state: 'on'
+      card:
+        type: tile
+        entity: input_boolean.hpvc_control_hbc_strategy
+        name: Enable HBC
+        icon: mdi:battery-sync
+        hide_state: true
+        vertical: false
+        features_position: inline
+        features:
+        - type: toggle
+      grid_options:
+        columns: 12
+        rows: auto
+    - type: conditional
+      conditions:
+      - condition: state
+        entity: binary_sensor.hpvc_hbc_available
+        state: 'off'
+      card:
+        type: tile
+        entity: input_boolean.hpvc_control_hbc_strategy
+        name: HBC unavailable
+        icon: mdi:battery-off-outline
+        color: disabled
+        hide_state: true
+        tap_action:
+          action: none
+        icon_tap_action:
+          action: none
+        hold_action:
+          action: none
+        double_tap_action:
+          action: none
+      grid_options:
+        columns: 12
+        rows: auto
+    - type: tile
+      entity: input_boolean.hpvc_notifications
+      name: Notifications
+      icon: mdi:bell-outline
+      hide_state: true
+      vertical: false
+      features_position: inline
+      features:
+      - type: toggle
+    - type: conditional
+      conditions:
+      - entity: input_boolean.hpvc_report_ready
+        state: 'off'
+      - entity: input_boolean.hpvc_report_generating
+        state: 'off'
+      card:
+        type: tile
+        entity: input_button.hpvc_export_report
+        name: Generate report
+        icon: mdi:file-document-plus-outline
+        color: blue
+        hide_state: true
+        tap_action:
+          action: perform-action
+          perform_action: input_button.press
+          target:
+            entity_id: input_button.hpvc_export_report
+        icon_tap_action:
+          action: perform-action
+          perform_action: input_button.press
+          target:
+            entity_id: input_button.hpvc_export_report
+        hold_action:
+          action: none
+        icon_hold_action:
+          action: none
+        double_tap_action:
+          action: none
+        icon_double_tap_action:
+          action: none
+      grid_options:
+        columns: 6
+        rows: 1
+    - type: conditional
+      conditions:
+      - entity: input_boolean.hpvc_report_generating
+        state: 'on'
+      card:
+        type: tile
+        entity: input_boolean.hpvc_report_generating
+        name: Generating…
+        icon: mdi:progress-clock
+        color: orange
+        hide_state: true
+        tap_action:
+          action: none
+        icon_tap_action:
+          action: none
+        hold_action:
+          action: none
+        icon_hold_action:
+          action: none
+        double_tap_action:
+          action: none
+        icon_double_tap_action:
+          action: none
+      grid_options:
+        columns: 6
+        rows: 1
+    - type: conditional
+      conditions:
+      - entity: input_boolean.hpvc_report_ready
+        state: 'on'
+      - entity: input_boolean.hpvc_report_generating
+        state: 'off'
+      card:
+        type: tile
+        entity: input_boolean.hpvc_report_ready
+        name: View report
+        icon: mdi:file-document-check-outline
+        color: green
+        hide_state: true
+        tap_action:
+          action: url
+          url_path: /local/hpvc/support-report.html?v=140-mobile-fresh-report
+        icon_tap_action:
+          action: url
+          url_path: /local/hpvc/support-report.html?v=140-mobile-fresh-report
+        hold_action:
+          action: none
+        icon_hold_action:
+          action: none
+        double_tap_action:
+          action: none
+        icon_double_tap_action:
+          action: none
+      grid_options:
+        columns: 6
+        rows: 1
+    - type: conditional
+      conditions:
+      - entity: script.hpvc_restore_defaults
+        state: 'off'
+      card:
+        type: tile
+        entity: script.hpvc_restore_defaults
+        name: Restore defaults
+        icon: mdi:backup-restore
+        color: blue
+        hide_state: true
+        state_content: []
+        features_position: inline
+        tap_action:
+          action: toggle
+          confirmation:
+            text: 'This will restore all recommended HPVC settings.
+
+              Press OK and wait until complete.
+
+              '
+      grid_options:
+        columns: 6
+        rows: auto
+    - type: conditional
+      conditions:
+      - entity: script.hpvc_restore_defaults
+        state: 'on'
+      card:
+        type: tile
+        entity: script.hpvc_restore_defaults
+        name: Restoring…
+        icon: mdi:progress-clock
+        color: orange
+        hide_state: true
+        tap_action:
+          action: none
+        icon_tap_action:
+          action: none
+        hold_action:
+          action: none
+        icon_hold_action:
+          action: none
+        double_tap_action:
+          action: none
+        icon_double_tap_action:
+          action: none
+      grid_options:
+        columns: 6
+        rows: auto
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_onboarding_complete
+      state: 'on'
+  - type: grid
+    columns: 1
+    square: false
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_onboarding_complete
+      state: 'on'
+    cards:
+    - type: grid
+      columns: 1
+      square: false
+      visibility:
+      - condition: state
+        entity: input_boolean.hpvc_onboarding_complete
+        state: 'on'
+      cards:
+      - type: markdown
+        title: 💡 Decision Details
+        content: "ℹ️ **Status**  \n{{ states('input_text.hpvc_status') }}\n\n\U0001F4AC **Reason**  \n{{ states('input_text.hpvc_reason') }}\n\n\U0001F552 **Status since**  \n{{ states('input_text.hpvc_last_action') }}\n"
+  - type: grid
+    cards:
+    - type: entities
+      title: 📡 Live Inputs
+      entities:
+      - entity: sensor.hpvc_diag_market_export_price
+        name: Market/export price
+      - entity: sensor.hpvc_diag_all_in_price
+        name: All-in price
+      - entity: sensor.hpvc_diag_grid_power
+        name: Grid power
+      - entity: sensor.hpvc_diag_pv_power
+        name: Total solar power
+      - entity: sensor.hpvc_pv1_actual_limit
+        name: PV1 actual limit
+      - type: conditional
+        conditions:
+        - condition: numeric_state
+          entity: input_number.hpvc_inverter_count
+          above: 1
+        row:
+          entity: sensor.hpvc_pv2_actual_limit
+          name: PV2 actual limit
+      - type: conditional
+        conditions:
+        - condition: numeric_state
+          entity: input_number.hpvc_inverter_count
+          above: 2
+        row:
+          entity: sensor.hpvc_pv3_actual_limit
+          name: PV3 actual limit
+      - type: conditional
+        conditions:
+        - condition: numeric_state
+          entity: input_number.hpvc_inverter_count
+          above: 3
+        row:
+          entity: sensor.hpvc_pv4_actual_limit
+          name: PV4 actual limit
+      - type: conditional
+        conditions:
+        - condition: numeric_state
+          entity: input_number.hpvc_inverter_count
+          above: 4
+        row:
+          entity: sensor.hpvc_pv5_actual_limit
+          name: PV5 actual limit
+      - type: conditional
+        conditions:
+        - condition: numeric_state
+          entity: input_number.hpvc_inverter_count
+          above: 5
+        row:
+          entity: sensor.hpvc_pv6_actual_limit
+          name: PV6 actual limit
+      - type: conditional
+        conditions:
+        - condition: numeric_state
+          entity: input_number.hpvc_inverter_count
+          above: 6
+        row:
+          entity: sensor.hpvc_pv7_actual_limit
+          name: PV7 actual limit
+      - type: conditional
+        conditions:
+        - condition: numeric_state
+          entity: input_number.hpvc_inverter_count
+          above: 7
+        row:
+          entity: sensor.hpvc_pv8_actual_limit
+          name: PV8 actual limit
+      - type: conditional
+        conditions:
+        - condition: numeric_state
+          entity: input_number.hpvc_inverter_count
+          above: 8
+        row:
+          entity: sensor.hpvc_pv9_actual_limit
+          name: PV9 actual limit
+      - type: conditional
+        conditions:
+        - condition: numeric_state
+          entity: input_number.hpvc_inverter_count
+          above: 9
+        row:
+          entity: sensor.hpvc_pv10_actual_limit
+          name: PV10 actual limit
+      show_header_toggle: false
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_onboarding_complete
+      state: 'on'
+  - type: grid
+    columns: 1
+    square: false
+    cards:
+    - type: entities
+      title: 📊 Control States
+      show_header_toggle: false
+      entities:
+      - entity: binary_sensor.hpvc_pv_limited
+        name: PV limited
+      - entity: binary_sensor.hpvc_cooldown_active
+        name: Cooldown
+      - type: conditional
+        conditions:
+        - entity: input_boolean.hpvc_control_hbc_strategy
+          state: 'on'
+        row:
+          entity: binary_sensor.hpvc_charge_priority_active
+          name: Charge priority
+      - entity: binary_sensor.hpvc_at_minimum_pv
+        name: At minimum PV
+      - entity: binary_sensor.hpvc_negative_price_mode
+        name: Negative price
+    - type: conditional
+      conditions:
+      - entity: input_boolean.hpvc_control_hbc_strategy
+        state: 'off'
+      card:
+        type: history-graph
+        hours_to_show: 6
+        entities:
+        - entity: binary_sensor.hpvc_pv_limited
+          name: PV limited
+        - entity: binary_sensor.hpvc_cooldown_active
+          name: Cooldown
+        - entity: binary_sensor.hpvc_at_minimum_pv
+          name: At minimum PV
+        - entity: binary_sensor.hpvc_negative_price_mode
+          name: Negative price
+    - type: conditional
+      conditions:
+      - entity: input_boolean.hpvc_control_hbc_strategy
+        state: 'on'
+      card:
+        type: history-graph
+        entities:
+        - entity: binary_sensor.hpvc_pv_limited
+          name: PV limited
+        - entity: binary_sensor.hpvc_cooldown_active
+          name: Cooldown
+        - entity: binary_sensor.hpvc_charge_priority_active
+          name: Charge priority
+        - entity: binary_sensor.hpvc_at_minimum_pv
+          name: At minimum PV
+        - entity: binary_sensor.hpvc_negative_price_mode
+          name: Negative price
+        hours_to_show: 6
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_onboarding_complete
+      state: 'on'
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+    - type: vertical-stack
+      cards:
+      - type: markdown
+        content: "{% set raw = states('sensor.hpvc_daily_target_accuracy') %}\n{% set has_data = raw not in ['unknown', 'unavailable', 'none', ''] %}\n{% set value = raw if has_data else 'No data collected today' %}\n{% set unit = (state_attr('sensor.hpvc_daily_target_accuracy', 'unit_of_measurement') or '%') if has_data else '' %}\n\n<center>\n\n<span style=\"font-size:18px;\">\n  <ha-icon icon=\"mdi:bullseye-arrow\"></ha-icon>&nbsp;&nbsp;&nbsp;\n  <b>Daily Control Accuracy</b>\n</span>\n\n\n<h1><b>{{ value }}{{ unit }}</b></h1>\n{% set sample_raw = states('sensor.hpvc_daily_target_accuracy_samples') %} {% if sample_raw not in ['unknown', 'unavailable', 'none', ''] %} <div style=\"opacity:.72; margin-top:-8px;\">{{ sample_raw | int(0) }} eligible samples today</div> {% endif %}\n\n</center>\n"
+      - type: markdown
+        text_only: true
+        content: '{% set raw = states(''sensor.hpvc_daily_target_accuracy'') %}
+
+          {% set has_data = raw not in [''unknown'', ''unavailable'', ''none'', ''''] %}
+
+          {% set value = raw | float(0) %}
+
+
+          {% if not has_data %}
+
+          <ha-alert title="No data collected today" alert-type="info">
+
+          No eligible control-accuracy samples have been collected today.
+
+          </ha-alert>
+
+          {% elif value >= 90 %}
+
+          <ha-alert title="Excellent" alert-type="success">
+
+          Target control is performing very accurately today.
+
+          </ha-alert>
+
+          {% elif value >= 80 %}
+
+          <ha-alert title="Great" alert-type="success">
+
+          Target control is performing well today.
+
+          </ha-alert>
+
+          {% elif value >= 65 %}
+
+          <ha-alert title="Good" alert-type="info">
+
+          Target control is generally accurate, with some losses.
+
+          </ha-alert>
+
+          {% elif value >= 50 %}
+
+          <ha-alert title="Fair" alert-type="warning">
+
+          Target accuracy is lower than normal today.
+
+          </ha-alert>
+
+          {% else %}
+
+          <ha-alert title="Needs attention" alert-type="error">
+
+          Accuracy is low. Review the estimated factors below to see what affected performance today.
+
+          </ha-alert>
+
+          {% endif %}
+
+          '
+      - type: heading
+        heading: Estimated accuracy-loss factors
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+        - type: tile
+          entity: sensor.hpvc_target_control_response_impact
+          name: Control response
+          icon: mdi:sine-wave
+        - type: tile
+          entity: sensor.hpvc_target_house_load_changes_impact
+          name: House load changes
+          icon: mdi:home-lightning-bolt-outline
+        - type: tile
+          entity: sensor.hpvc_target_pv_availability_impact
+          name: PV availability
+          icon: mdi:solar-power-variant-outline
+        - type: tile
+          entity: sensor.hpvc_target_other_impact
+          name: Other
+          icon: mdi:dots-horizontal-circle-outline
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_onboarding_complete
+      state: 'on'
+  - type: grid
+    columns: 1
+    square: false
+    cards:
+    - type: conditional
+      conditions:
+      - entity: input_boolean.hpvc_control_hbc_strategy
+        state: 'on'
+      - condition: state
+        entity: sensor.hpvc_diag_hbc_strategy
+        state_not:
+        - unknown
+        - unavailable
+        - ''
+      card:
+        type: entities
+        title: 🔋 HBC Live Status
+        show_header_toggle: false
+        entities:
+        - entity: sensor.hpvc_diag_hbc_strategy
+          name: HBC strategy
+        - type: simple-entity
+          entity: input_text.house_battery_strategy_active_sub_strategy
+          name: HBC sub-strategy
+          icon: mdi:battery-sync
+          tap_action:
+            action: none
+          hold_action:
+            action: none
+          double_tap_action:
+            action: none
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: input_number.house_battery_count
+            above: 0
+          row:
+            entity: sensor.marstek_m1_battery_state_of_charge
+            name: Battery M1 SOC
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: input_number.house_battery_count
+            above: 0
+          row:
+            entity: sensor.marstek_m1_ac_power
+            name: Battery M1 power
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: input_number.house_battery_count
+            above: 1
+          row:
+            entity: sensor.marstek_m2_battery_state_of_charge
+            name: Battery M2 SOC
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: input_number.house_battery_count
+            above: 1
+          row:
+            entity: sensor.marstek_m2_ac_power
+            name: Battery M2 power
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: input_number.house_battery_count
+            above: 2
+          row:
+            entity: sensor.marstek_m3_battery_state_of_charge
+            name: Battery M3 SOC
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: input_number.house_battery_count
+            above: 2
+          row:
+            entity: sensor.marstek_m3_ac_power
+            name: Battery M3 power
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: input_number.house_battery_count
+            above: 3
+          row:
+            entity: sensor.marstek_m4_battery_state_of_charge
+            name: Battery M4 SOC
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: input_number.house_battery_count
+            above: 3
+          row:
+            entity: sensor.marstek_m4_ac_power
+            name: Battery M4 power
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: input_number.house_battery_count
+            above: 4
+          row:
+            entity: sensor.marstek_m5_battery_state_of_charge
+            name: Battery M5 SOC
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: input_number.house_battery_count
+            above: 4
+          row:
+            entity: sensor.marstek_m5_ac_power
+            name: Battery M5 power
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: input_number.house_battery_count
+            above: 5
+          row:
+            entity: sensor.marstek_m6_battery_state_of_charge
+            name: Battery M6 SOC
+        - type: conditional
+          conditions:
+          - condition: numeric_state
+            entity: input_number.house_battery_count
+            above: 5
+          row:
+            entity: sensor.marstek_m6_ac_power
+            name: Battery M6 power
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_onboarding_complete
+      state: 'on'
+  - type: custom:apexcharts-card
+    section_mode: true
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_onboarding_complete
+      state: 'on'
+    - condition: or
+      conditions:
+      - condition: state
+        entity: input_boolean.hpvc_control_hbc_strategy
+        state: 'off'
+      - condition: state
+        entity: binary_sensor.hpvc_hbc_available
+        state: 'off'
+    update_interval: 5s
+    graph_span: 6h
+    header:
+      show: true
+      title: ⚡ Power Flow
+      show_states: true
+      colorize_states: true
+    yaxis:
+    - id: main
+      min: auto
+      max: auto
+      decimals: 0
+      apex_config:
+        title:
+          text: W
+    - id: raw_header
+      show: false
+      min: -50000
+      max: 50000
+      decimals: 0
+    apex_config:
+      chart:
+        height: 250
+        stacked: false
+        toolbar:
+          show: false
+        zoom:
+          enabled: false
+        pan:
+          enabled: false
+        animations:
+          enabled: false
+      stroke:
+        curve: smooth
+        connectNulls: false
+      fill:
+        opacity: 0.55
+      markers:
+        size: 0
+        hover:
+          size: 5
+          sizeOffset: 0
+      tooltip:
+        shared: true
+        intersect: false
+        followCursor: true
+        theme: false
+        custom: "EVAL:function({ series, dataPointIndex }) {\n\n  const colors = [\n    '#3B82F6',\n    '#22C55E',\n    '#F59E0B'\n  ];\n\n  const names = [\n    'Grid import',\n    'Grid export',\n    'Solar'\n  ];\n\n  let rows = '';\n\n  // Only the first three visible graph series belong in the tooltip.\n  for (let i = 0; i < 3; i++) {\n    const value =\n      series[i] && dataPointIndex < series[i].length\n        ? series[i][dataPointIndex]\n        : null;\n\n    const display =\n      value === null ||\n      value === undefined ||\n      !Number.isFinite(value)\n        ? '—'\n        : Math.round(value).toLocaleString() + ' W';\n\n    rows +=\n      '<div style=\"display:flex;align-items:center;gap:6px;margin:2px 0;\">' +\n        '<span style=\"display:inline-block;width:10px;height:10px;border-radius:50%;background:' +\n          colors[i] +\n          ';flex-shrink:0;\"></span>' +\n        '<span style=\"color:var(--secondary-text-color);min-width:88px;font-weight:700;\">' +\n          names[i] +\n          '</span>' +\n        '<span style=\"font-weight:700;margin-left:auto;\">' +\n          display +\n        '</span>' +\n      '</div>';\n  }\n\n  return (\n    '<div style=\"padding:8px 10px;font-size:10px;width:max-content;max-width:240px;box-sizing:border-box;background:color-mix(in srgb,var(--ha-card-background,var(--card-background-color)) 35%,transparent);backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px);border-radius:6px;border:1px solid var(--divider-color);color:var(--primary-text-color);font-family:inherit;box-shadow:none;font-weight:600;\">' +\n      rows +\n    '</div>'\n  );\n}\n"
+      grid:
+        borderColor: var(--divider-color)
+        strokeDashArray: 2
+        xaxis:
+          lines:
+            show: true
+        yaxis:
+          lines:
+            show: true
+      xaxis:
+        labels:
+          datetimeUTC: false
+          datetimeFormatter:
+            hour: HH:mm
+            day: d MMM
+          style:
+            fontSize: 11px
+        tooltip:
+          formatter: "EVAL:function(value) {\n  const date = new Date(value);\n\n  const months = [\n    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',\n    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'\n  ];\n\n  const pad = number =>\n    String(number).padStart(2, '0');\n\n  return (\n    pad(date.getDate()) +\n    ' ' +\n    months[date.getMonth()] +\n    ' · ' +\n    pad(date.getHours()) +\n    ':' +\n    pad(date.getMinutes())\n  );\n}\n"
+      dataLabels:
+        enabled: false
+      legend:
+        show: false
+      annotations:
+        yaxis:
+        - y: 0
+          borderColor: var(--secondary-text-color)
+          strokeDashArray: 0
+    series:
+    - entity: sensor.hpvc_diag_grid_power
+      name: Grid import
+      yaxis_id: main
+      type: area
+      color: '#3B82F6'
+      opacity: 0.55
+      stroke_width: 2
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: false
+        legend_value: false
+      transform: "const value = Number(x);\n\nif (\n  !Number.isFinite(value) ||\n  Math.abs(value) > 50000\n) {\n  return null;\n}\n\nreturn value > 0 ? value : 0;\n"
+      group_by:
+        func: avg
+        duration: 5min
+        fill: zero
+        start_with_last: false
+    - entity: sensor.hpvc_diag_grid_power
+      name: Grid export
+      yaxis_id: main
+      type: area
+      color: '#22C55E'
+      opacity: 0.55
+      stroke_width: 2
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: false
+        legend_value: false
+      transform: "const value = Number(x);\n\nif (\n  !Number.isFinite(value) ||\n  Math.abs(value) > 50000\n) {\n  return null;\n}\n\nreturn value < 0 ? value : 0;\n"
+      group_by:
+        func: avg
+        duration: 5min
+        fill: zero
+        start_with_last: false
+    - entity: sensor.hpvc_diag_pv_power
+      name: Solar graph
+      yaxis_id: main
+      type: area
+      color: '#F59E0B'
+      opacity: 0.55
+      stroke_width: 2
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: false
+        legend_value: false
+      transform: "const value = Number(x);\n\nif (\n  !Number.isFinite(value) ||\n  value < 0 ||\n  value > 50000\n) {\n  return null;\n}\n\nreturn value;\n"
+      group_by:
+        func: avg
+        duration: 5min
+        fill: zero
+        start_with_last: false
+    - entity: sensor.hpvc_diag_grid_power
+      name: Import
+      yaxis_id: raw_header
+      type: line
+      color: '#3B82F6'
+      opacity: 0
+      stroke_width: 0
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: true
+        name_in_header: true
+        legend_value: false
+      data_generator: "const value = Number(entity.state);\n\nif (\n  !Number.isFinite(value) ||\n  Math.abs(value) > 50000\n) {\n  return [];\n}\n\nreturn [[Date.now(), value > 0 ? value : 0]];\n"
+    - entity: sensor.hpvc_diag_grid_power
+      name: Export
+      yaxis_id: raw_header
+      type: line
+      color: '#22C55E'
+      opacity: 0
+      stroke_width: 0
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: true
+        name_in_header: true
+        legend_value: false
+      data_generator: "const value = Number(entity.state);\n\nif (\n  !Number.isFinite(value) ||\n  Math.abs(value) > 50000\n) {\n  return [];\n}\n\nreturn [[Date.now(), value < 0 ? value : 0]];\n"
+    - entity: sensor.hpvc_diag_pv_power
+      name: Solar
+      yaxis_id: raw_header
+      type: line
+      color: '#F59E0B'
+      opacity: 0
+      stroke_width: 0
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: true
+        name_in_header: true
+        legend_value: false
+      data_generator: "const value = Number(entity.state);\n\nif (\n  !Number.isFinite(value) ||\n  value < 0 ||\n  value > 50000\n) {\n  return [];\n}\n\nreturn [[Date.now(), value]];\n"
+  - type: custom:apexcharts-card
+    section_mode: true
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_onboarding_complete
+      state: 'on'
+    - condition: state
+      entity: input_boolean.hpvc_control_hbc_strategy
+      state: 'on'
+    - condition: state
+      entity: binary_sensor.hpvc_hbc_available
+      state: 'on'
+    update_interval: 5s
+    graph_span: 6h
+    header:
+      show: true
+      title: ⚡ Power Flow
+      show_states: true
+      colorize_states: true
+    yaxis:
+    - id: main
+      min: auto
+      max: auto
+      decimals: 0
+      apex_config:
+        title:
+          text: W
+    - id: raw_header
+      show: false
+      min: -50000
+      max: 50000
+      decimals: 0
+    apex_config:
+      chart:
+        height: 250
+        stacked: false
+        toolbar:
+          show: false
+        zoom:
+          enabled: false
+        pan:
+          enabled: false
+        animations:
+          enabled: false
+      stroke:
+        curve: smooth
+        connectNulls: false
+      fill:
+        opacity: 0.55
+      markers:
+        size: 0
+        hover:
+          size: 5
+          sizeOffset: 0
+      tooltip:
+        shared: true
+        intersect: false
+        followCursor: true
+        theme: false
+        custom: "EVAL:function({ series, dataPointIndex }) {\n\n  const colors = [\n    '#3B82F6',\n    '#22C55E',\n    '#F59E0B',\n    '#EC4899'\n  ];\n\n  const names = [\n    'Grid import',\n    'Grid export',\n    'Solar',\n    'Battery charge'\n  ];\n\n  let rows = '';\n\n  // Only the first four visible graph series belong in the tooltip.\n  for (let i = 0; i < 4; i++) {\n    const value =\n      series[i] && dataPointIndex < series[i].length\n        ? series[i][dataPointIndex]\n        : null;\n\n    const display =\n      value === null ||\n      value === undefined ||\n      !Number.isFinite(value)\n        ? '—'\n        : Math.round(value).toLocaleString() + ' W';\n\n    rows +=\n      '<div style=\"display:flex;align-items:center;gap:6px;margin:2px 0;\">' +\n        '<span style=\"display:inline-block;width:10px;height:10px;border-radius:50%;background:' +\n          colors[i] +\n          ';flex-shrink:0;\"></span>' +\n        '<span style=\"color:var(--secondary-text-color);min-width:88px;font-weight:700;\">' +\n          names[i] +\n          '</span>' +\n        '<span style=\"font-weight:700;margin-left:auto;\">' +\n          display +\n        '</span>' +\n      '</div>';\n  }\n\n  return (\n    '<div style=\"padding:8px 10px;font-size:10px;width:max-content;max-width:240px;box-sizing:border-box;background:color-mix(in srgb,var(--ha-card-background,var(--card-background-color)) 35%,transparent);backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px);border-radius:6px;border:1px solid var(--divider-color);color:var(--primary-text-color);font-family:inherit;box-shadow:none;font-weight:600;\">' +\n      rows +\n    '</div>'\n  );\n}\n"
+      grid:
+        borderColor: var(--divider-color)
+        strokeDashArray: 2
+        xaxis:
+          lines:
+            show: true
+        yaxis:
+          lines:
+            show: true
+      xaxis:
+        labels:
+          datetimeUTC: false
+          datetimeFormatter:
+            hour: HH:mm
+            day: d MMM
+          style:
+            fontSize: 11px
+        tooltip:
+          formatter: "EVAL:function(value) {\n  const date = new Date(value);\n\n  const months = [\n    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',\n    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'\n  ];\n\n  const pad = number =>\n    String(number).padStart(2, '0');\n\n  return (\n    pad(date.getDate()) +\n    ' ' +\n    months[date.getMonth()] +\n    ' · ' +\n    pad(date.getHours()) +\n    ':' +\n    pad(date.getMinutes())\n  );\n}\n"
+      dataLabels:
+        enabled: false
+      legend:
+        show: false
+      annotations:
+        yaxis:
+        - y: 0
+          borderColor: var(--secondary-text-color)
+          strokeDashArray: 0
+    series:
+    - entity: sensor.hpvc_diag_grid_power
+      name: Grid import
+      yaxis_id: main
+      type: area
+      color: '#3B82F6'
+      opacity: 0.55
+      stroke_width: 2
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: false
+        legend_value: false
+      transform: "const value = Number(x);\n\nif (\n  !Number.isFinite(value) ||\n  Math.abs(value) > 50000\n) {\n  return null;\n}\n\nreturn value > 0 ? value : 0;\n"
+      group_by:
+        func: avg
+        duration: 5min
+        fill: zero
+        start_with_last: false
+    - entity: sensor.hpvc_diag_grid_power
+      name: Grid export
+      yaxis_id: main
+      type: area
+      color: '#22C55E'
+      opacity: 0.55
+      stroke_width: 2
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: false
+        legend_value: false
+      transform: "const value = Number(x);\n\nif (\n  !Number.isFinite(value) ||\n  Math.abs(value) > 50000\n) {\n  return null;\n}\n\nreturn value < 0 ? value : 0;\n"
+      group_by:
+        func: avg
+        duration: 5min
+        fill: zero
+        start_with_last: false
+    - entity: sensor.hpvc_diag_pv_power
+      name: Solar graph
+      yaxis_id: main
+      type: area
+      color: '#F59E0B'
+      opacity: 0.55
+      stroke_width: 2
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: false
+        legend_value: false
+      transform: "const value = Number(x);\n\nif (\n  !Number.isFinite(value) ||\n  value < 0 ||\n  value > 50000\n) {\n  return null;\n}\n\nreturn value;\n"
+      group_by:
+        func: avg
+        duration: 5min
+        fill: zero
+        start_with_last: false
+    - entity: sensor.hpvc_total_hbc_charging_power
+      name: Battery charge graph
+      yaxis_id: main
+      type: area
+      color: '#EC4899'
+      opacity: 0.55
+      stroke_width: 2
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: false
+        legend_value: false
+      transform: "const value = Number(x);\n\nif (\n  !Number.isFinite(value) ||\n  value < 0 ||\n  value > 50000\n) {\n  return null;\n}\n\nreturn value;\n"
+      group_by:
+        func: avg
+        duration: 5min
+        fill: zero
+        start_with_last: false
+    - entity: sensor.hpvc_diag_grid_power
+      name: Import
+      yaxis_id: raw_header
+      type: line
+      color: '#3B82F6'
+      opacity: 0
+      stroke_width: 0
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: true
+        name_in_header: true
+        legend_value: false
+      data_generator: "const value = Number(entity.state);\n\nif (\n  !Number.isFinite(value) ||\n  Math.abs(value) > 50000\n) {\n  return [];\n}\n\nreturn [[Date.now(), value > 0 ? value : 0]];\n"
+    - entity: sensor.hpvc_diag_grid_power
+      name: Export
+      yaxis_id: raw_header
+      type: line
+      color: '#22C55E'
+      opacity: 0
+      stroke_width: 0
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: true
+        name_in_header: true
+        legend_value: false
+      data_generator: "const value = Number(entity.state);\n\nif (\n  !Number.isFinite(value) ||\n  Math.abs(value) > 50000\n) {\n  return [];\n}\n\nreturn [[Date.now(), value < 0 ? value : 0]];\n"
+    - entity: sensor.hpvc_diag_pv_power
+      name: Solar
+      yaxis_id: raw_header
+      type: line
+      color: '#F59E0B'
+      opacity: 0
+      stroke_width: 0
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: true
+        name_in_header: true
+        legend_value: false
+      data_generator: "const value = Number(entity.state);\n\nif (\n  !Number.isFinite(value) ||\n  value < 0 ||\n  value > 50000\n) {\n  return [];\n}\n\nreturn [[Date.now(), value]];\n"
+    - entity: sensor.hpvc_total_hbc_charging_power
+      name: Charge
+      yaxis_id: raw_header
+      type: line
+      color: '#EC4899'
+      opacity: 0
+      stroke_width: 0
+      unit: W
+      float_precision: 0
+      extend_to: false
+      show:
+        in_header: true
+        name_in_header: true
+        legend_value: false
+      data_generator: "const value = Number(entity.state);\n\nif (\n  !Number.isFinite(value) ||\n  value < 0 ||\n  value > 50000\n) {\n  return [];\n}\n\nreturn [[Date.now(), value]];\n"
+  - type: grid
+    cards:
+    - type: markdown
+      title: 📋 Insights
+      content: "<ha-alert alert-type=\"info\">\n  For complete current-day history, press <b>Generate report</b>\n  in <b>PV Master Control</b>.\n</ha-alert>\n<br>\n{% set entities = [\n  'input_text.hpvc_insight_1',\n  'input_text.hpvc_insight_2',\n  'input_text.hpvc_insight_3',\n  'input_text.hpvc_insight_4',\n  'input_text.hpvc_insight_5',\n  'input_text.hpvc_insight_6',\n  'input_text.hpvc_insight_7',\n  'input_text.hpvc_insight_8',\n  'input_text.hpvc_insight_9',\n  'input_text.hpvc_insight_10',\n  'input_text.hpvc_insight_11',\n  'input_text.hpvc_insight_12',\n  'input_text.hpvc_insight_13',\n  'input_text.hpvc_insight_14',\n  'input_text.hpvc_insight_15',\n  'input_text.hpvc_insight_16',\n  'input_text.hpvc_insight_17',\n  'input_text.hpvc_insight_18',\n  'input_text.hpvc_insight_19',\n  'input_text.hpvc_insight_20'\n] %} {% set ns = namespace(items=[]) %} {% for entity in entities %}\n  {% set value = states(entity) %}\n  {% if value not in ['unknown', 'unavailable', '', none] %}\n    {% set parts = value.split('|') %}\n    {% if parts | length >= 7 and parts[0] | trim == 'v2' %}\n      {% set severity_code = parts[3] | trim %}\n      {% set item = {\n        'time': parts[2] | trim,\n        'severity': 'critical' if severity_code == 'c' else ('warning' if severity_code == 'w' else 'info'),\n        'count': parts[4] | trim | int(1),\n        'node': parts[5] | trim,\n        'explanation': parts[6:] | join('|') | trim\n      } %}\n    {% elif parts | length >= 6 and parts[1] | trim in ['critical', 'warning', 'info'] %}\n      {% set item = {\n        'time': parts[0] | trim,\n        'severity': parts[1] | trim,\n        'count': parts[2] | trim | int(1),\n        'node': parts[4] | trim,\n        'explanation': parts[5:] | join('|') | trim\n      } %}\n    {% elif parts | length >= 4 %}\n      {% set explanation = parts[3:] | join('|') | trim %}\n      {% set lower = (parts[2] ~ ' ' ~ explanation) | lower %}\n      {% set critical =\n        'control paused' in lower or 'no inverter writes' in lower or\n        'invalid configuration' in lower or ('core ' in lower and ' unavailable' in lower) or\n        ('command' in lower and 'fail' in lower) or ('report' in lower and 'fail' in lower) or\n        'all battery telemetry' in lower or 'runtime unavailable' in lower %}\n      {% set warning = not critical and (\n        'warning' in lower or 'unavailable' in lower or 'stale' in lower or\n        'excluded' in lower or 'blocked' in lower or 'ineffective' in lower or\n        'not confirmed' in lower or 'fault' in lower) %}\n      {% set item = {\n        'time': parts[0] | trim,\n        'severity': 'critical' if critical else ('warning' if warning else 'info'),\n        'count': 1,\n        'node': parts[2] | trim,\n        'explanation': explanation\n      } %}\n    {% else %}\n      {% set item = none %}\n    {% endif %}\n    {% if item %}{% set ns.items = ns.items + [item] %}{% endif %}\n  {% endif %}\n{% endfor %}\n{% if ns.items | length == 0 %} <p><em>No Insights recorded yet today.</em></p> {% else %}\n  {# Node-RED publishes helpers 1..20 already normalized and newest-first. #}\n  {% for item in ns.items %}\n    {% set node = (item.node | lower) %}\n    {% set explanation = (item.explanation | lower) %}\n    {% set insight_text = node ~ ' ' ~ explanation %}\n    {# Dashboard-only colour policy: red is reserved for an actual fault,\n       failed action, safety pause, or control-blocking condition. #}\n    {% set red_fault =\n      ('hbc safety' in node and ('paused' in explanation or 'fault' in explanation or 'failed' in explanation)) or\n      ('sensor health' in node and ('control paused' in explanation or 'invalid' in explanation or 'unavailable' in explanation)) or\n      (('configuration' in node or node == 'inputs') and\n        ('control paused' in explanation or 'configuration error' in explanation or 'invalid' in explanation or 'unavailable' in explanation or 'no valid pv inverter' in explanation)) or\n      ('inverter group' in node and ('paused' in explanation or 'fault' in explanation or 'failed' in explanation or 'unavailable' in explanation)) or\n      ('write warning' in node and ('failed' in explanation or 'failure' in explanation or 'error' in explanation or 'could not' in explanation)) or\n      ('runtime warning' in node and ('error' in explanation or 'exception' in explanation or 'failed' in explanation or 'failure' in explanation)) or\n      ('support report' in node and ('failed' in explanation or 'failure' in explanation or 'error' in explanation)) %}\n    {% if 'battery' in node or 'charge priority' in node or 'taper' in node %}\n    {% set icon = '\U0001F7E3' %}\n    {% elif red_fault or item.severity == 'critical' %}\n    {% set icon = '\U0001F534' %}\n    {% elif 'pv' in node or 'inverter' in node or 'limit' in node or 'restore' in node %}\n    {% set icon = '\U0001F7E1' %}\n    {% elif 'price' in node %}\n    {% set icon = '\U0001F7E2' %}\n    {% else %}\n    {% set icon = '⚪' %}\n    {% endif %}\n<div style=\"padding:8px 0; border-bottom:1px solid rgba(128,128,128,.24); overflow:hidden;\">\n  <div style=\"display:flex; align-items:flex-start; gap:6px; min-width:0;\">\n    <span style=\"flex:0 0 auto;\">{{ icon }}</span>\n    <strong style=\"min-width:0; overflow-wrap:anywhere; word-break:break-word; white-space:normal;\">{{ item.time }} · {{ item.node }}{% if item.count > 1 %} · ×{{ item.count }}{% endif %}</strong>\n  </div>\n  <div style=\"margin-top:5px; overflow-wrap:anywhere; word-break:break-word; white-space:normal; line-height:1.45;\">{{ item.explanation }}</div>\n</div>\n  {% endfor %}\n{% endif %}"
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_onboarding_complete
+      state: 'on'
+  - type: custom:apexcharts-card
+    section_mode: true
+    visibility:
+    - condition: state
+      entity: input_boolean.hpvc_onboarding_complete
+      state: 'on'
+    - condition: state
+      entity: input_boolean.hpvc_control_hbc_strategy
+      state: 'on'
+    - condition: state
+      entity: binary_sensor.hpvc_hbc_available
+      state: 'on'
+    header:
+      show: true
+      show_states: true
+      colorize_states: true
+      title: 💰 HBC Price Intervals
+    graph_span: 48h
+    update_interval: 1min
+    span:
+      start: day
+    apex_config:
+      chart:
+        height: 210px
+        animations:
+          enabled: false
+        toolbar:
+          show: false
+        zoom:
+          enabled: false
+        pan:
+          enabled: false
+      annotations:
+        xaxis:
+        - x: EVAL:new Date().getTime()
+          borderColor: '#009ac7'
+          strokeDashArray: 0
+          label:
+            text: Now
+            orientation: horizontal
+            offsetY: -12
+            style:
+              background: '#009ac7'
+              color: '#ffffff'
+      plotOptions:
+        bar:
+          borderRadius: 2
+          columnWidth: 100%
+      grid:
+        borderColor: var(--divider-color)
+        strokeDashArray: 2
+        xaxis:
+          lines:
+            show: true
+        yaxis:
+          lines:
+            show: true
+      legend:
+        show: false
+      xaxis:
+        type: datetime
+        labels:
+          datetimeUTC: false
+          format: HH:mm
+          rotate: -45
+          rotateAlways: true
+          maxHeight: 70
+          offsetY: -3
+        tooltip:
+          enabled: true
+          formatter: "EVAL:function(value) {\n  const date = new Date(value);\n\n  const pad = number =>\n    String(number).padStart(2, '0');\n\n  return (\n    pad(date.getHours()) +\n    ':' +\n    pad(date.getMinutes())\n  );\n}\n"
+        crosshairs:
+          show: true
+          stroke:
+            width: 1
+            dashArray: 3
+      yaxis:
+        decimalsInFloat: 0
+        title:
+          text: cent / kWh
+      tooltip:
+        enabled: true
+        shared: true
+        intersect: false
+        followCursor: true
+        theme: false
+        custom: "EVAL:function({ series, seriesIndex, dataPointIndex, w }) {\n\n  const priceSeriesIndex =\n    w &&\n    w.config &&\n    w.config.series\n      ? w.config.series.findIndex(s => s.name === 'Price')\n      : -1;\n\n  const index =\n    priceSeriesIndex >= 0\n      ? priceSeriesIndex\n      : seriesIndex;\n\n  const value =\n    series[index] &&\n    dataPointIndex >= 0 &&\n    dataPointIndex < series[index].length\n      ? Number(series[index][dataPointIndex])\n      : NaN;\n\n  const point =\n    w &&\n    w.config &&\n    w.config.series &&\n    w.config.series[index] &&\n    w.config.series[index].data &&\n    dataPointIndex >= 0\n      ? w.config.series[index].data[dataPointIndex]\n      : null;\n\n  const colour =\n    point && point.fillColor\n      ? point.fillColor\n      : '#9e9e9e';\n\n  const display =\n    Number.isFinite(value)\n      ? value.toFixed(1) + ' ct/kWh'\n      : '—';\n\n  return (\n    '<div style=\"display:flex;align-items:center;gap:7px;padding:7px 9px;font-size:10px;width:max-content;box-sizing:border-box;background:color-mix(in srgb,var(--ha-card-background,var(--card-background-color)) 35%,transparent);backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px);border-radius:6px;border:1px solid var(--divider-color);color:var(--primary-text-color);font-family:inherit;box-shadow:none;font-weight:700;\">' +\n      '<span style=\"display:inline-block;width:10px;height:10px;border-radius:50%;background:' +\n      colour +\n      ';flex-shrink:0;\"></span>' +\n      '<span style=\"color:var(--secondary-text-color);\">Price</span>' +\n      '<span>' +\n      display +\n      '</span>' +\n    '</div>'\n  );\n}\n"
+    series:
+    - entity: sensor.hbc_energy_prices_data
+      name: Current high price
+      color: '#ff9800'
+      unit: ' ct/kWh'
+      float_precision: 1
+      extend_to: false
+      show:
+        in_chart: false
+        in_header: true
+        name_in_header: false
+        null_in_header: false
+        legend_value: false
+      data_generator: "const marks = entity.attributes.marks || [];\nconst now = Date.now();\n\nconst current =\n  marks.find(interval => interval.is_now) ||\n  marks.find((interval, index) => {\n    const start =\n      new Date(interval.start).getTime();\n\n    const nextStart =\n      index < marks.length - 1\n        ? new Date(marks[index + 1].start).getTime()\n        : start + (15 * 60 * 1000);\n\n    return now >= start && now < nextStart;\n  });\n\nif (\n  !current ||\n  current.mark !== 'high' ||\n  !Number.isFinite(Number(current.price))\n) {\n  return [];\n}\n\nreturn [[now, Number(current.price)]];\n"
+    - entity: sensor.hbc_energy_prices_data
+      name: Current low price
+      color: '#4caf50'
+      unit: ' ct/kWh'
+      float_precision: 1
+      extend_to: false
+      show:
+        in_chart: false
+        in_header: true
+        name_in_header: false
+        null_in_header: false
+        legend_value: false
+      data_generator: "const marks = entity.attributes.marks || [];\nconst now = Date.now();\n\nconst current =\n  marks.find(interval => interval.is_now) ||\n  marks.find((interval, index) => {\n    const start =\n      new Date(interval.start).getTime();\n\n    const nextStart =\n      index < marks.length - 1\n        ? new Date(marks[index + 1].start).getTime()\n        : start + (15 * 60 * 1000);\n\n    return now >= start && now < nextStart;\n  });\n\nif (\n  !current ||\n  current.mark !== 'low' ||\n  !Number.isFinite(Number(current.price))\n) {\n  return [];\n}\n\nreturn [[now, Number(current.price)]];\n"
+    - entity: sensor.hbc_energy_prices_data
+      name: Current normal price
+      color: '#9e9e9e'
+      unit: ' ct/kWh'
+      float_precision: 1
+      extend_to: false
+      show:
+        in_chart: false
+        in_header: true
+        name_in_header: false
+        null_in_header: false
+        legend_value: false
+      data_generator: "const marks = entity.attributes.marks || [];\nconst now = Date.now();\n\nconst current =\n  marks.find(interval => interval.is_now) ||\n  marks.find((interval, index) => {\n    const start =\n      new Date(interval.start).getTime();\n\n    const nextStart =\n      index < marks.length - 1\n        ? new Date(marks[index + 1].start).getTime()\n        : start + (15 * 60 * 1000);\n\n    return now >= start && now < nextStart;\n  });\n\nif (\n  !current ||\n  current.mark === 'high' ||\n  current.mark === 'low' ||\n  !Number.isFinite(Number(current.price))\n) {\n  return [];\n}\n\nreturn [[now, Number(current.price)]];\n"
+    - entity: sensor.hbc_energy_prices_data
+      name: Price
+      type: column
+      float_precision: 1
+      show:
+        in_header: false
+        legend_value: false
+      data_generator: "const marks = entity.attributes.marks || [];\n\nconst colours = {\n  high: '#ff9800',\n  low: '#4caf50'\n};\n\nconst startOfTomorrow = new Date();\nstartOfTomorrow.setHours(24, 0, 0, 0);\n\nconst tomorrowTimestamp =\n  startOfTomorrow.getTime();\n\nconst withOpacity = (hex, opacity) => {\n  const value = hex.replace('#', '');\n\n  const red =\n    parseInt(value.slice(0, 2), 16);\n\n  const green =\n    parseInt(value.slice(2, 4), 16);\n\n  const blue =\n    parseInt(value.slice(4, 6), 16);\n\n  return `rgba(${red}, ${green}, ${blue}, ${opacity})`;\n};\n\nreturn marks.map(interval => {\n  const timestamp =\n    new Date(interval.start).getTime();\n\n  const colour =\n    interval.is_now\n      ? '#009ac7'\n      : (colours[interval.mark] || '#9e9e9e');\n\n  return {\n    x: timestamp,\n    y: Number(interval.price),\n    fillColor:\n      timestamp >= tomorrowTimestamp &&\n      !interval.is_now\n        ? withOpacity(colour, 0.55)\n        : colour\n  };\n});\n"
+  background:
+    opacity: 33
+    alignment: center
+    size: cover
+    repeat: repeat
+    attachment: fixed
+  cards: []
+- type: sections
+  title: Settings
+  path: hpvc-configuration
+  icon: mdi:cog
+  max_columns: 3
+  sections:
+  - type: grid
+    cards:
+    - type: markdown
+      content: '### 📡 Core Sensors
+
+        '
+    - type: markdown
+      text_only: true
+      content: "**Grid**: current grid power. Negative is export, positive is import (W).\n\n**Market/export price**: current market or export price used for PV limiting (€/kWh).\n\n**All-in price**: current total import price used for negative-price override (€/kWh).\n\n**Solar power**: current total PV power from active inverters (W).\n\nPaste (Ctrl + V) the entity IDs in the fields below. \nExample: `sensor.p1_meter_power`"
+    - type: entities
+      entities:
+      - entity: input_text.hpvc_grid_power_sensor
+        name: Grid
+      - entity: input_text.hpvc_market_price_sensor
+        name: Market/export price
+      - entity: input_text.hpvc_all_in_price_sensor
+        name: All-in price
+      - entity: input_text.hpvc_pv_power_sensor
+        name: Solar power
+      show_header_toggle: false
+    grid_options:
+      columns: 6
+      rows: auto
+  - type: grid
+    cards:
+    - type: markdown
+      content: '### 🔆 Inverters
+
+        '
+    - type: markdown
+      text_only: true
+      content: 'Configure up to 10 active inverter limit entities.
+
+
+        For each inverter enter:
+
+
+        • The power limit number entity ID (W).
+
+        • The maximum power (W).
+
+        • The minimum desired power (W).
+
+
+        Paste (Ctrl + V) the entity IDs into the fields below.
+
+        '
+    - type: markdown
+      text_only: true
+      content: '<ha-alert title="Negative price protection" alert-type="info">
+
+        When the all-in price is ≤ 0 €/kWh, PV is limited to the configured minimum. Set it to <b>0 W</b> for full shutdown during negative price.
+
+        </ha-alert>'
+    - type: entities
+      entities:
+      - entity: input_number.hpvc_inverter_count
+        name: Number of inverters
+      show_header_toggle: false
+    - type: vertical-stack
+      cards:
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: binary_sensor.hpvc_pv1_limit_range_invalid
+          state: 'on'
+        card:
+          type: markdown
+          text_only: true
+          content: <ha-alert alert-type="warning">PV1 Min power must be lower than Max power.</ha-alert>
+      - type: entities
+        show_header_toggle: false
+        entities:
+        - entity: input_text.hpvc_pv1_limit_number
+          name: PV1 – Limit entity
+        - entity: input_number.hpvc_pv1_full_limit
+          name: PV1 Max power
+        - entity: input_number.hpvc_pv1_low_limit
+          name: PV1 Min power
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.hpvc_show_inverter_slot_2
+        state: 'on'
+      card:
+        type: vertical-stack
+        cards:
+        - type: conditional
+          conditions:
+          - condition: state
+            entity: binary_sensor.hpvc_pv2_limit_range_invalid
+            state: 'on'
+          card:
+            type: markdown
+            text_only: true
+            content: <ha-alert alert-type="warning">PV2 Min power must be lower than Max power.</ha-alert>
+        - type: entities
+          show_header_toggle: false
+          entities:
+          - entity: input_text.hpvc_pv2_limit_number
+            name: PV2 – Limit entity
+          - entity: input_number.hpvc_pv2_full_limit
+            name: PV2 Max power
+          - entity: input_number.hpvc_pv2_low_limit
+            name: PV2 Min power
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.hpvc_show_inverter_slot_3
+        state: 'on'
+      card:
+        type: vertical-stack
+        cards:
+        - type: conditional
+          conditions:
+          - condition: state
+            entity: binary_sensor.hpvc_pv3_limit_range_invalid
+            state: 'on'
+          card:
+            type: markdown
+            text_only: true
+            content: <ha-alert alert-type="warning">PV3 Min power must be lower than Max power.</ha-alert>
+        - type: entities
+          show_header_toggle: false
+          entities:
+          - entity: input_text.hpvc_pv3_limit_number
+            name: PV3 – Limit entity
+          - entity: input_number.hpvc_pv3_full_limit
+            name: PV3 Max power
+          - entity: input_number.hpvc_pv3_low_limit
+            name: PV3 Min power
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.hpvc_show_inverter_slot_4
+        state: 'on'
+      card:
+        type: vertical-stack
+        cards:
+        - type: conditional
+          conditions:
+          - condition: state
+            entity: binary_sensor.hpvc_pv4_limit_range_invalid
+            state: 'on'
+          card:
+            type: markdown
+            text_only: true
+            content: <ha-alert alert-type="warning">PV4 Min power must be lower than Max power.</ha-alert>
+        - type: entities
+          show_header_toggle: false
+          entities:
+          - entity: input_text.hpvc_pv4_limit_number
+            name: PV4 – Limit entity
+          - entity: input_number.hpvc_pv4_full_limit
+            name: PV4 Max power
+          - entity: input_number.hpvc_pv4_low_limit
+            name: PV4 Min power
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.hpvc_show_inverter_slot_5
+        state: 'on'
+      card:
+        type: vertical-stack
+        cards:
+        - type: conditional
+          conditions:
+          - condition: state
+            entity: binary_sensor.hpvc_pv5_limit_range_invalid
+            state: 'on'
+          card:
+            type: markdown
+            text_only: true
+            content: <ha-alert alert-type="warning">PV5 Min power must be lower than Max power.</ha-alert>
+        - type: entities
+          show_header_toggle: false
+          entities:
+          - entity: input_text.hpvc_pv5_limit_number
+            name: PV5 – Limit entity
+          - entity: input_number.hpvc_pv5_full_limit
+            name: PV5 Max power
+          - entity: input_number.hpvc_pv5_low_limit
+            name: PV5 Min power
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.hpvc_show_inverter_slot_6
+        state: 'on'
+      card:
+        type: vertical-stack
+        cards:
+        - type: conditional
+          conditions:
+          - condition: state
+            entity: binary_sensor.hpvc_pv6_limit_range_invalid
+            state: 'on'
+          card:
+            type: markdown
+            text_only: true
+            content: <ha-alert alert-type="warning">PV6 Min power must be lower than Max power.</ha-alert>
+        - type: entities
+          show_header_toggle: false
+          entities:
+          - entity: input_text.hpvc_pv6_limit_number
+            name: PV6 – Limit entity
+          - entity: input_number.hpvc_pv6_full_limit
+            name: PV6 Max power
+          - entity: input_number.hpvc_pv6_low_limit
+            name: PV6 Min power
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.hpvc_show_inverter_slot_7
+        state: 'on'
+      card:
+        type: vertical-stack
+        cards:
+        - type: conditional
+          conditions:
+          - condition: state
+            entity: binary_sensor.hpvc_pv7_limit_range_invalid
+            state: 'on'
+          card:
+            type: markdown
+            text_only: true
+            content: <ha-alert alert-type="warning">PV7 Min power must be lower than Max power.</ha-alert>
+        - type: entities
+          show_header_toggle: false
+          entities:
+          - entity: input_text.hpvc_pv7_limit_number
+            name: PV7 – Limit entity
+          - entity: input_number.hpvc_pv7_full_limit
+            name: PV7 Max power
+          - entity: input_number.hpvc_pv7_low_limit
+            name: PV7 Min power
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.hpvc_show_inverter_slot_8
+        state: 'on'
+      card:
+        type: vertical-stack
+        cards:
+        - type: conditional
+          conditions:
+          - condition: state
+            entity: binary_sensor.hpvc_pv8_limit_range_invalid
+            state: 'on'
+          card:
+            type: markdown
+            text_only: true
+            content: <ha-alert alert-type="warning">PV8 Min power must be lower than Max power.</ha-alert>
+        - type: entities
+          show_header_toggle: false
+          entities:
+          - entity: input_text.hpvc_pv8_limit_number
+            name: PV8 – Limit entity
+          - entity: input_number.hpvc_pv8_full_limit
+            name: PV8 Max power
+          - entity: input_number.hpvc_pv8_low_limit
+            name: PV8 Min power
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.hpvc_show_inverter_slot_9
+        state: 'on'
+      card:
+        type: vertical-stack
+        cards:
+        - type: conditional
+          conditions:
+          - condition: state
+            entity: binary_sensor.hpvc_pv9_limit_range_invalid
+            state: 'on'
+          card:
+            type: markdown
+            text_only: true
+            content: <ha-alert alert-type="warning">PV9 Min power must be lower than Max power.</ha-alert>
+        - type: entities
+          show_header_toggle: false
+          entities:
+          - entity: input_text.hpvc_pv9_limit_number
+            name: PV9 – Limit entity
+          - entity: input_number.hpvc_pv9_full_limit
+            name: PV9 Max power
+          - entity: input_number.hpvc_pv9_low_limit
+            name: PV9 Min power
+    - type: conditional
+      conditions:
+      - entity: binary_sensor.hpvc_show_inverter_slot_10
+        state: 'on'
+      card:
+        type: vertical-stack
+        cards:
+        - type: conditional
+          conditions:
+          - condition: state
+            entity: binary_sensor.hpvc_pv10_limit_range_invalid
+            state: 'on'
+          card:
+            type: markdown
+            text_only: true
+            content: <ha-alert alert-type="warning">PV10 Min power must be lower than Max power.</ha-alert>
+        - type: entities
+          show_header_toggle: false
+          entities:
+          - entity: input_text.hpvc_pv10_limit_number
+            name: PV10 – Limit entity
+          - entity: input_number.hpvc_pv10_full_limit
+            name: PV10 Max power
+          - entity: input_number.hpvc_pv10_low_limit
+            name: PV10 Min power
+    grid_options:
+      columns: 6
+      rows: auto
+  - type: grid
+    cards:
+    - type: markdown
+      content: '### 📈 Price Strategy
+
+        '
+    - type: markdown
+      text_only: true
+      content: '**PV limit price**: PV limiting is allowed at or below this market/export price.{% if is_state(''input_boolean.hpvc_control_hbc_strategy'', ''on'') %} HBC Charge takes priority while batteries still have useful charge headroom.{% endif %}'
+    - type: markdown
+      text_only: true
+      content: '**Price hysteresis**: prevents rapid PV limiting changes when leaving the configured PV limit price zone. Not used for negative-price mode.'
+    - type: markdown
+      text_only: true
+      content: '<ha-alert title="PV limiting price guidance" alert-type="info">
+
+        Use €0.00/kWh if you use a net export-price sensor. For a raw market-price sensor, adjust for fees, compensation, and local rules.
+
+        </ha-alert>'
+    - type: entities
+      entities:
+      - entity: input_number.hpvc_pv_limiting_price
+        name: PV limit price
+      - entity: input_number.hpvc_battery_price_hysteresis
+        name: Price hysteresis
+      show_header_toggle: false
+    grid_options:
+      columns: 4
+      rows: auto
+  - type: grid
+    cards:
+    - type: markdown
+      content: '### ⚡ Power Flow Control
+
+        '
+    - type: markdown
+      text_only: true
+      content: '**Export start**: start limiting when export is stronger than this value.
+
+
+        **Target export**: export level Home PV Control tries to maintain while limiting. Must be higher (less negative) than Export start.
+
+
+        **Import restore**: raise PV again if the house imports too much while limited.
+
+
+        **Min PV for control**: prevents export limiting when PV is low. Not used for import restore.
+
+
+        **Night restore**: restores full inverter limits after PV stays at or below the configured threshold for a while.'
+    - type: vertical-stack
+      cards:
+      - type: conditional
+        conditions:
+        - condition: state
+          entity: binary_sensor.hpvc_export_threshold_range_invalid
+          state: 'on'
+        card:
+          type: markdown
+          text_only: true
+          content: <ha-alert alert-type="warning">Export start must be lower than Target export, and Target export must be lower than Import restore.</ha-alert>
+      - type: entities
+        show_header_toggle: false
+        entities:
+        - entity: input_number.hpvc_export_start_threshold
+          name: Export start
+        - entity: input_number.hpvc_export_stop_threshold
+          name: Target export
+        - entity: input_number.hpvc_import_restore_threshold
+          name: Import restore
+        - entity: input_number.hpvc_pv_min_power_for_control
+          name: Min PV for control
+        - entity: input_number.hpvc_pv_night_restore_power
+          name: Night restore
+    grid_options:
+      columns: 5
+      rows: auto
+  - type: grid
+    cards:
+    - type: markdown
+      content: '### 🎚️ Control Tuning
+
+        '
+    - type: markdown
+      text_only: true
+      content: '**Cooldown**: minimum time between PV limit changes (10 to 60 sec).
+
+
+        **Deadband**: ignores small differences around Target export so Home PV Control does not react to tiny changes.'
+    - type: entities
+      entities:
+      - entity: input_number.hpvc_cooldown_seconds
+        name: Cooldown
+      - entity: input_number.hpvc_pv_adjust_deadband
+        name: Deadband
+      show_header_toggle: false
+    grid_options:
+      columns: 3
+      rows: auto
+  - type: grid
+    cards:
+    - type: vertical-stack
+      cards:
+      - type: markdown
+        content: '### 🧩 Optional HBC Setup
+
+          {% if is_state(''binary_sensor.hpvc_hbc_available'', ''on'') %} <ha-alert title="HBC detected" alert-type="success"> HBC strategy control is available. Enable or disable it in <b>PV Master Control</b> when HPVC is enabled. </ha-alert> {% else %} <ha-alert title="Standalone mode" alert-type="warning"> No compatible HBC runtime was detected.
+
+          HPVC requires both <code>input_select.house_battery_strategy</code> and <code>input_text.house_battery_strategy_active_sub_strategy</code>. </ha-alert> {% endif %}
+
+          '
+      - type: conditional
+        conditions:
+        - entity: binary_sensor.hpvc_hbc_available
+          state: 'on'
+        - entity: input_boolean.hpvc_control_hbc_strategy
+          state: 'on'
+        card:
+          type: entities
+          show_header_toggle: false
+          entities:
+          - entity: input_select.house_battery_strategy
+            name: HBC strategy to run
+            icon: mdi:home-battery
+          - type: section
+          - entity: input_boolean.hpvc_negative_price_hbc_charge
+            name: Force charge at negative price
+            icon: mdi:battery-charging
+    grid_options:
+      columns: 12
+      rows: auto
+  cards: []
