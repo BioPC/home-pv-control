@@ -259,11 +259,15 @@ For Home Battery Control itself, see the [HBC documentation](https://docs.homeba
 
 ### Settings
 
-![Home PV Control settings](assets/screenshots/dashboard_settings.png)
+<p align="center">
+  <img src="assets/screenshots/dashboard_settings.png" alt="Home PV Control settings" width="50%">
+</p>
 
 ### HPVC report
 
-![HPVC report](assets/screenshots/hpvc_report.png)
+<p align="center">
+  <img src="assets/screenshots/hpvc_report.png" alt="HPVC report" width="50%">
+</p>
 
 ### Node-RED flow
 
