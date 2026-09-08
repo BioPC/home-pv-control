@@ -142,7 +142,7 @@ The packaged dashboard includes the **HBC Price Intervals** graph with theme-awa
 
 ### Mobile report navigation buttons appear only after refresh
 
-Use the current v1.4.0 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
+Use the current v1.4.1 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
 
 ## Accuracy diagnostics
 
@@ -223,3 +223,12 @@ The flow records a Battery telemetry warning when a battery becomes unusable and
 For deeper telemetry, cutoff, persistence, attribution, and report semantics, see [How it works](03-how-it-works.md).
 
 [← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md)
+
+
+## Node-RED latency or heap growth (v1.4.1 / issue #2)
+
+v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test v1.4.1 unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
+
+The runtime stores bounded diagnostics in the Node-RED global context key `homePvControlPerformanceDiagnostics`. It contains the latest cycle total, maximum and rolling average evaluation time, the latest per-stage timings, and—when the Function sandbox permits it—a memory sample no more than once per minute. No per-cycle timing or heap history is retained by this diagnostic.
+
+If heap sampling reports unavailable, this only means `process.memoryUsage()` is not exposed to Function nodes in that Node-RED environment; HPVC control continues normally. For useful issue reports, include the current performance-diagnostics object, Node-RED version, Home Assistant version, approximate entity count, and whether memory returns after garbage collection or continues establishing a higher baseline.

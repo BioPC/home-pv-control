@@ -348,10 +348,10 @@ The supplied flow is split into four tabs:
 
 | Tab | Purpose |
 |---|---|
-| **HPVC Inputs v1.4.0** | Reads Home Assistant state, validates configuration and live inputs, and restores persisted runtime state. |
-| **HPVC Engine v1.4.0** | Evaluates prices, cooldown, Night Restore, battery eligibility, Charge Priority, and the total PV target. |
-| **HPVC Outputs v1.4.0** | Distributes inverter targets, performs writes, verifies results, and publishes status, Insights, and accuracy. |
-| **HPVC Reports v1.4.0** | Builds and publishes the on-demand HTML/TXT support report. |
+| **HPVC Inputs v1.4.1** | Reads Home Assistant state, validates configuration and live inputs, and restores persisted runtime state. |
+| **HPVC Engine v1.4.1** | Evaluates prices, cooldown, Night Restore, battery eligibility, Charge Priority, and the total PV target. |
+| **HPVC Outputs v1.4.1** | Distributes inverter targets, performs writes, verifies results, and publishes status, Insights, and accuracy. |
+| **HPVC Reports v1.4.1** | Builds and publishes the on-demand HTML/TXT support report. |
 
 Import the complete `hpvc_flow.json`; the tabs are designed to operate together.
 
@@ -363,3 +363,12 @@ HTML and TXT use the same report model. The report's timestamps and current-day 
 
 [← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md)
 
+
+
+## v1.4.1 runtime state and performance model
+
+HPVC no longer deep-copies Home Assistant's complete `homeassistant.homeAssistant.states` object on each 10-second evaluation. The Inputs tab resolves the fixed HPVC helpers plus configured dynamic grid, price, PV and inverter-limit entities, then copies only those required state entries into a compact `msg.hpvc.cycleStates` snapshot. Predictable HBC/Marstek entities needed by battery safety and Charge Priority are included directly.
+
+This preserves one coherent state picture for a control cycle without allocating a second copy of every Home Assistant entity and its attributes. `msg.hpvc.haStates` is not used by v1.4.1 and is explicitly removed before output publication as a migration safety guard.
+
+For issue #2 verification, major runtime stages record bounded per-cycle elapsed times. HPVC stores only the latest stage timings plus aggregate total timing in `homePvControlPerformanceDiagnostics`. When the Node-RED Function sandbox exposes `process.memoryUsage()`, a heap sample is added at most once per minute; otherwise heap sampling is marked unavailable without affecting control.

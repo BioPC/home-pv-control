@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="releases/v1.4.0/release.md"><img src="https://img.shields.io/badge/release-v1.4.0-blue" alt="Release v1.4.0"></a>
+  <a href="releases/v1.4.1/release.md"><img src="https://img.shields.io/badge/release-v1.4.1-blue" alt="Release v1.4.1"></a>
   <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant ready"></a>
   <a href="https://nodered.org/"><img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED flow"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="GPL-3.0-or-later"></a>
@@ -240,7 +240,7 @@ When upgrading, keep the Home Assistant package, Node-RED flow and dashboard on 
 7. Review **Force charge at negative price**. It is seeded **On** once on fresh installs and upgrades. After that, a manual Off choice survives normal Home Assistant restarts and package/automation reloads. **Restore defaults** turns it On again.
 8. Generate a support report to confirm the installation is healthy.
 
-See the [v1.4.0 release notes](releases/v1.4.0/release.md) for the full release summary.
+See the [v1.4.1 release notes](releases/v1.4.1/release.md) for the full release summary.
 
 ## Documentation
 
@@ -250,7 +250,7 @@ See the [v1.4.0 release notes](releases/v1.4.0/release.md) for the full release 
 - [Troubleshooting](docs/04-troubleshooting.md)
 - [Documentation index](docs/README.md)
 - [Changelog](CHANGELOG.md)
-- [v1.4.0 release notes](releases/v1.4.0/release.md)
+- [v1.4.1 release notes](releases/v1.4.1/release.md)
 
 For Home Battery Control itself, see the [HBC documentation](https://docs.homebatterycontrol.com/).
 
@@ -271,7 +271,7 @@ For Home Battery Control itself, see the [HBC documentation](https://docs.homeba
 
 ### Node-RED flow
 
-Current v1.4.0 Node-RED architecture overview generated from the shipped flow.
+Current v1.4.1 Node-RED architecture overview generated from the shipped flow.
 
 ![Home PV Control Node-RED flow](assets/screenshots/node_red_flow.png)
 
@@ -305,7 +305,7 @@ home assistant/
   hpvc_dashboard.yaml   # Separate Home Assistant dashboard
 
 node-red/
-  hpvc_flow.json        # Importable Node-RED flow with four v1.4.0 tabs
+  hpvc_flow.json        # Importable Node-RED flow with four v1.4.1 tabs
 
 examples/
   hoymiles-opendtu-2-inverters.reference.json
@@ -314,6 +314,9 @@ assets/
   banner.png
   logo.svg
   screenshots/
+    dashboard_main.png
+    dashboard_settings.png
+    hpvc_report.png
     node_red_flow.png
 
 docs/
@@ -324,8 +327,10 @@ docs/
   README.md
 
 releases/
-  v1.3.0/
+  v1.0.0/
+  ...
   v1.4.0/
+  v1.4.1/
 ```
 
 ## Installation format

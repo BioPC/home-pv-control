@@ -1539,7 +1539,7 @@ automation:
   mode: restart
   trigger:
   - platform: webhook
-    webhook_id: hpvc_report_viewed_140
+    webhook_id: hpvc_report_viewed_141
     allowed_methods:
     - POST
     local_only: false

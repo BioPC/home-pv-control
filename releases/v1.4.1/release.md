@@ -30,3 +30,6 @@ Home PV Control v1.4.1 is a focused performance and memory release addressing Gi
 - Existing inverter, HBC, negative-price, safety, accuracy, persistence and report behavior is retained.
 - Replace the Home Assistant package, Node-RED flow and dashboard together when upgrading.
 
+## Verification requested
+
+For issue #2, run v1.4.1 unchanged for several hours or a full day before making additional local modifications. Compare Node-RED latency, garbage-collection pauses and the memory baseline with v1.4.0. If memory still establishes a progressively higher baseline, the next investigation should target retained references outside the removed full-state snapshots rather than applying further blind changes.

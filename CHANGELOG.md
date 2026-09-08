@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.4.1
+
+### Performance and memory
+- Fixed GitHub issue #2's confirmed allocation hotspot by removing the full Home Assistant state-table deep clone from the 10-second runtime evaluation.
+- Removed the equivalent full-state deep clone from support-report generation.
+- Replaced runtime `msg.hpvc.haStates` transport with a compact per-cycle `msg.hpvc.cycleStates` snapshot containing only required fixed and resolved dynamic entities.
+- Added a legacy-state cleanup guard before output publication.
+- Reduced Daily Control Accuracy allocation by replacing an unnecessary JSON deep clone of the last PV command with a small object copy.
+- Reduced the activity-history ceiling from 9,000 to 3,000 rows.
+
+### Diagnostics
+- Added bounded per-stage evaluation timing and aggregate last/max/average cycle timing.
+- Added optional heap telemetry sampled no more than once per minute when `process.memoryUsage()` is available in the Node-RED Function sandbox.
+- Performance diagnostics are stored as a single bounded global object and do not create a per-cycle history.
+
+### Documentation
+- Updated README, installation, architecture/how-it-works, troubleshooting, dashboard version label, release notes, and release archive documentation for v1.4.1.
+- Added explicit testing guidance for issue #2.
+
+
 ## v1.4.0
 
 ### Major changes
