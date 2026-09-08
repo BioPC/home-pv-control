@@ -250,7 +250,7 @@ See the [v1.4.2 release notes](releases/v1.4.2/release.md) for the full release 
 - [Troubleshooting](docs/04-troubleshooting.md)
 - [Documentation index](docs/README.md)
 - [Changelog](CHANGELOG.md)
-- [v1.4.1 release notes](releases/v1.4.2/release.md)
+- [v1.4.2 release notes](releases/v1.4.2/release.md)
 
 For Home Battery Control itself, see the [HBC documentation](https://docs.homebatterycontrol.com/).
 
