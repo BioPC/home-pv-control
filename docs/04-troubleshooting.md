@@ -142,7 +142,7 @@ The packaged dashboard includes the **HBC Price Intervals** graph with theme-awa
 
 ### Mobile report navigation buttons appear only after refresh
 
-Use the current v1.4.1 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
+Use the current v1.4.2 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
 
 ## Accuracy diagnostics
 
@@ -225,10 +225,25 @@ For deeper telemetry, cutoff, persistence, attribution, and report semantics, se
 [← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md)
 
 
-## Node-RED latency or heap growth (v1.4.1 / issue #2)
+## Node-RED latency or heap growth (v1.4.2)
 
-v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test v1.4.1 unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
+v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test the current corrected v1.4.2 build unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
 
 The runtime stores bounded diagnostics in the Node-RED global context key `homePvControlPerformanceDiagnostics`. It contains the latest cycle total, maximum and rolling average evaluation time, the latest per-stage timings, and—when the Function sandbox permits it—a memory sample no more than once per minute. No per-cycle timing or heap history is retained by this diagnostic.
 
 If heap sampling reports unavailable, this only means `process.memoryUsage()` is not exposed to Function nodes in that Node-RED environment; HPVC control continues normally. The HTML and TXT support reports include the current timing and heap diagnostics, so attach a fresh support report when investigating issue #2. Also include the Node-RED version, Home Assistant version, approximate entity count, and whether memory returns after garbage collection or continues establishing a higher baseline.
+
+
+## Rate limiter and 10-second control
+
+The HPVC trigger remains every 10 seconds. A stable 10-second check may skip the heavier evaluation to reduce CPU and allocation pressure. Grid/PV thresholds remain 20 W + 2%, compared with the last full evaluation. HPVC still forces a complete evaluation at least every 30 seconds and does not skip pending safety or write/recovery work.
+
+
+### `settingsTrigger` ReferenceError
+
+If a support report shows `ReferenceError: Cannot access 'settingsTrigger' before initialization` from `Read HPVC Core Configuration`, update to the corrected v1.4.2 package. The settings-trigger flag is now declared before its first use so the 10-second control loop can complete normally.
+
+
+### Current runtime investigation
+
+The original full Home Assistant state deep-clone was removed before v1.4.2. If Node-RED memory growth or OOM behaviour is still observed with the corrected v1.4.2 build, treat it as a separate runtime investigation: confirm that HPVC runtime timestamps continue to advance, compare Node-RED RAM with HPVC enabled and disabled, and record Node-RED/Node.js versions, context storage, contrib nodes, and approximate Home Assistant entity count. Do not assume remaining heap growth is caused by the old deep-clone path.

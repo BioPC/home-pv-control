@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.4.2
+
+### Runtime efficiency
+- Added incremental Insights/dashboard rendering so unchanged Insight history is no longer rescanned and regrouped every 10 seconds.
+- Kept Power Control history event-based while avoiding unchanged per-cycle history/meta writes.
+- Changed activity pruning from every evaluation to a bounded periodic maintenance pass.
+- Suppressed selected redundant scalar/context writes where the value has not changed.
+- Avoided rewriting the bounded runtime-cadence array when its contents are unchanged.
+
+### Diagnostics
+- Added internal measured-stage and unaccounted-cycle timing to help isolate Node-RED scheduling, GC or untimed runtime overhead without expanding the visible support report.
+
+### Compatibility
+- No configuration migration is required from v1.4.1.
+- Existing control, safety, HBC, inverter, accuracy and reporting behavior is retained.
+
+### Issue #3 / #4 follow-up
+- Added conservative HBC-style stable-input rate limiting with a mandatory full evaluation every 30 seconds.
+- Added high-load cooldown signalling for previous evaluations above 1 second without suppressing safety/control logic.
+- Added bounded internal rate-limiter counters (full/skipped cycles) without storing a per-cycle history.
+- Fixed a Settings-changed race: configuration changes received while the runtime lock is active are now marked dirty and applied by the next successful evaluation.
+- Cached 68 helper/configuration states and rebuild them only on startup or a Settings changed event.
+- Reduced the normal 10-second snapshot refresh to 30 live whitelist states plus dynamically resolved entities.
+- Expanded Settings changed coverage to all cached configuration helpers.
+- Reused the bounded serialized-cycle snapshot object and explicitly drops `msg.hpvc.cycleStates` after diagnostics.
+- Added bounded internal retention counters for major HPVC histories to help isolate remaining heap growth.
+
+
 ## v1.4.1
 
 ### Performance and memory
@@ -225,3 +253,12 @@
 ## v1.0.0
 
 - Initial public release.
+
+
+## Rate-limiter baseline correction
+
+- Fixed the stable-input rate limiter baseline: grid/PV deltas now accumulate from the last full HPVC evaluation rather than resetting after every 10-second check.
+- Kept the existing 20 W + 2% thresholds, 10-second trigger, and 30-second mandatory full evaluation.
+
+
+- Fixed `settingsTrigger` declaration order in `Read HPVC Core Configuration` to prevent `ReferenceError: Cannot access 'settingsTrigger' before initialization`.

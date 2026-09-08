@@ -1,33 +1,45 @@
-# Home PV Control v1.4.1
+# Home PV Control v1.4.2
 
-Home PV Control v1.4.1 is a focused performance and memory release addressing GitHub issue #2 while preserving the v1.4.0 control behavior and configuration model.
+Home PV Control v1.4.2 is a runtime-efficiency follow-up to v1.4.1.
 
-## Performance and memory
+## CPU and memory improvements
 
-- Removed the 10-second full deep clone of `homeassistant.homeAssistant.states`.
-- Removed the full Home Assistant state-table deep clone used during support-report generation.
-- Replaced the runtime-wide `msg.hpvc.haStates` payload with a compact `msg.hpvc.cycleStates` snapshot containing only entities HPVC needs for the current evaluation.
-- Dynamic grid, market-price, all-in-price, PV-power and inverter-limit entities are resolved first and then included individually in the compact snapshot.
-- HBC/Marstek state requirements remain automatic through predictable battery entity families and the configured HBC helpers.
-- Added a migration guard that removes any legacy `msg.hpvc.haStates` property before output/service publication.
+- Insights/dashboard helpers are rebuilt only when their underlying Insight sources change instead of rescanning the full current-day history every 10 seconds.
+- Power Control activity remains event-based, but activity arrays and metadata are now written only when activity actually changes.
+- Activity-history pruning is performed periodically instead of allocating a filtered copy every control cycle.
+- Selected unchanged scalar/context values are no longer rewritten unnecessarily.
+- Runtime cadence history is only rewritten when its bounded sample window actually changes.
 
-## Allocation reductions
+## Diagnostics
 
-- Replaced the Daily Control Accuracy command snapshot `JSON.parse(JSON.stringify(...))` with a small object copy.
-- Reduced the maximum in-memory activity history from 9,000 to 3,000 rows to lower the retained-heap ceiling while keeping substantial same-day diagnostic context.
+- Added internal `measuredStageMs` and `unaccountedMs` timing so unexplained cycle time can be separated from explicitly timed HPVC stages.
+- The user-facing Performance Diagnostics report remains compact.
 
-## Temporary issue #2 diagnostics
+## Issue #3 / #4 follow-up
 
-- Added bounded per-stage runtime timing for the main evaluation path.
-- Added aggregate last/max/average cycle timing in `homePvControlPerformanceDiagnostics`.
-- Added guarded heap telemetry using `process.memoryUsage()` when the Node-RED Function sandbox exposes it.
-- Heap sampling occurs at most once per minute. No per-cycle heap history is retained.
-- If heap access is unavailable, control continues normally and diagnostics mark heap sampling unavailable.
-- The HTML and TXT support reports now show the performance timing and heap diagnostics directly.
+- Added an HBC-inspired stable-input rate limiter: HPVC may skip downstream work when grid, PV and other live control inputs remain unchanged, while forcing a complete evaluation at least every 30 seconds.
+- Added a high-load signal based on the previous cycle (>1 s); stable cycles use the rate limiter as a cooldown while control/safety evaluations are never disabled.
+- The rate limiter is bypassed for startup/settings rebuilds, cooldowns, Night Restore state, write verification, physical-event attribution, HBC safety/settling and battery recovery timing.
+- Fixed a Settings-changed race: configuration changes received while the runtime lock is active are now marked dirty and applied by the next successful evaluation.
+- Added an event-driven cache for 68 configuration/helper entities.
+- The 10-second control cycle now refreshes only 30 genuinely live whitelist entities plus dynamically resolved targets.
+- Configuration cache is initialized on startup and rebuilt after any watched settings change.
+- Expanded the Settings changed watcher to cover all 68 cached helper/configuration entities.
+- The bounded cycle snapshot is reused between serialized HPVC evaluations instead of reconstructing all 98 static whitelist entries every cycle.
+- Dynamic grid, price, PV and inverter target entities are still resolved from current configuration and read live every cycle.
+- Completed runtime messages explicitly release their `cycleStates` reference.
+- Added bounded internal retention counters for the main activity/history structures to help diagnose issue #3 without creating another diagnostic history.
+
 
 ## Compatibility
 
-- No helper renames or setting migrations are required from v1.4.0.
-- Existing inverter, HBC, negative-price, safety, accuracy, persistence and report behavior is retained.
+- No helper renames or configuration migrations are required from v1.4.1.
+- Control logic, HBC coordination, inverter handling, Daily Control Accuracy, safety behavior and report functionality are unchanged.
 - Replace the Home Assistant package, Node-RED flow and dashboard together when upgrading.
 
+## Rate-limiter baseline correction
+
+- Corrected the HBC-inspired stable-input rate limiter so grid/PV changes are compared with the **last full HPVC evaluation**, not the previous 10-second lightweight check.
+- The existing **20 W + 2%** thresholds are unchanged; gradual changes now accumulate against the last full baseline and can trigger a full evaluation sooner.
+- The normal **10-second trigger** and mandatory full evaluation at least every **30 seconds** remain unchanged.
+- Fixed a v1.4.2 runtime regression where `settingsTrigger` could be referenced before initialization in `Read HPVC Core Configuration`, causing the HPVC control loop to throw and stop completing evaluations.
