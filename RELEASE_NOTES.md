@@ -23,6 +23,7 @@ Home PV Control v1.4.1 is a focused performance and memory release addressing Gi
 - Added guarded heap telemetry using `process.memoryUsage()` when the Node-RED Function sandbox exposes it.
 - Heap sampling occurs at most once per minute. No per-cycle heap history is retained.
 - If heap access is unavailable, control continues normally and diagnostics mark heap sampling unavailable.
+- The HTML and TXT support reports now show the performance timing and heap diagnostics directly.
 
 ## Compatibility
 

@@ -14,6 +14,7 @@
 - Added bounded per-stage evaluation timing and aggregate last/max/average cycle timing.
 - Added optional heap telemetry sampled no more than once per minute when `process.memoryUsage()` is available in the Node-RED Function sandbox.
 - Performance diagnostics are stored as a single bounded global object and do not create a per-cycle history.
+- HTML and TXT support reports now render the v1.4.1 timing and heap diagnostics for issue #2 validation.
 
 ### Documentation
 - Updated README, installation, architecture/how-it-works, troubleshooting, dashboard version label, release notes, and release archive documentation for v1.4.1.
