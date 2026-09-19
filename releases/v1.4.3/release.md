@@ -1,6 +1,6 @@
 # Home PV Control v1.4.3
 
-Percent-mode targets are now quantized before change detection using the configured Home Assistant number entity step. This prevents repeated equivalent writes on coarse percentage controls and guarantees that percentage rounding cannot command below the configured minimum Watt limit.
+Percent-mode targets are quantized before change detection using the Home Assistant number entity `step`; minimum-power rounding is constrained so the configured Watt minimum is never undercut.
 
 Home PV Control v1.4.3 is a compatibility and runtime-efficiency maintenance release. It keeps the v1.4.2 control policy intact while reducing Home Assistant dashboard-helper traffic and adding native support for percentage-based inverter limit entities.
 

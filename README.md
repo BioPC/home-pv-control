@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="releases/v1.4.2/release.md"><img src="https://img.shields.io/badge/release-v1.4.2-blue" alt="Release v1.4.2"></a>
+  <a href="releases/v1.4.3/release.md"><img src="https://img.shields.io/badge/release-v1.4.3-blue" alt="Release v1.4.3"></a>
   <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant ready"></a>
   <a href="https://nodered.org/"><img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED flow"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="GPL-3.0-or-later"></a>
@@ -26,7 +26,7 @@ Home PV Control (HPVC) dynamically limits and restores PV inverter output in Hom
 - Protect against negative all-in prices with minimum-PV control and optional HBC grid charging.
 
 > [!IMPORTANT]
-> HPVC requires at least one writable inverter power-limit entity exposed to Home Assistant. It does not communicate directly with an inverter.
+> HPVC requires at least one writable inverter power-limit `number` entity exposed to Home Assistant. Each inverter can use either a Watt-based limit or a 0–100% percentage limit. HPVC does not communicate directly with an inverter.
 
 <p align="center">
   <img src="assets/screenshots/dashboard_main.png" alt="Home PV Control dashboard" width="70%">
@@ -75,6 +75,7 @@ See the full [installation guide](docs/01-installation.md) for dependencies and 
 | Standalone PV export control | ✅ |
 | Dynamic export limiting and import recovery | ✅ |
 | Multi-inverter support with per-inverter minimum/maximum limits | ✅ |
+| Per-inverter Watt or percentage limit entities | ✅ |
 | Negative all-in-price minimum-PV protection | ✅ |
 | Optional HBC grid charging during negative prices | ✅ |
 | Optional HBC Charge Priority for `Charge` / `Charge PV` | ✅ |
@@ -240,7 +241,11 @@ When upgrading, keep the Home Assistant package, Node-RED flow and dashboard on 
 7. Review **Force charge at negative price**. It is seeded **On** once on fresh installs and upgrades. After that, a manual Off choice survives normal Home Assistant restarts and package/automation reloads. **Restore defaults** turns it On again.
 8. Generate a support report to confirm the installation is healthy.
 
-See the [v1.4.2 release notes](releases/v1.4.2/release.md) for the full release summary.
+See the [v1.4.3 release notes](releases/v1.4.3/release.md) for the full release summary.
+
+### Percentage target resolution
+
+Percentage targets are quantized before change detection using the writable Home Assistant `number.*` entity's advertised `step`. This prevents repeated equivalent writes when an inverter only accepts coarse percentage increments. The configured Minimum power remains a hard Watt floor; HPVC rounds upward to the first supported percentage when nearest-step rounding would otherwise go below that minimum.
 
 ## Documentation
 
@@ -250,12 +255,14 @@ See the [v1.4.2 release notes](releases/v1.4.2/release.md) for the full release 
 - [Troubleshooting](docs/04-troubleshooting.md)
 - [Documentation index](docs/README.md)
 - [Changelog](CHANGELOG.md)
-- [v1.4.2 release notes](releases/v1.4.2/release.md)
+- [v1.4.3 release notes](releases/v1.4.3/release.md)
 
 For Home Battery Control itself, see the [HBC documentation](https://docs.homebatterycontrol.com/).
 
 
 ## Screenshots
+
+The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.4.3 YAML and Node-RED flow are authoritative.
 
 ### Settings
 
@@ -271,7 +278,7 @@ For Home Battery Control itself, see the [HBC documentation](https://docs.homeba
 
 ### Node-RED flow
 
-Current v1.4.2 Node-RED architecture overview generated from the shipped flow.
+Reference Node-RED architecture screenshot.
 
 ![Home PV Control Node-RED flow](assets/screenshots/node_red_flow.png)
 
@@ -305,7 +312,7 @@ home assistant/
   hpvc_dashboard.yaml   # Separate Home Assistant dashboard
 
 node-red/
-  hpvc_flow.json        # Importable Node-RED flow with four v1.4.2 tabs
+  hpvc_flow.json        # Importable Node-RED flow with four v1.4.3 tabs
 
 examples/
   hoymiles-opendtu-2-inverters.reference.json
@@ -331,6 +338,7 @@ releases/
   ...
   v1.4.1/
   v1.4.2/
+  v1.4.3/
 ```
 
 ## Installation format

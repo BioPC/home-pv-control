@@ -46,10 +46,15 @@ The dashboard exposes HBC's native strategy selector and reads `input_text.house
 Each inverter requires:
 
 - **Limit entity** — writable Home Assistant `number` entity used to set the inverter limit.
-- **Full power** — normal maximum limit in watts.
-- **Minimum power** — lowest value HPVC may request. It must be zero or positive and lower than Full power.
+- **Limit unit** — `Watts` when the entity value is a power limit in W, or `Percent` when the entity uses a 0–100% active-power limit.
+- **Full power** — normal maximum inverter power in watts.
+- **Minimum power** — lowest power HPVC may request, always configured in watts. It must be zero or positive and lower than Full power.
 
-Invalid inverter limits block writes and produce a configuration error.
+HPVC always calculates plant and inverter targets internally in watts. With **Limit unit = Percent**, only the Home Assistant I/O boundary is converted: `target % = target W / Full power W × 100`. The live percentage state is converted back to watts before allocation, deadband and write-verification logic. This allows percentage-controlled integrations to use the same HPVC control model without changing thresholds or proportional distribution.
+
+The writable number entity is also used as the command-state readback for write verification. HPVC v1.4.3 does not require a separate physical inverter-feedback sensor. If **Limit unit** is missing, unavailable, or not exactly `Watts` or `Percent`, configuration is treated as invalid and inverter writes are blocked rather than silently assuming Watts. For percentage entities, HPVC uses the Home Assistant `number` entity's `step` attribute when available, rounds commands to that supported percentage resolution, and verifies the effective Watt equivalent. If an integration does not expose a writable percentage `number` entity directly, a template/bridge number may be used to translate HPVC's percentage command to the inverter-specific service or Modbus register. A bridge that mirrors its requested value provides command-state confirmation only; it is not independent proof that the physical inverter accepted the underlying service/register write.
+
+Invalid inverter limits or a percentage entity reporting outside 0–100% block writes and produce a configuration error.
 
 ## Control relationships
 
@@ -95,6 +100,7 @@ These values are safe starting points, not universal recommendations. Review the
 | Cooldown | `30 s` |
 | Deadband | `25 W` |
 | PV1–PV10 full limit | `0 W` until configured |
+| PV1–PV10 limit unit | `Watts` |
 | PV1–PV10 minimum limit | `0 W` until configured |
 
 Night Restore enters after 120 continuous seconds at or below the configured threshold. It exits only after valid PV remains above `max(25 W, threshold + 15 W)` for 30 seconds. See [How it works](03-how-it-works.md#restore-and-recovery) for restart and offline-telemetry behavior.
@@ -150,6 +156,7 @@ The **Restore defaults** tile reapplies shipped configurable values after confir
 
 - configured sensor entity IDs;
 - inverter limit entity selections;
+- inverter limit-unit selections;
 - active inverter count;
 - the current HBC Strategy Control on/off state.
 
@@ -157,9 +164,14 @@ It resets **Force charge at negative price** to its shipped default of **On**. T
 
 It does not populate installation-specific sensor or inverter entities. Verify all entities, maximum and minimum powers, inverter count, and optional HBC strategy entity afterward.
 
+### Percentage step handling (v1.4.3)
+
+For `Limit unit: Percent`, HPVC quantizes the requested Watt target to the writable `number.*` entity's advertised percentage `step` before deciding whether a write is required. The configured minimum remains a hard Watt floor: if nearest-step rounding would fall below it, HPVC uses the first supported percentage at or above the minimum.
+
 ## Next steps
 
 - [Understand the control sequence](03-how-it-works.md)
 - [Troubleshoot unexpected behavior](04-troubleshooting.md)
 
 [← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md)
+

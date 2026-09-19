@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.4.3
+
+- Finalized percentage-limit quantization before inverter change detection, preventing repeated writes when a percent entity can only represent coarse steps.
+- Enforced configured inverter minimum power as a hard Watt floor when percent-step rounding is required.
+
+- Added a per-inverter **Limit unit** (`Watts` / `Percent`) while keeping all HPVC control calculations, Full power and Minimum power in watts.
+- Added percentage I/O conversion for live inverter limits, `number.set_value` commands and write verification.
+- Updated the existing `sensor.hpvc_pv1_actual_limit` through `sensor.hpvc_pv10_actual_limit` compatibility sensors so they continue to report watts when a percentage limit entity is used.
+- Kept existing installations backward-compatible by defaulting every inverter Limit unit to `Watts`.
+- Removed HPVC-owned output helpers from the stable-input rate-limiter hash so dashboard publishing cannot retrigger full evaluations.
+- Added HPVC-owned last-published caches to deduplicate status, reason, Insights, targets JSON and accuracy diagnostics.
+- Throttled changed targets JSON to 30 seconds and changed accuracy diagnostics to 60 seconds, with a five-minute forced dashboard resync.
+- Fixed Insight publishing so only changed rows are written instead of resending all 20 helpers after any Insight change.
+- Added rate-limiter full/skip diagnostics to support reports.
+- Updated installation, configuration, architecture and troubleshooting documentation for v1.4.3.
+- Percentage limit writes now respect the writable `number` entity step/resolution and verify against the effective representable Watt target.
+- Invalid, missing, unknown or unavailable per-inverter Limit unit values now fail safe as configuration errors instead of silently falling back to Watts.
+- Corrected remaining v1.4.2 runtime/dashboard version labels and refreshed v1.4.3 documentation/reference metadata (screenshots intentionally unchanged).
+
 ## v1.4.2
 
 ### Runtime efficiency

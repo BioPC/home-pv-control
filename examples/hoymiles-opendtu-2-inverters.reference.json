@@ -4,13 +4,15 @@
     "limit_entity": "number.hms_2000_4t_limit_nonpersistent_absolute",
     "full_power": 2000,
     "minimum_power": 100,
-    "enabled": true
+    "enabled": true,
+    "limit_unit": "Watts"
   },
   {
     "name": "HMS-1000",
     "limit_entity": "number.hms_1000_2t_limit_nonpersistent_absolute",
     "full_power": 1000,
     "minimum_power": 50,
-    "enabled": true
+    "enabled": true,
+    "limit_unit": "Watts"
   }
 ]

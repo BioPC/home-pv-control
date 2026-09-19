@@ -8,7 +8,7 @@ Home PV Control can run independently or alongside Home Battery Control. Use Ste
 
 - Home Assistant
 - Node-RED with `node-red-contrib-home-assistant-websocket` version **0.80.3 or newer**
-- At least one writable PV inverter power-limit entity exposed as a Home Assistant `number` entity
+- At least one writable PV inverter power-limit entity exposed as a Home Assistant `number` entity; the entity may represent Watts or 0–100%
 - ApexCharts Card for the supplied dashboard graphs
 
 The supplied dashboard requires **ApexCharts Card**. It does not require card-mod, Button Card, or Config Template Card.
@@ -101,7 +101,7 @@ Version 1.3.0 renames active legacy helper entity IDs from `pv_ems_*` to `hpvc_*
 5. Reload packages or restart Home Assistant, then deploy Node-RED.
 6. Copy or re-enter your sensor entities, inverter entities, limits, thresholds, and HBC integration preference in the new `hpvc_*` helpers.
 
-Do not mix v1.4.2 files with older runtime files. Home Assistant may keep obsolete `pv_ems_*` helpers visible until their old package definitions are removed and Home Assistant is restarted.
+Do not mix v1.4.3 files with older runtime files. Home Assistant may keep obsolete `pv_ems_*` helpers visible until their old package definitions are removed and Home Assistant is restarted.
 
 ## Next steps
 
@@ -111,9 +111,9 @@ Do not mix v1.4.2 files with older runtime files. Home Assistant may keep obsole
 
 [← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md)
 
-### Upgrading to v1.4.2
+### Upgrading to v1.4.3
 
-When upgrading from v1.4.1 to v1.4.2, replace the synchronized HPVC files from the same package version together. v1.4.2 adds event-driven configuration caching, live/static state separation, bounded performance diagnostics, and the stable-input rate limiter. Import the updated Node-RED flow, reload the Home Assistant configuration as required, and then verify that the HPVC runtime evaluation timestamp continues to advance normally.
+When upgrading to v1.4.3, replace the synchronized HPVC files from the same package version together. v1.4.3 adds per-inverter Watt/Percent limit-unit selection and reduces unnecessary Home Assistant helper writes from status, Insights, targets and accuracy diagnostics. Existing inverter slots default to Watts. Import the updated Node-RED flow, reload the Home Assistant package so the new limit-unit helpers exist, and verify each inverter Limit unit before enabling control.
 
 
-Replace the Node-RED flow, Home Assistant package, and dashboard together. v1.4.1 is configuration-compatible with v1.4.0; the main change is internal runtime state handling for issue #2. After deployment, allow normal 10-second evaluations to run and verify that HPVC status, inverter writes, HBC behavior and report generation remain normal.
+After deployment, allow normal 10-second evaluations to run and verify HPVC status, inverter writes, HBC behavior, percentage conversion (where used), and report generation.
