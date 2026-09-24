@@ -1,6 +1,6 @@
-# Troubleshooting
+[← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
 
-[← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md)
+# Troubleshooting
 
 Use the generated support report first. **Executive summary**, **Decision evaluation**, **Sensor health**, **Inverters**, and **Today’s Insights** usually identify the blocking condition quickly.
 
@@ -142,7 +142,7 @@ The packaged dashboard includes the **HBC Price Intervals** graph with theme-awa
 
 ### Mobile report navigation buttons appear only after refresh
 
-Use the current v1.4.3 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
+Use the current v1.5.0 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
 
 ## Accuracy diagnostics
 
@@ -222,12 +222,12 @@ The flow records a Battery telemetry warning when a battery becomes unusable and
 
 For deeper telemetry, cutoff, persistence, attribution, and report semantics, see [How it works](03-how-it-works.md).
 
-[← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md)
+[← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
 
 
 ## Node-RED latency or heap growth (v1.4.3)
 
-v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test the current v1.4.3 build unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
+v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test the current v1.5.0 build unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
 
 The runtime stores bounded diagnostics in the Node-RED global context key `homePvControlPerformanceDiagnostics`. It contains the latest cycle total, maximum and rolling average evaluation time, the latest per-stage timings, and—when the Function sandbox permits it—a memory sample no more than once per minute. No per-cycle timing or heap history is retained by this diagnostic.
 
@@ -236,7 +236,9 @@ If heap sampling reports unavailable, this only means `process.memoryUsage()` is
 
 ## Rate limiter and 10-second control
 
-The HPVC trigger remains every 10 seconds. A stable 10-second check may skip the heavier evaluation to reduce CPU and allocation pressure. Grid/PV thresholds remain 20 W + 2%, compared with the last full evaluation. HPVC still forces a complete evaluation at least every 30 seconds and does not skip pending safety or write/recovery work.
+The HPVC trigger remains every 10 seconds. A stable 10-second check may skip the heavier evaluation to reduce CPU and allocation pressure. Grid, PV and Marstek battery AC power use a cumulative 20 W + 2% significance threshold compared with the last full evaluation. Battery SOC is reduced to whole-percentage changes for the stable-input hash, while other control-relevant states remain exact-match. HPVC still forces a complete evaluation at least every 30 seconds and does not skip pending safety, write/recovery, settings or adapter-heartbeat work.
+
+During confirmed Night Restore, the steady nighttime state may now be skipped. This is expected. If valid PV rises above the Night Restore recovery threshold, or a recovery timer has already started, the limiter is bypassed so recovery is checked on the normal timer cadence.
 
 
 ### `settingsTrigger` ReferenceError
@@ -246,12 +248,12 @@ If a support report shows `ReferenceError: Cannot access 'settingsTrigger' befor
 
 ### Current runtime investigation
 
-The original full Home Assistant state deep-clone was removed before v1.4.2. If Node-RED memory growth or OOM behaviour is still observed with the current v1.4.3 build, treat it as a separate runtime investigation: confirm that HPVC runtime timestamps continue to advance, compare Node-RED RAM with HPVC enabled and disabled, and record Node-RED/Node.js versions, context storage, contrib nodes, and approximate Home Assistant entity count. Do not assume remaining heap growth is caused by the old deep-clone path.
+The original full Home Assistant state deep-clone was removed before v1.4.2. If Node-RED memory growth or OOM behaviour is still observed with the current v1.5.0 build, treat it as a separate runtime investigation: confirm that HPVC runtime timestamps continue to advance, compare Node-RED RAM with HPVC enabled and disabled, and record Node-RED/Node.js versions, context storage, contrib nodes, and approximate Home Assistant entity count. Do not assume remaining heap growth is caused by the old deep-clone path.
 
 
 ## Percentage-controlled inverter does not follow the requested Watt target
 
-Set that inverter's **Limit unit** to **Percent**, while keeping Full power and Minimum power configured in watts. HPVC converts the Watt target to 0–100% for the writable number entity and converts the entity state back to watts for command-state verification. If the Home Assistant `number` entity exposes a `step`, HPVC v1.4.3 rounds the percentage command to that supported resolution and verifies against the effective Watt equivalent, avoiding false write warnings on whole-percent controls. Confirm that the percentage number entity itself reports a numeric value between 0 and 100 and that its min/max range can represent the configured Minimum power through 100% full power. For service-only or Modbus-register integrations, expose a writable bridge `number` entity that accepts the percentage command. This verification confirms the state of that writable entity; a bridge that merely mirrors the requested value does not prove that the physical inverter applied the register write.
+Set that inverter's **Limit unit** to **Percent**, while keeping Full power and Minimum power configured in watts. In **Number entity** mode HPVC converts the Watt target to 0–100% for the writable number entity and converts the entity state back to watts for command-state verification. If the Home Assistant `number` entity exposes a `step`, HPVC rounds the percentage command to that supported resolution and verifies against the effective Watt equivalent, avoiding false write warnings on whole-percent controls. Confirm that the percentage number entity itself reports a numeric value between 0 and 100 and that its min/max range can represent the configured Minimum power through 100% full power. In **Action/service** mode configure the integration's action/service, dynamic value field and command step instead of creating a bridge number. Add a real numeric readback entity when the integration exposes one. See [Inverter compatibility](05-inverter-compatibility.md) for the current status matrix and the distinction between direct, action/service-adapter, and unsuitable export-limit controls. Command-state or mirrored values do not prove that the physical inverter applied the downstream command.
 
 ## Excessive Home Assistant action calls
 
@@ -260,4 +262,20 @@ v1.4.3 deduplicates HPVC-owned status, reason, Insights, targets JSON and accura
 ### Percent target differs slightly from calculated Watts
 
 This is expected when the writable percentage entity has a coarse `step`. HPVC uses the nearest representable percentage for normal targets. At the configured minimum it rounds upward when necessary, so the effective command never falls below the configured minimum Watt limit.
+
+
+
+### Action/service adapter does not control the inverter
+
+Check that the action is written as `domain.service`, the fixed-data field contains valid JSON, and the value field matches the integration's service schema. If the inverter requires an enable switch, mode selection, trigger button, or heartbeat, put those calls in the per-inverter pre/post action arrays. Configure a numeric readback entity when available so HPVC can verify the applied limit. The readback must use the same unit as the configured Limit unit. If an action/service call itself fails, HPVC clears that inverter's cached command and retries on a later eligible cycle; check the persistent notification and Node-RED/Home Assistant logs for the rejected payload. Pre/main/post calls execute sequentially and stop on the first failed Home Assistant action, but HPVC does not insert built-in delays. Use a Home Assistant script when timed waits are required. The advanced JSON helper fields are limited to 255 characters.
+
+[← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
+
+## Charge Priority repeatedly releases and limits PV
+
+If Charge Priority releases PV but the batteries do not absorb the additional power, grid export can return and HPVC can reduce PV again. A later evaluation may retry the release while HBC still requests charging and usable headroom remains. This can look like a limit/release cycle at roughly the cooldown/forced-evaluation cadence. Check the HBC executing sub-strategy, measured battery charge power, SOC/cutoff state, telemetry freshness, and the Charge Priority response-window diagnostics. v1.5.0 intentionally does not add a long exponential backoff because that could delay charging after the battery/plant becomes able to absorb power again.
+
+## Action/service writes again soon after Node-RED restart
+
+After Node-RED loses its runtime command cache, an Action/service inverter performs one synchronization write on the next normal/full evaluation. Startup synchronization itself is not treated as an ordinary PV target change and therefore does not start the normal PV cooldown. If grid/PV conditions then require a different target on the following cycle, a second write can occur sooner than the configured cooldown. This is intentional so startup synchronization cannot block a newly required control response. A real readback entity is recommended when the integration provides one.
 

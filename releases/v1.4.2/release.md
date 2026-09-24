@@ -26,7 +26,7 @@ No configuration migration is required from v1.4.1.
 - Added bounded retention counters for diagnosing remaining heap growth.
 
 
-## Rate-limiter baseline correction
+### Additional fixes
 
 - Fixed cumulative-change handling in the HBC-inspired rate limiter. Small grid/PV changes now accumulate relative to the last full evaluation, while the 20 W + 2% thresholds remain unchanged.
 - Fixed a declaration-order regression in the HPVC input function that could stop runtime evaluations with a `settingsTrigger` ReferenceError.

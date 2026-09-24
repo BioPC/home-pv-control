@@ -199,7 +199,347 @@ input_text:
     name: PV10 Limit Entity
     icon: mdi:solar-panel
     max: 255
+  hpvc_pv1_action:
+    name: PV1 Action Service
+    icon: mdi:call-split
+    max: 255
+  hpvc_pv1_value_field:
+    name: PV1 Action Value Field
+    icon: mdi:form-textbox
+    max: 255
+  hpvc_pv1_fixed_data_json:
+    name: PV1 Action Fixed Data JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv1_pre_actions_json:
+    name: PV1 Pre-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv1_post_actions_json:
+    name: PV1 Post-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv1_readback_entity:
+    name: PV1 Readback Entity
+    icon: mdi:eye-outline
+    max: 255
+  hpvc_pv2_action:
+    name: PV2 Action Service
+    icon: mdi:call-split
+    max: 255
+  hpvc_pv2_value_field:
+    name: PV2 Action Value Field
+    icon: mdi:form-textbox
+    max: 255
+  hpvc_pv2_fixed_data_json:
+    name: PV2 Action Fixed Data JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv2_pre_actions_json:
+    name: PV2 Pre-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv2_post_actions_json:
+    name: PV2 Post-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv2_readback_entity:
+    name: PV2 Readback Entity
+    icon: mdi:eye-outline
+    max: 255
+  hpvc_pv3_action:
+    name: PV3 Action Service
+    icon: mdi:call-split
+    max: 255
+  hpvc_pv3_value_field:
+    name: PV3 Action Value Field
+    icon: mdi:form-textbox
+    max: 255
+  hpvc_pv3_fixed_data_json:
+    name: PV3 Action Fixed Data JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv3_pre_actions_json:
+    name: PV3 Pre-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv3_post_actions_json:
+    name: PV3 Post-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv3_readback_entity:
+    name: PV3 Readback Entity
+    icon: mdi:eye-outline
+    max: 255
+  hpvc_pv4_action:
+    name: PV4 Action Service
+    icon: mdi:call-split
+    max: 255
+  hpvc_pv4_value_field:
+    name: PV4 Action Value Field
+    icon: mdi:form-textbox
+    max: 255
+  hpvc_pv4_fixed_data_json:
+    name: PV4 Action Fixed Data JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv4_pre_actions_json:
+    name: PV4 Pre-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv4_post_actions_json:
+    name: PV4 Post-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv4_readback_entity:
+    name: PV4 Readback Entity
+    icon: mdi:eye-outline
+    max: 255
+  hpvc_pv5_action:
+    name: PV5 Action Service
+    icon: mdi:call-split
+    max: 255
+  hpvc_pv5_value_field:
+    name: PV5 Action Value Field
+    icon: mdi:form-textbox
+    max: 255
+  hpvc_pv5_fixed_data_json:
+    name: PV5 Action Fixed Data JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv5_pre_actions_json:
+    name: PV5 Pre-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv5_post_actions_json:
+    name: PV5 Post-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv5_readback_entity:
+    name: PV5 Readback Entity
+    icon: mdi:eye-outline
+    max: 255
+  hpvc_pv6_action:
+    name: PV6 Action Service
+    icon: mdi:call-split
+    max: 255
+  hpvc_pv6_value_field:
+    name: PV6 Action Value Field
+    icon: mdi:form-textbox
+    max: 255
+  hpvc_pv6_fixed_data_json:
+    name: PV6 Action Fixed Data JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv6_pre_actions_json:
+    name: PV6 Pre-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv6_post_actions_json:
+    name: PV6 Post-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv6_readback_entity:
+    name: PV6 Readback Entity
+    icon: mdi:eye-outline
+    max: 255
+  hpvc_pv7_action:
+    name: PV7 Action Service
+    icon: mdi:call-split
+    max: 255
+  hpvc_pv7_value_field:
+    name: PV7 Action Value Field
+    icon: mdi:form-textbox
+    max: 255
+  hpvc_pv7_fixed_data_json:
+    name: PV7 Action Fixed Data JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv7_pre_actions_json:
+    name: PV7 Pre-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv7_post_actions_json:
+    name: PV7 Post-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv7_readback_entity:
+    name: PV7 Readback Entity
+    icon: mdi:eye-outline
+    max: 255
+  hpvc_pv8_action:
+    name: PV8 Action Service
+    icon: mdi:call-split
+    max: 255
+  hpvc_pv8_value_field:
+    name: PV8 Action Value Field
+    icon: mdi:form-textbox
+    max: 255
+  hpvc_pv8_fixed_data_json:
+    name: PV8 Action Fixed Data JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv8_pre_actions_json:
+    name: PV8 Pre-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv8_post_actions_json:
+    name: PV8 Post-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv8_readback_entity:
+    name: PV8 Readback Entity
+    icon: mdi:eye-outline
+    max: 255
+  hpvc_pv9_action:
+    name: PV9 Action Service
+    icon: mdi:call-split
+    max: 255
+  hpvc_pv9_value_field:
+    name: PV9 Action Value Field
+    icon: mdi:form-textbox
+    max: 255
+  hpvc_pv9_fixed_data_json:
+    name: PV9 Action Fixed Data JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv9_pre_actions_json:
+    name: PV9 Pre-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv9_post_actions_json:
+    name: PV9 Post-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv9_readback_entity:
+    name: PV9 Readback Entity
+    icon: mdi:eye-outline
+    max: 255
+  hpvc_pv10_action:
+    name: PV10 Action Service
+    icon: mdi:call-split
+    max: 255
+  hpvc_pv10_value_field:
+    name: PV10 Action Value Field
+    icon: mdi:form-textbox
+    max: 255
+  hpvc_pv10_fixed_data_json:
+    name: PV10 Action Fixed Data JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv10_pre_actions_json:
+    name: PV10 Pre-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv10_post_actions_json:
+    name: PV10 Post-actions JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv10_readback_entity:
+    name: PV10 Readback Entity
+    icon: mdi:eye-outline
+    max: 255
+  hpvc_pv1_target_json:
+    name: PV1 Action Target JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv2_target_json:
+    name: PV2 Action Target JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv3_target_json:
+    name: PV3 Action Target JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv4_target_json:
+    name: PV4 Action Target JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv5_target_json:
+    name: PV5 Action Target JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv6_target_json:
+    name: PV6 Action Target JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv7_target_json:
+    name: PV7 Action Target JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv8_target_json:
+    name: PV8 Action Target JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv9_target_json:
+    name: PV9 Action Target JSON
+    icon: mdi:code-json
+    max: 255
+  hpvc_pv10_target_json:
+    name: PV10 Action Target JSON
+    icon: mdi:code-json
+    max: 255
 input_select:
+  hpvc_pv1_control_method:
+    name: PV1 Control Method
+    options:
+      - Number entity
+      - Action/service
+    icon: mdi:transit-connection-variant
+  hpvc_pv2_control_method:
+    name: PV2 Control Method
+    options:
+      - Number entity
+      - Action/service
+    icon: mdi:transit-connection-variant
+  hpvc_pv3_control_method:
+    name: PV3 Control Method
+    options:
+      - Number entity
+      - Action/service
+    icon: mdi:transit-connection-variant
+  hpvc_pv4_control_method:
+    name: PV4 Control Method
+    options:
+      - Number entity
+      - Action/service
+    icon: mdi:transit-connection-variant
+  hpvc_pv5_control_method:
+    name: PV5 Control Method
+    options:
+      - Number entity
+      - Action/service
+    icon: mdi:transit-connection-variant
+  hpvc_pv6_control_method:
+    name: PV6 Control Method
+    options:
+      - Number entity
+      - Action/service
+    icon: mdi:transit-connection-variant
+  hpvc_pv7_control_method:
+    name: PV7 Control Method
+    options:
+      - Number entity
+      - Action/service
+    icon: mdi:transit-connection-variant
+  hpvc_pv8_control_method:
+    name: PV8 Control Method
+    options:
+      - Number entity
+      - Action/service
+    icon: mdi:transit-connection-variant
+  hpvc_pv9_control_method:
+    name: PV9 Control Method
+    options:
+      - Number entity
+      - Action/service
+    icon: mdi:transit-connection-variant
+  hpvc_pv10_control_method:
+    name: PV10 Control Method
+    options:
+      - Number entity
+      - Action/service
+    icon: mdi:transit-connection-variant
   hpvc_pv1_limit_unit:
     name: PV1 Limit Unit
     options:
@@ -501,6 +841,157 @@ input_number:
     unit_of_measurement: W
     icon: mdi:approximately-equal
 
+  hpvc_pv1_action_step:
+    name: PV1 Action Step
+    min: 0
+    max: 10000
+    step: 0.001
+    mode: box
+    icon: mdi:stairs
+  hpvc_pv1_refresh_seconds:
+    name: PV1 Action Refresh Seconds
+    min: 0
+    max: 3600
+    step: 1
+    mode: box
+    unit_of_measurement: s
+    icon: mdi:refresh-auto
+  hpvc_pv2_action_step:
+    name: PV2 Action Step
+    min: 0
+    max: 10000
+    step: 0.001
+    mode: box
+    icon: mdi:stairs
+  hpvc_pv2_refresh_seconds:
+    name: PV2 Action Refresh Seconds
+    min: 0
+    max: 3600
+    step: 1
+    mode: box
+    unit_of_measurement: s
+    icon: mdi:refresh-auto
+  hpvc_pv3_action_step:
+    name: PV3 Action Step
+    min: 0
+    max: 10000
+    step: 0.001
+    mode: box
+    icon: mdi:stairs
+  hpvc_pv3_refresh_seconds:
+    name: PV3 Action Refresh Seconds
+    min: 0
+    max: 3600
+    step: 1
+    mode: box
+    unit_of_measurement: s
+    icon: mdi:refresh-auto
+  hpvc_pv4_action_step:
+    name: PV4 Action Step
+    min: 0
+    max: 10000
+    step: 0.001
+    mode: box
+    icon: mdi:stairs
+  hpvc_pv4_refresh_seconds:
+    name: PV4 Action Refresh Seconds
+    min: 0
+    max: 3600
+    step: 1
+    mode: box
+    unit_of_measurement: s
+    icon: mdi:refresh-auto
+  hpvc_pv5_action_step:
+    name: PV5 Action Step
+    min: 0
+    max: 10000
+    step: 0.001
+    mode: box
+    icon: mdi:stairs
+  hpvc_pv5_refresh_seconds:
+    name: PV5 Action Refresh Seconds
+    min: 0
+    max: 3600
+    step: 1
+    mode: box
+    unit_of_measurement: s
+    icon: mdi:refresh-auto
+  hpvc_pv6_action_step:
+    name: PV6 Action Step
+    min: 0
+    max: 10000
+    step: 0.001
+    mode: box
+    icon: mdi:stairs
+  hpvc_pv6_refresh_seconds:
+    name: PV6 Action Refresh Seconds
+    min: 0
+    max: 3600
+    step: 1
+    mode: box
+    unit_of_measurement: s
+    icon: mdi:refresh-auto
+  hpvc_pv7_action_step:
+    name: PV7 Action Step
+    min: 0
+    max: 10000
+    step: 0.001
+    mode: box
+    icon: mdi:stairs
+  hpvc_pv7_refresh_seconds:
+    name: PV7 Action Refresh Seconds
+    min: 0
+    max: 3600
+    step: 1
+    mode: box
+    unit_of_measurement: s
+    icon: mdi:refresh-auto
+  hpvc_pv8_action_step:
+    name: PV8 Action Step
+    min: 0
+    max: 10000
+    step: 0.001
+    mode: box
+    icon: mdi:stairs
+  hpvc_pv8_refresh_seconds:
+    name: PV8 Action Refresh Seconds
+    min: 0
+    max: 3600
+    step: 1
+    mode: box
+    unit_of_measurement: s
+    icon: mdi:refresh-auto
+  hpvc_pv9_action_step:
+    name: PV9 Action Step
+    min: 0
+    max: 10000
+    step: 0.001
+    mode: box
+    icon: mdi:stairs
+  hpvc_pv9_refresh_seconds:
+    name: PV9 Action Refresh Seconds
+    min: 0
+    max: 3600
+    step: 1
+    mode: box
+    unit_of_measurement: s
+    icon: mdi:refresh-auto
+  hpvc_pv10_action_step:
+    name: PV10 Action Step
+    min: 0
+    max: 10000
+    step: 0.001
+    mode: box
+    icon: mdi:stairs
+  hpvc_pv10_refresh_seconds:
+    name: PV10 Action Refresh Seconds
+    min: 0
+    max: 3600
+    step: 1
+    mode: box
+    unit_of_measurement: s
+    icon: mdi:refresh-auto
+
 input_button:
   hpvc_defaults_restored_event:
     name: HPVC Defaults Restored Event
@@ -508,8 +999,11 @@ input_button:
   hpvc_export_report:
     name: HPVC Generate Report
     icon: mdi:file-document-plus-outline
+
 template:
 - sensor:
+  # Explicit default_entity_id is intentional for this renamed v1.3.0 sensor so
+  # fresh installs use the documented entity ID; other template sensors can derive theirs.
   - name: HPVC Diag Market/Export Price
     default_entity_id: sensor.hpvc_diag_market_export_price
     unique_id: hpvc_diag_market_export_price
@@ -741,16 +1235,17 @@ template:
     state_class: measurement
     icon: mdi:solar-panel
     availability: >-
-      {% set ent = states('input_text.hpvc_pv1_limit_number') %}
+      {% set method = states('input_select.hpvc_pv1_control_method') %}
+      {% set ent = states('input_text.hpvc_pv1_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv1_readback_entity') %}
       {{
         states('input_number.hpvc_inverter_count') | int(0) >= 1
         and ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', '']
-        and (ent | regex_match('^number[.][a-z0-9_]+$'))
         and is_number(states(ent))
         and states('input_select.hpvc_pv1_limit_unit') in ['Watts', 'Percent']
       }}
     state: >-
-      {% set ent = states('input_text.hpvc_pv1_limit_number') %}
+      {% set method = states('input_select.hpvc_pv1_control_method') %}
+      {% set ent = states('input_text.hpvc_pv1_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv1_readback_entity') %}
       {% set unit = states('input_select.hpvc_pv1_limit_unit') %}
       {% set maximum = states('input_number.hpvc_pv1_full_limit') | float(0) %}
       {% set raw = states(ent) | float(0) %}
@@ -762,16 +1257,17 @@ template:
     state_class: measurement
     icon: mdi:solar-panel
     availability: >-
-      {% set ent = states('input_text.hpvc_pv2_limit_number') %}
+      {% set method = states('input_select.hpvc_pv2_control_method') %}
+      {% set ent = states('input_text.hpvc_pv2_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv2_readback_entity') %}
       {{
         states('input_number.hpvc_inverter_count') | int(0) >= 2
         and ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', '']
-        and (ent | regex_match('^number[.][a-z0-9_]+$'))
         and is_number(states(ent))
         and states('input_select.hpvc_pv2_limit_unit') in ['Watts', 'Percent']
       }}
     state: >-
-      {% set ent = states('input_text.hpvc_pv2_limit_number') %}
+      {% set method = states('input_select.hpvc_pv2_control_method') %}
+      {% set ent = states('input_text.hpvc_pv2_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv2_readback_entity') %}
       {% set unit = states('input_select.hpvc_pv2_limit_unit') %}
       {% set maximum = states('input_number.hpvc_pv2_full_limit') | float(0) %}
       {% set raw = states(ent) | float(0) %}
@@ -783,16 +1279,17 @@ template:
     state_class: measurement
     icon: mdi:solar-panel
     availability: >-
-      {% set ent = states('input_text.hpvc_pv3_limit_number') %}
+      {% set method = states('input_select.hpvc_pv3_control_method') %}
+      {% set ent = states('input_text.hpvc_pv3_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv3_readback_entity') %}
       {{
         states('input_number.hpvc_inverter_count') | int(0) >= 3
         and ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', '']
-        and (ent | regex_match('^number[.][a-z0-9_]+$'))
         and is_number(states(ent))
         and states('input_select.hpvc_pv3_limit_unit') in ['Watts', 'Percent']
       }}
     state: >-
-      {% set ent = states('input_text.hpvc_pv3_limit_number') %}
+      {% set method = states('input_select.hpvc_pv3_control_method') %}
+      {% set ent = states('input_text.hpvc_pv3_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv3_readback_entity') %}
       {% set unit = states('input_select.hpvc_pv3_limit_unit') %}
       {% set maximum = states('input_number.hpvc_pv3_full_limit') | float(0) %}
       {% set raw = states(ent) | float(0) %}
@@ -804,16 +1301,17 @@ template:
     state_class: measurement
     icon: mdi:solar-panel
     availability: >-
-      {% set ent = states('input_text.hpvc_pv4_limit_number') %}
+      {% set method = states('input_select.hpvc_pv4_control_method') %}
+      {% set ent = states('input_text.hpvc_pv4_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv4_readback_entity') %}
       {{
         states('input_number.hpvc_inverter_count') | int(0) >= 4
         and ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', '']
-        and (ent | regex_match('^number[.][a-z0-9_]+$'))
         and is_number(states(ent))
         and states('input_select.hpvc_pv4_limit_unit') in ['Watts', 'Percent']
       }}
     state: >-
-      {% set ent = states('input_text.hpvc_pv4_limit_number') %}
+      {% set method = states('input_select.hpvc_pv4_control_method') %}
+      {% set ent = states('input_text.hpvc_pv4_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv4_readback_entity') %}
       {% set unit = states('input_select.hpvc_pv4_limit_unit') %}
       {% set maximum = states('input_number.hpvc_pv4_full_limit') | float(0) %}
       {% set raw = states(ent) | float(0) %}
@@ -825,16 +1323,17 @@ template:
     state_class: measurement
     icon: mdi:solar-panel
     availability: >-
-      {% set ent = states('input_text.hpvc_pv5_limit_number') %}
+      {% set method = states('input_select.hpvc_pv5_control_method') %}
+      {% set ent = states('input_text.hpvc_pv5_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv5_readback_entity') %}
       {{
         states('input_number.hpvc_inverter_count') | int(0) >= 5
         and ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', '']
-        and (ent | regex_match('^number[.][a-z0-9_]+$'))
         and is_number(states(ent))
         and states('input_select.hpvc_pv5_limit_unit') in ['Watts', 'Percent']
       }}
     state: >-
-      {% set ent = states('input_text.hpvc_pv5_limit_number') %}
+      {% set method = states('input_select.hpvc_pv5_control_method') %}
+      {% set ent = states('input_text.hpvc_pv5_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv5_readback_entity') %}
       {% set unit = states('input_select.hpvc_pv5_limit_unit') %}
       {% set maximum = states('input_number.hpvc_pv5_full_limit') | float(0) %}
       {% set raw = states(ent) | float(0) %}
@@ -846,16 +1345,17 @@ template:
     state_class: measurement
     icon: mdi:solar-panel
     availability: >-
-      {% set ent = states('input_text.hpvc_pv6_limit_number') %}
+      {% set method = states('input_select.hpvc_pv6_control_method') %}
+      {% set ent = states('input_text.hpvc_pv6_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv6_readback_entity') %}
       {{
         states('input_number.hpvc_inverter_count') | int(0) >= 6
         and ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', '']
-        and (ent | regex_match('^number[.][a-z0-9_]+$'))
         and is_number(states(ent))
         and states('input_select.hpvc_pv6_limit_unit') in ['Watts', 'Percent']
       }}
     state: >-
-      {% set ent = states('input_text.hpvc_pv6_limit_number') %}
+      {% set method = states('input_select.hpvc_pv6_control_method') %}
+      {% set ent = states('input_text.hpvc_pv6_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv6_readback_entity') %}
       {% set unit = states('input_select.hpvc_pv6_limit_unit') %}
       {% set maximum = states('input_number.hpvc_pv6_full_limit') | float(0) %}
       {% set raw = states(ent) | float(0) %}
@@ -867,16 +1367,17 @@ template:
     state_class: measurement
     icon: mdi:solar-panel
     availability: >-
-      {% set ent = states('input_text.hpvc_pv7_limit_number') %}
+      {% set method = states('input_select.hpvc_pv7_control_method') %}
+      {% set ent = states('input_text.hpvc_pv7_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv7_readback_entity') %}
       {{
         states('input_number.hpvc_inverter_count') | int(0) >= 7
         and ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', '']
-        and (ent | regex_match('^number[.][a-z0-9_]+$'))
         and is_number(states(ent))
         and states('input_select.hpvc_pv7_limit_unit') in ['Watts', 'Percent']
       }}
     state: >-
-      {% set ent = states('input_text.hpvc_pv7_limit_number') %}
+      {% set method = states('input_select.hpvc_pv7_control_method') %}
+      {% set ent = states('input_text.hpvc_pv7_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv7_readback_entity') %}
       {% set unit = states('input_select.hpvc_pv7_limit_unit') %}
       {% set maximum = states('input_number.hpvc_pv7_full_limit') | float(0) %}
       {% set raw = states(ent) | float(0) %}
@@ -888,16 +1389,17 @@ template:
     state_class: measurement
     icon: mdi:solar-panel
     availability: >-
-      {% set ent = states('input_text.hpvc_pv8_limit_number') %}
+      {% set method = states('input_select.hpvc_pv8_control_method') %}
+      {% set ent = states('input_text.hpvc_pv8_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv8_readback_entity') %}
       {{
         states('input_number.hpvc_inverter_count') | int(0) >= 8
         and ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', '']
-        and (ent | regex_match('^number[.][a-z0-9_]+$'))
         and is_number(states(ent))
         and states('input_select.hpvc_pv8_limit_unit') in ['Watts', 'Percent']
       }}
     state: >-
-      {% set ent = states('input_text.hpvc_pv8_limit_number') %}
+      {% set method = states('input_select.hpvc_pv8_control_method') %}
+      {% set ent = states('input_text.hpvc_pv8_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv8_readback_entity') %}
       {% set unit = states('input_select.hpvc_pv8_limit_unit') %}
       {% set maximum = states('input_number.hpvc_pv8_full_limit') | float(0) %}
       {% set raw = states(ent) | float(0) %}
@@ -909,16 +1411,17 @@ template:
     state_class: measurement
     icon: mdi:solar-panel
     availability: >-
-      {% set ent = states('input_text.hpvc_pv9_limit_number') %}
+      {% set method = states('input_select.hpvc_pv9_control_method') %}
+      {% set ent = states('input_text.hpvc_pv9_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv9_readback_entity') %}
       {{
         states('input_number.hpvc_inverter_count') | int(0) >= 9
         and ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', '']
-        and (ent | regex_match('^number[.][a-z0-9_]+$'))
         and is_number(states(ent))
         and states('input_select.hpvc_pv9_limit_unit') in ['Watts', 'Percent']
       }}
     state: >-
-      {% set ent = states('input_text.hpvc_pv9_limit_number') %}
+      {% set method = states('input_select.hpvc_pv9_control_method') %}
+      {% set ent = states('input_text.hpvc_pv9_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv9_readback_entity') %}
       {% set unit = states('input_select.hpvc_pv9_limit_unit') %}
       {% set maximum = states('input_number.hpvc_pv9_full_limit') | float(0) %}
       {% set raw = states(ent) | float(0) %}
@@ -930,21 +1433,23 @@ template:
     state_class: measurement
     icon: mdi:solar-panel
     availability: >-
-      {% set ent = states('input_text.hpvc_pv10_limit_number') %}
+      {% set method = states('input_select.hpvc_pv10_control_method') %}
+      {% set ent = states('input_text.hpvc_pv10_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv10_readback_entity') %}
       {{
         states('input_number.hpvc_inverter_count') | int(0) >= 10
         and ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', '']
-        and (ent | regex_match('^number[.][a-z0-9_]+$'))
         and is_number(states(ent))
         and states('input_select.hpvc_pv10_limit_unit') in ['Watts', 'Percent']
       }}
     state: >-
-      {% set ent = states('input_text.hpvc_pv10_limit_number') %}
+      {% set method = states('input_select.hpvc_pv10_control_method') %}
+      {% set ent = states('input_text.hpvc_pv10_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv10_readback_entity') %}
       {% set unit = states('input_select.hpvc_pv10_limit_unit') %}
       {% set maximum = states('input_number.hpvc_pv10_full_limit') | float(0) %}
       {% set raw = states(ent) | float(0) %}
       {{ ((raw / 100 * maximum) if unit == 'Percent' else raw) | round(0) }}
-  binary_sensor:
+
+- binary_sensor:
   - name: HPVC Show Inverter Slot 2
     unique_id: hpvc_show_inverter_slot_2
     icon: mdi:eye-outline
@@ -1169,16 +1674,67 @@ template:
       {% set count = states('input_number.hpvc_inverter_count') | int(0) %}
       {% if count_raw != count or count < 1 or count > 10 %}{% set ns.valid = false %}{% endif %}
       {% for i in range(1, count + 1) %}
+        {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') | trim %}
+        {% set unit = states('input_select.hpvc_pv' ~ i ~ '_limit_unit') | trim %}
         {% set limit_ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim | lower %}
+        {% set readback_ent = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
+        {% set action = states('input_text.hpvc_pv' ~ i ~ '_action') | trim | lower %}
+        {% set value_field = states('input_text.hpvc_pv' ~ i ~ '_value_field') | trim %}
+        {% set fixed_data = states('input_text.hpvc_pv' ~ i ~ '_fixed_data_json') | from_json(default=none) %}
+        {% set target_data = states('input_text.hpvc_pv' ~ i ~ '_target_json') | from_json(default=none) %}
+        {% set pre_actions = states('input_text.hpvc_pv' ~ i ~ '_pre_actions_json') | from_json(default=none) %}
+        {% set post_actions = states('input_text.hpvc_pv' ~ i ~ '_post_actions_json') | from_json(default=none) %}
+        {% set action_step = states('input_number.hpvc_pv' ~ i ~ '_action_step') | float(-1) %}
+        {% set refresh_seconds = states('input_number.hpvc_pv' ~ i ~ '_refresh_seconds') | float(-1) %}
         {% set full = states('input_number.hpvc_pv' ~ i ~ '_full_limit') | float(0) %}
         {% set low = states('input_number.hpvc_pv' ~ i ~ '_low_limit') | float(-1) %}
-        {% if limit_ent in bad or not (limit_ent | regex_match('^number[.][a-z0-9_]+$')) %}
+
+        {% if method not in ['Number entity', 'Action/service'] or unit not in ['Watts', 'Percent'] %}
           {% set ns.valid = false %}
-        {% elif limit_ent in ns.inverter_entities %}
-          {% set ns.valid = false %}
-        {% else %}
-          {% set ns.inverter_entities = ns.inverter_entities + [limit_ent] %}
         {% endif %}
+
+        {% if method == 'Number entity' %}
+          {% if limit_ent in bad or not (limit_ent | regex_match('^number[.][a-z0-9_]+$')) %}
+            {% set ns.valid = false %}
+          {% elif limit_ent in ns.inverter_entities %}
+            {% set ns.valid = false %}
+          {% else %}
+            {% set ns.inverter_entities = ns.inverter_entities + [limit_ent] %}
+          {% endif %}
+        {% elif method == 'Action/service' %}
+          {% if not (action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) or value_field == '' %}
+            {% set ns.valid = false %}
+          {% endif %}
+          {% if fixed_data is not mapping or target_data is not mapping %}
+            {% set ns.valid = false %}
+          {% endif %}
+          {% if pre_actions is not sequence or pre_actions is string or post_actions is not sequence or post_actions is string %}
+            {% set ns.valid = false %}
+          {% else %}
+            {% for step in pre_actions %}
+              {% if step is not mapping or step.get('action', '') is not string or not (step.get('action', '') | trim | lower | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) %}
+                {% set ns.valid = false %}
+              {% endif %}
+            {% endfor %}
+            {% for step in post_actions %}
+              {% if step is not mapping or step.get('action', '') is not string or not (step.get('action', '') | trim | lower | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) %}
+                {% set ns.valid = false %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+          {% if readback_ent not in bad and not (readback_ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) %}
+            {% set ns.valid = false %}
+          {% endif %}
+          {% if action_step < 0 or refresh_seconds < 0 %}
+            {% set ns.valid = false %}
+          {% endif %}
+          {% if unit == 'Percent' and action_step > 100 %}
+            {% set ns.valid = false %}
+          {% elif unit == 'Watts' and full > 0 and action_step > full %}
+            {% set ns.valid = false %}
+          {% endif %}
+        {% endif %}
+
         {% if full <= 0 or full > 10000 or low < 0 or low > 10000 or low >= full %}
           {% set ns.valid = false %}
         {% endif %}
@@ -1211,9 +1767,17 @@ template:
       {% if count < 1 or count > 10 %}{% set ns.ready = false %}{% endif %}
       {% if not night_restore %}
         {% for i in range(1, count + 1) %}
-          {% set ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim %}
-          {% if ent in bad or not (ent | regex_match('^number[.][a-z0-9_]+$')) or not is_number(states(ent)) %}
-            {% set ns.ready = false %}
+          {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') | trim %}
+          {% set limit_ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim | lower %}
+          {% set readback_ent = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
+          {% if method == 'Number entity' %}
+            {% if limit_ent in bad or not (limit_ent | regex_match('^number[.][a-z0-9_]+$')) or not is_number(states(limit_ent)) %}
+              {% set ns.ready = false %}
+            {% endif %}
+          {% elif method == 'Action/service' and readback_ent not in bad %}
+            {% if not (readback_ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) or not is_number(states(readback_ent)) %}
+              {% set ns.ready = false %}
+            {% endif %}
           {% endif %}
         {% endfor %}
       {% endif %}
@@ -1245,9 +1809,17 @@ template:
         {% set count = states('input_number.hpvc_inverter_count') | int(0) %}
         {% if not night_restore %}
           {% for i in range(1, count + 1) %}
-            {% set ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim %}
-            {% if ent in bad or not (ent | regex_match('^number[.][a-z0-9_]+$')) or not is_number(states(ent)) %}
-              {% set ns.items = ns.items + [ent if ent not in bad else 'PV' ~ i ~ ' limit'] %}
+            {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') | trim %}
+            {% set limit_ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim | lower %}
+            {% set readback_ent = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
+            {% if method == 'Number entity' %}
+              {% if limit_ent in bad or not (limit_ent | regex_match('^number[.][a-z0-9_]+$')) or not is_number(states(limit_ent)) %}
+                {% set ns.items = ns.items + [limit_ent if limit_ent not in bad else 'PV' ~ i ~ ' limit'] %}
+              {% endif %}
+            {% elif method == 'Action/service' and readback_ent not in bad %}
+              {% if not (readback_ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) or not is_number(states(readback_ent)) %}
+                {% set ns.items = ns.items + [readback_ent] %}
+              {% endif %}
             {% endif %}
           {% endfor %}
         {% endif %}
@@ -1265,14 +1837,24 @@ template:
   - name: HPVC PV Limited
     unique_id: hpvc_pv_limited
     icon: mdi:solar-power-variant
-    state: "{% set bad = ['unknown','unavailable','select_entity_first',''] %}\n{%
-      set count = states('input_number.hpvc_inverter_count')|int(1) %}\n{% set db
-      = states('input_number.hpvc_pv_adjust_deadband')|float(25) %}\n{% set ns = namespace(limited=false)
-      %}\n{% for i in range(1, count + 1) %}\n  {% set ent = states('input_text.hpvc_pv'
-      ~ i ~ '_limit_number') %}\n  {% set full = states('input_number.hpvc_pv' ~ i
-      ~ '_full_limit')|float(0) %}\n  {% if ent not in bad and full > 0 and states(ent)|float(full)
-      < (full - db) %}{% set ns.limited = true %}{% endif %}\n{% endfor %}\n{{ ns.limited
-      }}"
+    state: >-
+      {% set bad = ['unknown','unavailable','none','select_entity_first',''] %}
+      {% set count = states('input_number.hpvc_inverter_count') | int(1) %}
+      {% set db = states('input_number.hpvc_pv_adjust_deadband') | float(25) %}
+      {% set debug = states('input_text.hpvc_last_targets_json') | from_json(default={}) %}
+      {% set ns = namespace(limited=debug.get('lim', false)) %}
+      {% for i in range(1, count + 1) %}
+        {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') %}
+        {% set unit = states('input_select.hpvc_pv' ~ i ~ '_limit_unit') %}
+        {% set ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv' ~ i ~ '_readback_entity') %}
+        {% set full = states('input_number.hpvc_pv' ~ i ~ '_full_limit') | float(0) %}
+        {% if ent not in bad and full > 0 and is_number(states(ent)) %}
+          {% set raw = states(ent) | float(0) %}
+          {% set current = (raw / 100 * full) if unit == 'Percent' else raw %}
+          {% if current < (full - db) %}{% set ns.limited = true %}{% endif %}
+        {% endif %}
+      {% endfor %}
+      {{ ns.limited }}
   - name: HPVC Charge Priority Active
     unique_id: hpvc_charge_priority_active
     icon: mdi:battery-charging-high
@@ -1297,23 +1879,31 @@ template:
     unique_id: hpvc_at_minimum_pv
     icon: mdi:solar-power-variant-outline
     state: >-
-      {% set bad = ['unknown','unavailable','select_entity_first',''] %}
+      {% set bad = ['unknown','unavailable','none','select_entity_first',''] %}
       {% set count = states('input_number.hpvc_inverter_count') | int(1) %}
       {% set min_tol = 1 %}
-      {% set ns = namespace(any=false, all_min=true) %}
+      {% set debug = states('input_text.hpvc_last_targets_json') | from_json(default={}) %}
+      {% set ns = namespace(any=false, all_min=true, missing=false) %}
       {% for i in range(1, count + 1) %}
-        {% set ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') %}
+        {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') %}
+        {% set unit = states('input_select.hpvc_pv' ~ i ~ '_limit_unit') %}
+        {% set ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv' ~ i ~ '_readback_entity') %}
         {% set full = states('input_number.hpvc_pv' ~ i ~ '_full_limit') | float(0) %}
         {% set low = states('input_number.hpvc_pv' ~ i ~ '_low_limit') | float(0) %}
-        {% if ent not in bad and full > 0 %}
+        {% if ent not in bad and full > 0 and is_number(states(ent)) %}
           {% set ns.any = true %}
-          {% set current = states(ent) | float(full) %}
-          {% if ((current - low) | abs) >= min_tol %}
-            {% set ns.all_min = false %}
-          {% endif %}
+          {% set raw = states(ent) | float(0) %}
+          {% set current = (raw / 100 * full) if unit == 'Percent' else raw %}
+          {% if ((current - low) | abs) >= min_tol %}{% set ns.all_min = false %}{% endif %}
+        {% elif method == 'Action/service' %}
+          {% set ns.missing = true %}
         {% endif %}
       {% endfor %}
-      {{ ns.any and ns.all_min }}
+      {% if ns.missing %}
+        {{ debug.get('am', false) and ns.all_min }}
+      {% else %}
+        {{ ns.any and ns.all_min }}
+      {% endif %}
 - sensor:
   - name: HPVC Charge Priority State
     unique_id: hpvc_charge_priority_state

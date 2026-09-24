@@ -4,8 +4,9 @@
 - [Settings](02-configuration.md) — sensors, inverter limits, thresholds, HBC integration, and defaults.
 - [How it works](03-how-it-works.md) — control sequence, Charge Priority, Night Restore, accuracy, and reports.
 - [Troubleshooting](04-troubleshooting.md) — symptom-based help for sensors, PV control, HBC, dashboard, and reports.
+- [Inverter compatibility](05-inverter-compatibility.md) — compatibility statuses and brand/integration matrix.
 
 Release-level changes are listed in [Release notes](../RELEASE_NOTES.md); version history is in the [Changelog](../CHANGELOG.md).
 
 
-Current documentation targets Home PV Control v1.4.3.
+Current documentation targets Home PV Control v1.5.0.
