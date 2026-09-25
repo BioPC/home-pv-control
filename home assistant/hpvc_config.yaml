@@ -9,6 +9,9 @@ input_boolean:
   hpvc_enabled:
     name: Home PV Control Enabled
     icon: mdi:solar-power
+  hpvc_external_release_request:
+    name: HPVC External PV Release Request
+    icon: mdi:transmission-tower-export
   hpvc_notifications:
     name: Home PV Control Notifications
     icon: mdi:bell-outline
@@ -1834,6 +1837,12 @@ template:
       {% set options = state_attr(strategy, 'options') %}
       {{ states(strategy) not in bad and options is sequence and options is not string
       and options | count > 0 and states(executing) not in bad }}
+  - name: HPVC External Release Active
+    unique_id: hpvc_external_release_active
+    icon: mdi:solar-power-variant
+    state: >-
+      {{ is_state('input_boolean.hpvc_external_release_request', 'on')
+         and is_state('input_text.hpvc_status', 'External PV release active') }}
   - name: HPVC PV Limited
     unique_id: hpvc_pv_limited
     icon: mdi:solar-power-variant

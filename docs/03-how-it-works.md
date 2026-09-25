@@ -352,10 +352,10 @@ The supplied flow is split into four tabs:
 
 | Tab | Purpose |
 |---|---|
-| **HPVC Inputs v1.5.0** | Reads Home Assistant state, validates configuration and live inputs, and restores persisted runtime state. |
-| **HPVC Engine v1.5.0** | Evaluates prices, cooldown, Night Restore, battery eligibility, Charge Priority, and the total PV target. |
-| **HPVC Outputs v1.5.0** | Distributes inverter targets, performs writes, verifies results, and publishes status, Insights, and accuracy. |
-| **HPVC Reports v1.5.0** | Builds and publishes the on-demand HTML/TXT support report. |
+| **HPVC Inputs v1.5.1** | Reads Home Assistant state, validates configuration and live inputs, and restores persisted runtime state. |
+| **HPVC Engine v1.5.1** | Evaluates prices, cooldown, Night Restore, battery eligibility, Charge Priority, and the total PV target. |
+| **HPVC Outputs v1.5.1** | Distributes inverter targets, performs writes, verifies results, and publishes status, Insights, and accuracy. |
+| **HPVC Reports v1.5.1** | Builds and publishes the on-demand HTML/TXT support report. |
 
 Import the complete `hpvc_flow.json`; the tabs are designed to operate together.
 
@@ -407,3 +407,19 @@ A configured readback entity participates in normal write verification. Without 
 
 [← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
 
+
+## Safe disable and external PV release (v1.5.1)
+
+### Safe disable
+
+HPVC retains a compact runtime diagnostic for the most recent disable-restore attempt. This does not add another Home Assistant helper; it exists so a support report generated after HPVC reaches `Disabled` can still show whether PV and an HPVC-owned HBC override required restoration and whether that restoration completed.
+
+A master-disable transition is handled as a short shutdown/restore sequence rather than an immediate write stop. If HPVC still owns a reduced PV limit, the engine keeps only the restore path alive, bypasses the ordinary cooldown for that shutdown restore, commands the configured inverters back to full output, and allows any HPVC-owned negative-price HBC override to restore. After those owned states are released, the next evaluation settles at `Disabled`.
+
+If HPVC cannot access a usable configured inverter control path, it does not invent a successful restore. The runtime status/reason remains diagnostic so the condition is visible in the report.
+
+### External-release handshake
+
+An external controller requests release with `input_boolean.hpvc_external_release_request`. HPVC remains enabled. Safety/minimum-price and restore states retain priority; otherwise HPVC waits for its ordinary cooldown/write-confirmation window, restores all configured inverter limits to full, and then publishes `binary_sensor.hpvc_external_release_active`.
+
+While the acknowledgement is On, normal HPVC PV curtailment is suspended but HPVC continues evaluating its safety and ownership states. When the request is removed, the acknowledgement clears and normal PV control resumes on the next evaluation. A requester should start its own handover/charger timer only after the acknowledgement turns On.

@@ -2,7 +2,7 @@
 
 # Inverter compatibility
 
-Home PV Control (HPVC) v1.5.0 controls inverter output through either a writable Home Assistant `number` entity or a configurable Home Assistant **Action/service** adapter. Limits can be expressed in **Watts** or **Percent**, while HPVC continues to calculate internally in Watts.
+Home PV Control (HPVC) v1.5.1 controls inverter output through either a writable Home Assistant `number` entity or a configurable Home Assistant **Action/service** adapter. Limits can be expressed in **Watts** or **Percent**, while HPVC continues to calculate internally in Watts.
 
 Compatibility depends on the **Home Assistant integration and the entities it exposes**, not only on the inverter brand or model. A writable grid-export limit is not automatically equivalent to an inverter active-power limit: HPVC expects to control the inverter production ceiling itself.
 
@@ -71,3 +71,7 @@ In **Number entity** mode HPVC verifies the configured writable limit entity. In
 The matrix is intentionally conservative. If you successfully use an integration marked **Compatible by design** or **Action/service adapter** with HPVC, please open a GitHub issue or discussion with the inverter model, Home Assistant integration, control method, action/entity details and Limit unit so the status can be promoted to **Confirmed direct**.
 
 [← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
+
+## v1.5.1 release/disable behavior
+
+Safe disable and the external PV-release handshake use the same configured Number-entity or Action/service write path as normal HPVC control. They do not create a separate inverter protocol. A real readback remains recommended: without independent readback, HPVC can confirm its command path but cannot prove the physical inverter response beyond the semantics exposed by the selected integration.

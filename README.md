@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="releases/v1.5.0/release.md"><img src="https://img.shields.io/badge/release-v1.5.0-blue" alt="Release v1.5.0"></a>
+  <a href="releases/v1.5.1/release.md"><img src="https://img.shields.io/badge/release-v1.5.1-blue" alt="Release v1.5.1"></a>
   <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant ready"></a>
   <a href="https://nodered.org/"><img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED flow"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="GPL-3.0-or-later"></a>
@@ -17,7 +17,7 @@
 
 # Home PV Control
 
-Home PV Control (HPVC) dynamically limits and restores PV inverter output in Home Assistant through Node-RED. It is designed for dynamic electricity contracts and can run as a standalone PV controller or integrate with Home Battery Control (HBC).
+Home PV Control (HPVC) dynamically controls, limits and restores PV inverter output in Home Assistant through Node-RED. It is designed for dynamic electricity contracts and can run as a standalone PV controller or integrate with Home Battery Control (HBC).
 
 - Reduce unwanted or uneconomic PV export.
 - Preserve useful PV for household consumption.
@@ -87,7 +87,7 @@ See the full [installation guide](docs/01-installation.md) for dependencies and 
 | Dynamic export limiting and import recovery | ✅ |
 | Multi-inverter support with per-inverter minimum/maximum limits | ✅ |
 | Per-inverter Watt or percentage limits | ✅ |
-| Generic per-inverter Number entity / Action-service adapters | ✅ |
+| Generic per-inverter Number entity / Action/service adapters | ✅ |
 | Negative all-in-price minimum-PV protection | ✅ |
 | Optional HBC grid charging during negative prices | ✅ |
 | Optional HBC Charge Priority for `Charge` / `Charge PV` | ✅ |
@@ -197,6 +197,7 @@ On-demand HTML/TXT reports include:
 
 - current HPVC decision and control mode;
 - inverter state and calculated targets;
+- inverter adapter, control-method and readback diagnostics;
 - required sensor health;
 - HBC strategy/execution and Charge Priority state;
 - battery eligibility, headroom and taper diagnostics;
@@ -243,7 +244,7 @@ When upgrading, keep the Home Assistant package, Node-RED flow and dashboard on 
 7. Review **Force charge at negative price**. It is seeded **On** once on fresh installs and upgrades. After that, a manual Off choice survives normal Home Assistant restarts and package/automation reloads. **Restore defaults** turns it On again.
 8. Generate a support report to confirm the installation is healthy.
 
-See the [v1.5.0 release notes](releases/v1.5.0/release.md) for the full release summary.
+See the [v1.5.1 release notes](releases/v1.5.1/release.md) for the full release summary.
 
 ## Documentation
 
@@ -254,13 +255,13 @@ See the [v1.5.0 release notes](releases/v1.5.0/release.md) for the full release 
 - [Inverter compatibility](docs/05-inverter-compatibility.md)
 - [Documentation index](docs/README.md)
 - [Changelog](CHANGELOG.md)
-- [v1.5.0 release notes](releases/v1.5.0/release.md)
+- [v1.5.1 release notes](releases/v1.5.1/release.md)
 
 For Home Battery Control itself, see the [HBC documentation](https://docs.homebatterycontrol.com/).
 
 ## Screenshots
 
-The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.5.0 YAML and Node-RED flow are authoritative.
+The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.5.1 YAML and Node-RED flow are authoritative.
 
 ### Settings
 
@@ -310,7 +311,7 @@ home assistant/
   hpvc_dashboard.yaml   # Separate Home Assistant dashboard
 
 node-red/
-  hpvc_flow.json        # Importable Node-RED flow with four v1.5.0 tabs
+  hpvc_flow.json        # Importable Node-RED flow with four functional tabs
 
 examples/
   hoymiles-opendtu-2-inverters.reference.json
@@ -335,7 +336,7 @@ docs/
 releases/
   v1.0.0/
   ...
-  v1.5.0/
+  v1.5.1/
 ```
 
 ## Installation format

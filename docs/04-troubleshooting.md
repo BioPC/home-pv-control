@@ -142,7 +142,7 @@ The packaged dashboard includes the **HBC Price Intervals** graph with theme-awa
 
 ### Mobile report navigation buttons appear only after refresh
 
-Use the current v1.5.0 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
+Use the current v1.5.1 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
 
 ## Accuracy diagnostics
 
@@ -227,7 +227,7 @@ For deeper telemetry, cutoff, persistence, attribution, and report semantics, se
 
 ## Node-RED latency or heap growth (v1.4.3)
 
-v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test the current v1.5.0 build unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
+v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test the current v1.5.1 build unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
 
 The runtime stores bounded diagnostics in the Node-RED global context key `homePvControlPerformanceDiagnostics`. It contains the latest cycle total, maximum and rolling average evaluation time, the latest per-stage timings, and—when the Function sandbox permits it—a memory sample no more than once per minute. No per-cycle timing or heap history is retained by this diagnostic.
 
@@ -248,7 +248,7 @@ If a support report shows `ReferenceError: Cannot access 'settingsTrigger' befor
 
 ### Current runtime investigation
 
-The original full Home Assistant state deep-clone was removed before v1.4.2. If Node-RED memory growth or OOM behaviour is still observed with the current v1.5.0 build, treat it as a separate runtime investigation: confirm that HPVC runtime timestamps continue to advance, compare Node-RED RAM with HPVC enabled and disabled, and record Node-RED/Node.js versions, context storage, contrib nodes, and approximate Home Assistant entity count. Do not assume remaining heap growth is caused by the old deep-clone path.
+The original full Home Assistant state deep-clone was removed before v1.4.2. If Node-RED memory growth or OOM behaviour is still observed with the current v1.5.1 build, treat it as a separate runtime investigation: confirm that HPVC runtime timestamps continue to advance, compare Node-RED RAM with HPVC enabled and disabled, and record Node-RED/Node.js versions, context storage, contrib nodes, and approximate Home Assistant entity count. Do not assume remaining heap growth is caused by the old deep-clone path.
 
 
 ## Percentage-controlled inverter does not follow the requested Watt target
@@ -279,3 +279,19 @@ If Charge Priority releases PV but the batteries do not absorb the additional po
 
 After Node-RED loses its runtime command cache, an Action/service inverter performs one synchronization write on the next normal/full evaluation. Startup synchronization itself is not treated as an ordinary PV target change and therefore does not start the normal PV cooldown. If grid/PV conditions then require a different target on the following cycle, a second write can occur sooner than the configured cooldown. This is intentional so startup synchronization cannot block a newly required control response. A real readback entity is recommended when the integration provides one.
 
+
+## v1.5.1 external release and disable restoration
+
+### External release request is On but Active stays Off
+
+This can be normal while HPVC is finishing a higher-priority state or waiting for its normal cooldown/write-confirmation window. Check `input_text.hpvc_status`, `input_text.hpvc_reason`, the inverter rows in the support report, negative-price state, Night Restore and any HBC override/fault diagnostics. External controllers must wait for `binary_sensor.hpvc_external_release_active = on`; the request helper alone is not an acknowledgement.
+
+### HPVC says “Disabling - restoring” after I switch it Off
+
+This is the v1.5.1 safe-disable sequence. HPVC detected a reduced inverter limit and/or an HPVC-owned HBC override. It restores those owned states before settling at `Disabled`. If the state persists, generate a support report and check inverter write/readback and HBC restore diagnostics.
+
+The support report retains the most recent disable-restore result after HPVC has already settled at `Disabled`, including whether PV and HBC restoration were required and confirmed.
+
+### External release was active before a restart
+
+The request helper can restore as On after Home Assistant restarts, but the active sensor is not trusted blindly. HPVC re-evaluates the request and inverter state, performs any required restore-to-full action, and only then reports the release as active again.

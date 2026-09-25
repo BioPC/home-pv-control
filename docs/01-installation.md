@@ -103,7 +103,20 @@ Version 1.3.0 renames active legacy helper entity IDs from `pv_ems_*` to `hpvc_*
 5. Reload packages or restart Home Assistant, then deploy Node-RED.
 6. Copy or re-enter your sensor entities, inverter entities, limits, thresholds, and HBC integration preference in the new `hpvc_*` helpers.
 
-Do not mix v1.5.0 files with older runtime files. Home Assistant may keep obsolete `pv_ems_*` helpers visible until their old package definitions are removed and Home Assistant is restarted.
+Do not mix v1.5.1 files with older runtime files. Home Assistant may keep obsolete `pv_ems_*` helpers visible until their old package definitions are removed and Home Assistant is restarted.
+
+### Upgrading to v1.5.1
+
+v1.5.1 adds safe master-disable restoration and a generic external PV-release handshake. Replace the Home Assistant package, Node-RED flow and dashboard together. Existing inverter and HBC settings are preserved.
+
+Two new HPVC-owned entities are created:
+
+- `input_boolean.hpvc_external_release_request` — request interface for external controllers.
+- `binary_sensor.hpvc_external_release_active` — acknowledgement that HPVC has restored PV to full and suspended normal curtailment for the active request.
+
+The request helper restores its Home Assistant state across restarts. HPVC always re-evaluates the request after startup; the acknowledgement is derived from HPVC runtime status and is never a blind mirror of the request.
+
+When the master `input_boolean.hpvc_enabled` is switched off, HPVC now restores configured inverter limits to full and releases an HPVC-owned negative-price HBC override before settling into the disabled state, where the configured control path is available.
 
 ### Upgrading to v1.5.0
 

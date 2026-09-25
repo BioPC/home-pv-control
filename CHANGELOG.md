@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.5.1
+
+- Added safe master-disable restoration: switching HPVC Off now restores configured inverter limits to full before normal control stops, where a usable control path is available.
+- HPVC-owned negative-price HBC overrides are restored during the safe-disable sequence instead of being left active until HPVC is enabled again.
+- Added the generic external PV-release handshake: `input_boolean.hpvc_external_release_request` and `binary_sensor.hpvc_external_release_active`.
+- External release keeps HPVC enabled, respects higher-priority safety/minimum/restore states, restores PV to full through the normal inverter adapter path, and suspends ordinary curtailment until the request is removed.
+- Support reports retain the most recent safe-disable restore result, including whether PV and HPVC-owned HBC restoration were required and confirmed.
+- External release respects the normal PV cooldown/write-confirmation window; safe master-disable restoration bypasses the ordinary PV cooldown so a user-requested shutdown does not leave PV curtailed unnecessarily.
+- Added an active-only External PV Release badge to the dashboard; the request helper remains an integration/API helper rather than a normal user control.
+- Expanded HTML and TXT support reports with external-release request/active state and updated report version metadata.
+- Updated installation, configuration, architecture, troubleshooting and inverter-compatibility documentation for the v1.5.1 handshake and safe-disable semantics.
+
+
 ## v1.5.0
 
 ### Added / changed
