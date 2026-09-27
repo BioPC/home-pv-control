@@ -17,7 +17,7 @@ views:
         content: '<div align="center">
 
 
-          ## Home PV Control (v1.5.1)
+          ## Home PV Control (v1.5.2)
 
           #### Standalone PV optimization for dynamic energy contracts. Optional HBC integration.
 
@@ -60,7 +60,7 @@ views:
     visibility:
     - condition: state
       entity: binary_sensor.hpvc_negative_price_mode
-      state_not: 'off'
+      state: 'on'
   - type: entity
     show_name: true
     show_state: true
@@ -886,7 +886,7 @@ views:
         show: false
       annotations:
         yaxis:
-        - 'true': 0
+        - y: 0
           borderColor: var(--secondary-text-color)
           strokeDashArray: 0
     series:
@@ -1077,7 +1077,7 @@ views:
         show: false
       annotations:
         yaxis:
-        - 'true': 0
+        - y: 0
           borderColor: var(--secondary-text-color)
           strokeDashArray: 0
     series:

@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.5.2
+
+### Fixed
+
+- Fixed issue #7 where one slow/unconfirmed inverter could hold the entire PV plant in the in-flight write lock while the house was importing from the grid.
+- During an import-driven upward correction, HPVC now freezes only inverter(s) that have not confirmed the previous command and redistributes available increase across healthy inverters. Export/downward correction remains protected by the normal write lock.
+- If the healthy inverters cannot reach the full requested increase, HPVC caps the temporary target at the reachable plant limit instead of raising a plant-wide allocation error.
+- Fixed direction-safe allocation errors caused by small live-limit quantization outside a configured bound (for example 4.95 W with a 5 W minimum).
+- Safe master-disable restore no longer waits for an older in-flight normal-control command; HPVC immediately issues full-limit targets to all configured inverters and uses the existing verification/retry path afterwards.
+- Fixed price-zone Insight flapping at an exact threshold such as `0.0000 €/kWh`. Missing/partial evaluations no longer coerce the remembered state to false, and enter/leave transitions are logged only when the live price satisfies the corresponding hysteresis boundary.
+
+### Audit hardening
+
+- Corrected Power Flow ApexCharts zero-line annotations to use `y: 0`.
+- Reconciled published `controlAction` diagnostics with the allocator's final reachable target after slow-inverter target capping.
+- Aligned current documentation and README release references with v1.5.2.
+- Clarified the in-flight write-lock exceptions for import-driven upward recovery and safe master-disable restore.
+
+
 ## v1.5.1
 
 - Added safe master-disable restoration: switching HPVC Off now restores configured inverter limits to full before normal control stops, where a usable control path is available.

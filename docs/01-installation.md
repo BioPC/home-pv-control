@@ -103,11 +103,11 @@ Version 1.3.0 renames active legacy helper entity IDs from `pv_ems_*` to `hpvc_*
 5. Reload packages or restart Home Assistant, then deploy Node-RED.
 6. Copy or re-enter your sensor entities, inverter entities, limits, thresholds, and HBC integration preference in the new `hpvc_*` helpers.
 
-Do not mix v1.5.1 files with older runtime files. Home Assistant may keep obsolete `pv_ems_*` helpers visible until their old package definitions are removed and Home Assistant is restarted.
+Do not mix v1.5.2 files with older runtime files. Home Assistant may keep obsolete `pv_ems_*` helpers visible until their old package definitions are removed and Home Assistant is restarted.
 
-### Upgrading to v1.5.1
+### Upgrading to v1.5.2
 
-v1.5.1 adds safe master-disable restoration and a generic external PV-release handshake. Replace the Home Assistant package, Node-RED flow and dashboard together. Existing inverter and HBC settings are preserved.
+v1.5.2 adds safe master-disable restoration and a generic external PV-release handshake. Replace the Home Assistant package, Node-RED flow and dashboard together. Existing inverter and HBC settings are preserved.
 
 Two new HPVC-owned entities are created:
 
@@ -118,21 +118,7 @@ The request helper restores its Home Assistant state across restarts. HPVC alway
 
 When the master `input_boolean.hpvc_enabled` is switched off, HPVC now restores configured inverter limits to full and releases an HPVC-owned negative-price HBC override before settling into the disabled state, where the configured control path is available.
 
-### Upgrading to v1.5.0
-
-v1.5.0 adds a generic per-inverter adapter layer. Existing writable `number.*` installations remain on **Control method = Number entity** and keep their existing Limit entity, Limit unit, Max power and Min power settings.
-
-Use **Action/service** only for integrations that require a Home Assistant action/service or register-write call. Configure the action schema carefully and use a real numeric readback entity whenever one is available. Replace the synchronized HPVC package, dashboard and Node-RED flow from the same release.
-
-### Upgrading to v1.4.3
-
-When upgrading to v1.4.3, replace the synchronized HPVC files from the same package version together. v1.4.3 adds per-inverter Watt/Percent limit-unit selection and reduces unnecessary Home Assistant helper writes from status, Insights, targets and accuracy diagnostics. Existing inverter slots default to Watts. Import the updated Node-RED flow, reload the Home Assistant package so the new limit-unit helpers exist, and verify each inverter Limit unit before enabling control.
-
-
 After deployment, allow normal 10-second evaluations to run and verify HPVC status, inverter writes, HBC behavior, percentage conversion (where used), and report generation.
-
-> **Upgrade note — sensor → binary_sensor migration:** v1.5.0 corrects several HPVC helper domains (`hpvc_show_inverter_slot_2`…`_10`, inverter limit-range warnings and the export-threshold warning) from `sensor.*` to `binary_sensor.*`. If an earlier installed package created the old `sensor.*` registry entries, Home Assistant may leave those old entities orphaned. They can be removed from the entity registry after confirming the new `binary_sensor.*` entities are present.
-
 
 ## Next steps
 

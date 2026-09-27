@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="releases/v1.5.1/release.md"><img src="https://img.shields.io/badge/release-v1.5.1-blue" alt="Release v1.5.1"></a>
+  <a href="releases/v1.5.2/release.md"><img src="https://img.shields.io/badge/release-v1.5.2-blue" alt="Release v1.5.2"></a>
   <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant ready"></a>
   <a href="https://nodered.org/"><img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED flow"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="GPL-3.0-or-later"></a>
@@ -50,7 +50,9 @@ See [Inverter compatibility](docs/05-inverter-compatibility.md) and [Configurati
 - [Screenshots](#screenshots)
 - [Support](#support)
 - [Repository structure](#repository-structure)
+- [Credits](#credits)
 - [License](#license)
+- [Disclaimer](#disclaimer)
 
 ## Requirements
 
@@ -244,7 +246,7 @@ When upgrading, keep the Home Assistant package, Node-RED flow and dashboard on 
 7. Review **Force charge at negative price**. It is seeded **On** once on fresh installs and upgrades. After that, a manual Off choice survives normal Home Assistant restarts and package/automation reloads. **Restore defaults** turns it On again.
 8. Generate a support report to confirm the installation is healthy.
 
-See the [v1.5.1 release notes](releases/v1.5.1/release.md) for the full release summary.
+See the [v1.5.2 release notes](releases/v1.5.2/release.md) for the full release summary.
 
 ## Documentation
 
@@ -255,13 +257,13 @@ See the [v1.5.1 release notes](releases/v1.5.1/release.md) for the full release 
 - [Inverter compatibility](docs/05-inverter-compatibility.md)
 - [Documentation index](docs/README.md)
 - [Changelog](CHANGELOG.md)
-- [v1.5.1 release notes](releases/v1.5.1/release.md)
+- [v1.5.2 release notes](releases/v1.5.2/release.md)
 
 For Home Battery Control itself, see the [HBC documentation](https://docs.homebatterycontrol.com/).
 
 ## Screenshots
 
-The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.5.1 YAML and Node-RED flow are authoritative.
+The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.5.2 YAML and Node-RED flow are authoritative.
 
 ### Settings
 
@@ -318,7 +320,7 @@ examples/
 
 assets/
   banner.png
-  logo.svg
+  logo.png
   screenshots/
     dashboard_main.png
     dashboard_settings.png
@@ -337,15 +339,12 @@ releases/
   v1.0.0/
   ...
   v1.5.1/
+  v1.5.2/
 ```
-
-## Installation format
-
-HPVC is distributed as a manual GitHub release ZIP, not as a HACS custom integration, plugin, theme or template repository. Install the Home Assistant package, Node-RED flow and dashboard manually as described above.
 
 ## Credits
 
-Inspired by the Home Assistant and Node-RED workflow of [Home Battery Control](https://github.com/gitcodebob/marstek-venus-rs485-node-red).
+Inspired by the Home Assistant and Node-RED workflow of [Home Battery Control](https://github.com/gitcodebob/marstek-venus-rs485-node-red) by gitcodebob.
 
 ## License
 
