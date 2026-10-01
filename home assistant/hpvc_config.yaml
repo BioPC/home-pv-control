@@ -45,6 +45,21 @@ input_boolean:
     name: HPVC Negative-Price Override Fault
     icon: mdi:alert-circle-outline
     initial: false
+  hpvc_update_available:
+    name: HPVC Update Available
+    icon: mdi:update
+  hpvc_update_in_progress:
+    name: HPVC Update In Progress
+    icon: mdi:update
+  hpvc_update_reload_required:
+    name: HPVC Quick Reload Required
+    icon: mdi:reload
+  hpvc_update_dashboard_manual:
+    name: HPVC Dashboard Manual Update Required
+    icon: mdi:view-dashboard-edit-outline
+  hpvc_update_resume_enabled:
+    name: HPVC Resume Enabled After Update
+    icon: mdi:play-circle-outline
 input_text:
   hpvc_market_price_sensor:
     name: Market/export Price Sensor
@@ -66,6 +81,22 @@ input_text:
     name: Home PV Control Status
     icon: mdi:solar-power-variant
     max: 255
+  hpvc_latest_version:
+    name: HPVC Latest Version
+    icon: mdi:tag-outline
+    max: 32
+  hpvc_update_status:
+    name: HPVC Update Status
+    icon: mdi:update
+    max: 255
+  hpvc_last_update_check:
+    name: HPVC Last Update Check
+    icon: mdi:clock-check-outline
+    max: 64
+  hpvc_node_red_flows_status:
+    name: HPVC Node-RED Flows Status
+    icon: mdi:source-branch-check
+    max: 32
   hpvc_reason:
     name: Home PV Control Reason
     icon: mdi:information-outline
@@ -120,46 +151,6 @@ input_text:
     max: 255
   hpvc_insight_10:
     name: Home PV Control Insight 10
-    icon: mdi:lightbulb-on-outline
-    max: 255
-  hpvc_insight_11:
-    name: Home PV Control Insight 11
-    icon: mdi:lightbulb-on-outline
-    max: 255
-  hpvc_insight_12:
-    name: Home PV Control Insight 12
-    icon: mdi:lightbulb-on-outline
-    max: 255
-  hpvc_insight_13:
-    name: Home PV Control Insight 13
-    icon: mdi:lightbulb-on-outline
-    max: 255
-  hpvc_insight_14:
-    name: Home PV Control Insight 14
-    icon: mdi:lightbulb-on-outline
-    max: 255
-  hpvc_insight_15:
-    name: Home PV Control Insight 15
-    icon: mdi:lightbulb-on-outline
-    max: 255
-  hpvc_insight_16:
-    name: Home PV Control Insight 16
-    icon: mdi:lightbulb-on-outline
-    max: 255
-  hpvc_insight_17:
-    name: Home PV Control Insight 17
-    icon: mdi:lightbulb-on-outline
-    max: 255
-  hpvc_insight_18:
-    name: Home PV Control Insight 18
-    icon: mdi:lightbulb-on-outline
-    max: 255
-  hpvc_insight_19:
-    name: Home PV Control Insight 19
-    icon: mdi:lightbulb-on-outline
-    max: 255
-  hpvc_insight_20:
-    name: Home PV Control Insight 20
     icon: mdi:lightbulb-on-outline
     max: 255
   hpvc_pv1_limit_number:
@@ -483,6 +474,21 @@ input_text:
     icon: mdi:code-json
     max: 255
 input_select:
+  hpvc_selected_inverter:
+    name: HPVC Selected Inverter
+    options:
+      - PV1
+      - PV2
+      - PV3
+      - PV4
+      - PV5
+      - PV6
+      - PV7
+      - PV8
+      - PV9
+      - PV10
+    initial: PV1
+    icon: mdi:solar-panel
   hpvc_pv1_control_method:
     name: PV1 Control Method
     options:
@@ -1002,9 +1008,29 @@ input_button:
   hpvc_export_report:
     name: HPVC Generate Report
     icon: mdi:file-document-plus-outline
+  hpvc_uninstall:
+    name: HPVC Uninstall / Cleanup
+    icon: mdi:delete-alert
+  hpvc_remove_flows:
+    name: HPVC Remove Node-RED Flows
+    icon: mdi:source-branch-remove
+  hpvc_check_update:
+    name: HPVC Check for Updates
+    icon: mdi:update
+  hpvc_update:
+    name: HPVC Update
+    icon: mdi:download
+  hpvc_quick_reload:
+    name: HPVC Quick Reload Home Assistant
+    icon: mdi:reload
 
 template:
 - sensor:
+  - name: HPVC Installed Version
+    default_entity_id: sensor.hpvc_installed_version
+    unique_id: hpvc_installed_version
+    icon: mdi:tag
+    state: "1.5.3"
   # Explicit default_entity_id is intentional for this renamed v1.3.0 sensor so
   # fresh installs use the documented entity ID; other template sensors can derive theirs.
   - name: HPVC Diag Market/Export Price
@@ -1880,10 +1906,15 @@ template:
   - name: HPVC Negative Price Mode
     unique_id: hpvc_negative_price_mode
     icon: mdi:cash-minus
-    state: '{% set ent = states(''input_text.hpvc_all_in_price_sensor'') %}
-
-      {% if ent in [''unknown'',''unavailable'',''select_entity_first'',''''] %}false{%
-      else %}{{ states(ent)|float(999) <= 0 }}{% endif %}'
+    state: >-
+      {% set ent = states('input_text.hpvc_all_in_price_sensor') | trim %}
+      {% set enabled = is_state('input_boolean.hpvc_enabled', 'on') %}
+      {% set valid = is_state('binary_sensor.hpvc_configuration_valid', 'on') %}
+      {% if not enabled or not valid or ent in ['unknown', 'unavailable', 'select_entity_first', ''] %}
+        false
+      {% else %}
+        {{ states(ent) | float(999) <= 0 }}
+      {% endif %}
   - name: HPVC At Minimum PV
     unique_id: hpvc_at_minimum_pv
     icon: mdi:solar-power-variant-outline
@@ -1929,6 +1960,40 @@ template:
         {% set data = states('input_text.hpvc_last_targets_json') | from_json(default={}) %}
         {{ data.get('cps', 'a' if data.get('cp', false) else 'o') == 'a' }}
 script:
+  hpvc_previous_inverter:
+    alias: HPVC Previous Inverter
+    mode: restart
+    sequence:
+      - variables:
+          current: >-
+            {{ states('input_select.hpvc_selected_inverter') | replace('PV', '') | int(1) }}
+          count: >-
+            {% set configured = states('input_number.hpvc_inverter_count') | int(1) %} {{ 1 if configured < 1 else 10 if configured > 10 else configured }}
+          target: >-
+            {{ count if current <= 1 or current > count else current - 1 }}
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hpvc_selected_inverter
+        data:
+          option: "PV{{ target }}"
+
+  hpvc_next_inverter:
+    alias: HPVC Next Inverter
+    mode: restart
+    sequence:
+      - variables:
+          current: >-
+            {{ states('input_select.hpvc_selected_inverter') | replace('PV', '') | int(1) }}
+          count: >-
+            {% set configured = states('input_number.hpvc_inverter_count') | int(1) %} {{ 1 if configured < 1 else 10 if configured > 10 else configured }}
+          target: >-
+            {{ 1 if current < 1 or current >= count else current + 1 }}
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hpvc_selected_inverter
+        data:
+          option: "PV{{ target }}"
+
   hpvc_restore_defaults:
     alias: Restore defaults
     mode: single
@@ -1986,6 +2051,36 @@ script:
         entity_id: input_button.hpvc_defaults_restored_event
 
 automation:
+- id: hpvc_keep_selected_inverter_in_range
+  alias: HPVC - Keep selected inverter in range
+  mode: restart
+  trigger:
+  - platform: homeassistant
+    event: start
+  - platform: state
+    entity_id:
+    - input_number.hpvc_inverter_count
+    - input_select.hpvc_selected_inverter
+  condition:
+  - condition: template
+    value_template: >-
+      {{ states('input_number.hpvc_inverter_count') not in ['unknown', 'unavailable', 'none', '']
+         and states('input_select.hpvc_selected_inverter') not in ['unknown', 'unavailable', 'none', ''] }}
+  action:
+  - variables:
+      count: >-
+        {% set configured = states('input_number.hpvc_inverter_count') | int(1) %}
+        {{ 1 if configured < 1 else 10 if configured > 10 else configured }}
+      current: >-
+        {{ states('input_select.hpvc_selected_inverter') | replace('PV', '') | int(1) }}
+  - condition: template
+    value_template: "{{ current < 1 or current > count }}"
+  - service: input_select.select_option
+    target:
+      entity_id: input_select.hpvc_selected_inverter
+    data:
+      option: "PV{{ count }}"
+
 - id: hpvc_seed_negative_price_hbc_charge_default
   alias: HPVC - Seed negative-price HBC charging default
   mode: single

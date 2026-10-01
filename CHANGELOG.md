@@ -1,5 +1,77 @@
 # Changelog
 
+## v1.5.3 — 2026-10-01
+
+v1.5.3 adds safe maintenance workflows for both future Smart Updates and complete uninstall while retaining the v1.5.2 control model.
+
+- Made Full Uninstall, Smart Update, and Manual upgrade mutually exclusive so maintenance workflows cannot overlap.
+- Hardened Smart Update merge handling to preserve only one shared `global-config` node when IDs change between releases.
+- Added scoped Smart Update error catching and clearer failure notices that keep HPVC disabled until inverter limits are verified after pre-updater failures.
+- Added release-version consistency validation and documented the Smart Update GitHub trust model.
+- Full Uninstall cleanup now includes the inverter-navigation range automation (`hpvc_keep_selected_inverter_in_range`), preventing a leftover HPVC registry entry after uninstall.
+- Added Settings inverter navigation so only one configured PV card is shown at a time, with previous/next wraparound controls.
+- Maintenance now shows the last GitHub check time in the Home Assistant local timezone, a release-notes shortcut for available updates, a compact configuration/input/Node-RED-flow health summary, and a clearly separated **Uninstall HPVC** section.
+- Added **Manual upgrade** with a safe **Remove HPVC flows** action: it restores/validates PV first, removes only the four HPVC tabs, and preserves the Home Assistant package, entities, dashboard and saved data.
+- Maintenance now shows **Node-RED flows: Ready / Removed / Not detected / Needs attention** so normal, intentionally removed, manually absent and inconsistent flow states are distinguishable.
+- Safe uninstall/update shutdown now requires every configured inverter to be readable and confirmed at its full limit; unavailable/unverifiable inverter slots block destructive cleanup and are identified for manual verification.
+- Reduced the dashboard Insight helper cache from 20 to 10 entities while keeping the complete current-day Insight journal and HTML/TXT report history unchanged (up to 1,000 entries).
+
+### Added
+
+- Added **Maintenance → HPVC updates** with installed/latest version display, periodic/manual GitHub release checks, an update-available indicator, **Update HPVC**, and post-install **Quick Reload Home Assistant**.
+- Update checks now ignore the successful Exec return-code output, distinguish an installed version newer than GitHub's latest release, and send one persistent notification when each new update version is first detected (when HPVC notifications are enabled).
+- Added a detached Smart Updater that safely restores PV first, downloads/validates the latest tagged HPVC files, atomically replaces only managed package/dashboard/Node-RED assets, preserves HPVC entities/settings/data, and survives replacement of the old HPVC flows.
+- Smart Update now validates the downloaded flow's `node-red-contrib-home-assistant-websocket` requirement against the current Node-RED global configuration and stops before replacement when a manual dependency update is required.
+- Added a confirmation-protected **Uninstall HPVC** control for manual installations.
+- Added persistent uninstall progress, completion and failure notifications.
+- Added dynamic Node-RED tab discovery by exact v1.5.3 tab labels instead of import-specific flow IDs.
+- Added authenticated Node-RED cleanup fallbacks: direct Admin API, direct access with `SUPERVISOR_TOKEN`, Supervisor ingress, then explicit manual follow-up when automatic access is unavailable.
+
+### Safe uninstall and reinstall
+
+- Uninstall now starts with the live-tested **Safe Restore v3** lifecycle before destructive cleanup.
+- The uninstall re-entry guard prevents overlapping cleanup runs.
+- HPVC first disables only `input_boolean.hpvc_enabled`, preserving inverter configuration while shutdown is evaluated.
+- If an inverter write/verification is already active, uninstall waits for that operation before issuing the normal full-limit restore.
+- Configured and reachable inverter limits are restored to their configured full values through the existing HPVC verification/retry path.
+- A fresh installation with no configured inverter is treated as having nothing to restore.
+- Sleeping, offline or otherwise unusable inverter control paths do not cause an indefinite uninstall wait; the bounded safe-shutdown path fails safely if shutdown cannot complete.
+- HPVC-owned HBC negative-price overrides are released before destructive cleanup.
+- Only after safe shutdown completes, uninstall resets the complete HPVC helper set to fresh-install defaults and waits **15 seconds** for Home Assistant RestoreEntity persistence.
+- The known-working entity-registry removal pattern is preserved: HPVC removes only exact packaged entity IDs and exact HPVC unique IDs through the supported Home Assistant WebSocket API.
+- A clean `config/entity_registry/list` request is rebuilt immediately before registry cleanup so stale service-call payloads cannot remove the required WebSocket `type`.
+- Node-RED Engine/Outputs/Reports tabs are removed by exact labels; the Inputs tab removes itself last with detached retry/verification.
+- HPVC-owned config/data/report paths are removed without wildcard entity deletion or direct `.storage` editing.
+- Normal version updates preserve existing HPVC helper values; the full fresh-install reset is uninstall-only.
+
+### Hardening and safety
+
+- Blocked Action-node input overrides on the fixed uninstall-state reset so stale `msg.payload.action` data cannot replace the intended service.
+- Expanded uninstall error catching across the operational cleanup chain.
+- Node-RED cleanup failure no longer blocks HPVC-owned file/data cleanup; remaining tabs are reported as a manual follow-up.
+- Secured the temporary Node-RED ingress/access file with mode `0600` and cleanup on success/failure.
+- Enabled **Global Context Store** on the bundled Home Assistant Node-RED server configuration because HPVC runtime Function nodes depend on it.
+- Fixed embedded Node.js syntax in automatic Node-RED removal.
+- Fixed a Node-RED runtime scope error in **Detect Runtime Transitions and Log Insights** where `currentPriceZone` could be referenced outside its declaration scope.
+- Started the HBC Charge Priority 15-second transition-settle window at the first observed loss of confirmed charging, so it overlaps the exit hold and prevents a brief charging dip from causing an immediate opposite PV correction.
+- Added per-inverter detection for repeated unconfirmed write supersessions; HPVC now warns after three consecutive supersessions instead of allowing a failing lock-bypass write path to remain silent.
+
+### Negative-price mode
+
+- `binary_sensor.hpvc_negative_price_mode` now requires HPVC to be enabled and configuration-valid before reporting active negative-price mode.
+- The configured all-in price entity ID is trimmed before use.
+- HBC permission remains independent: negative-price PV protection does not require HBC control to be enabled.
+
+### Upgrade notes
+
+- From v1.5.3 onward, use the dashboard Smart Updater for future releases when running the supported Home Assistant OS/Supervised Node-RED add-on environment.
+- Smart Update preserves HPVC entities, helper values, configuration and saved data; it preserves the pre-update HPVC enabled/disabled state across Quick Reload, replaces a managed `/config/hpvc_dashboard.yaml` automatically, and reports custom/pasted dashboards for manual upgrade.
+- **Quick Reload Home Assistant** uses `homeassistant.reload_all` after a successful Smart Update.
+- Manual replacement of the Home Assistant package, Node-RED flow and dashboard remains the fallback.
+- Do not uninstall to perform a normal upgrade. Existing helper/entity IDs are preserved so user configuration remains intact.
+- Restart Home Assistant only when required by the installation/update instructions or after a completed full uninstall.
+
+
 ## v1.5.2
 
 ### Fixed
@@ -219,6 +291,8 @@
 - Improved restore behavior and handling of unavailable or malformed inverter limits so HPVC never controls only part of a configured plant.
 - Normal PV correction, restore and HBC Charge Priority now share one in-flight inverter-command lock, preventing overlapping targets while a previous write is still propagating.
 - Inverter write verification is progress-aware and hardware-agnostic: delayed confirmations retain command identity through a bounded extended verification horizon instead of being prematurely classified as external/manual movement.
+- Inverter write failure escalation now survives 120-second retry/supersession cycles, so the extended unresolved-write warning remains reachable while retries continue.
+- Daily-history file-write errors now release the persistence serialization guard so the normal persistence cycle can retry instead of remaining stalled until restart.
 - Large inverter-limit commands require live-limit confirmation, correct PV response direction and two fresh, reasonably stable PV observations before a meaningful reversal is permitted.
 - Added plant-size-relative damping for large normal PV corrections and first-reversal damping after a recent large opposite command; ordinary small corrections retain the normal evaluation cadence.
 

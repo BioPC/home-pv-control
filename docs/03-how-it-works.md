@@ -1,6 +1,15 @@
-[← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
+[← README](../README.md) · [Installation](01-installation.md) · [Configuration](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
 
 # How it works
+
+## Contents
+
+- [Control lifecycle](#control-overview): validation, limiting conditions, target calculation and inverter distribution
+- [Control stability and write handling](#pv-price-hysteresis): hysteresis, cooldown, damping, rate limiting and inverter adapters
+- [Restore and safe shutdown](#restore-and-recovery): recovery, disable, external release, Smart Update and uninstall shutdown
+- [HBC and Charge Priority](#negative-price-and-charge-priority-completion-behavior): negative-price coordination, battery eligibility, tapering and strategy handling
+- [Persistence and diagnostics](#persistence-and-safeguards): runtime history, sensor health, Insights and accuracy attribution
+- [Reports and runtime architecture](#report-generation-and-diagnostics): report semantics, timing, runtime state and Node-RED structure
 
 ## Control overview
 
@@ -31,17 +40,9 @@ HPVC separates **configuration validity** from **live input readiness**.
 
 Night Restore is the deliberate exception: after a valid low-PV transition has started, expected nighttime loss of PV-power or inverter-limit telemetry can be tolerated while grid and price safety inputs remain monitored. If any inverter limit is unavailable during normal daytime control, all inverter writes are paused rather than reallocating the plant target across only the remaining inverters.
 
-## Negative-price and Charge Priority completion behavior
+## Control boundaries and validation
 
-The all-in-price sensor controls a dedicated override independently of normal market/export-price hysteresis.
-
-### Negative all-in-price state machine
-
-A valid all-in price `<= 0` always holds each inverter at its configured minimum. If HBC is unavailable, **Enable HBC** is off, or **Force charge at negative price** is off, HPVC stays in **PV only** mode and does not create a new HBC override.
-
-When both HBC permissions are enabled and the native HBC strategy/charge-goal entities exist, HPVC saves the original HBC values and proceeds through confirmed phases: **Entering strategy → Entering goal → Active → Restoring goal → Restoring strategy**. It forces strategy `Charge`, then charge goal `batteries are full`; Charge Priority is off during this override.
-
-A valid all-in price `> 0`, or disabling either HBC permission, starts restoration. If no forced HBC write was ever issued, the temporary override can be cleared directly. Once a forced write may have occurred, the confirmed restore sequence remains mandatory. An unavailable all-in sensor holds the current durable state rather than guessing an exit. PV-minimum protection continues independently until the all-in price becomes positive.
+HPVC requires `Export Start < Target Export < Import Restore`, `Import Restore >= 0 W`, and each inverter minimum to be lower than its full power. Invalid static configuration or a required live-input outage switches off the HPVC master toggle and blocks writes. When configuration validity and all required inputs remain healthy for 5 continuous seconds, HPVC resumes automatically only if it was running before the fault. Any unavailable configured inverter limit therefore stops all inverter writes.
 
 ## Dynamic limiting conditions
 
@@ -99,6 +100,50 @@ Every inverter has its own `minimum_power`; HPVC never requests less than this v
 
 Once the combined plant change reaches the deadband, proportional shares are retained even when an individual share is smaller than the deadband. Diagnostics mark those shares rather than discarding them.
 
+## PV price hysteresis
+
+PV limiting enters at or below the configured limiting price. Once active, it remains active until the market/export price rises above `limiting price + hysteresis`. If the market/export price becomes unavailable, HPVC follows the safe-pause policy and holds current inverter limits until the sensor recovers.
+
+## Cooldown and deadband
+
+Every inverter write starts the configured cooldown; HPVC keeps evaluating but sends no new PV write until it expires. A newly started cooldown always takes precedence over an old cooldown that happened to expire at the beginning of the same runtime evaluation.
+
+HPVC also keeps one authoritative inverter target in flight at a time. After a write, normal export/downward correction, ordinary restore, and HBC Charge Priority/taper releases wait until the live inverter-limit entities confirm the requested target and PV either moves materially in the commanded direction or a fresh PV observation shows that no measurable production response was physically required because the plant was already availability-limited. PV movement in the opposite direction does not release this lock. Two deliberate exceptions apply: an import-driven upward recovery may continue on healthy inverters while unconfirmed inverter(s) are frozen at their live limit, and a user-requested safe master-disable restore bypasses the normal in-flight lock so configured inverters can be returned to full immediately. A bounded timeout prevents a permanently stale sensor from freezing protected control paths forever. Negative-price minimum protection remains the higher-priority safety action.
+
+Deadband is evaluated at combined-plant level, so smaller proportional per-inverter shares are retained once the total change is meaningful. Daily Control Accuracy is separate: its 0–100 headline uses a side-aware, time-weighted normalized RMS excursion outside **Export Start…Import Restore**, normalized independently on the export and import sides. HBC Charge Priority has no sub-deadband full-restore exception.
+
+## Large-command transient damping
+
+HPVC keeps small target corrections responsive. Larger corrections are bounded relative to the configured total inverter range and applied in stages, with fresh plant feedback between stages. If the immediately preceding HPVC command was a large move in the opposite direction, the first reverse step is capped more conservatively. During HBC Charge Priority, the first observed loss of confirmed battery charging immediately starts a short bounded transition-settle window, overlapping the exit-hold period when applicable, so the independent battery controller can recover before HPVC reacts to the full transient grid error. These rules are plant-size-relative and do not depend on a particular inverter, battery model, or entity name.
+
+Delayed inverter-limit motion remains associated with its originating HPVC command while that command is pending. If a newer HPVC command supersedes it, any progress already observed on the old command is retained for causal attribution so that the delayed HPVC response is not reclassified as a manual/external inverter change.
+
+## Stable-input rate limiting
+
+HPVC still wakes every 10 seconds. When the relevant live control inputs remain stable, it can skip the heavier downstream evaluation. Grid, PV and Marstek battery AC-power changes use the same **20 W + 2%** significance thresholds, measured against the values from the **last full HPVC evaluation** so gradual changes accumulate instead of being reset every 10 seconds. Battery SOC is normalized to whole-percentage changes for the stable-input hash; other control-relevant live states remain exact-match. A complete evaluation is forced at least every 30 seconds, and pending safety, write-verification, recovery, startup, settings, or adapter-heartbeat work always bypasses the limiter.
+
+A confirmed **Night Restore** state is itself considered stable and no longer forces every 10-second wake through the full pipeline. HPVC continues to take the lightweight live snapshot each wake. If valid PV rises above the Night Restore recovery level (`max(25 W, threshold + 15 W)`), or a Night Restore recovery timer is already active, the limiter is bypassed so the 30-second recovery persistence is evaluated on the normal timer cadence. This preserves recovery responsiveness while allowing quiet overnight cycles to be skipped.
+
+
+### Helper publishing
+
+v1.4.3 keeps HPVC-owned dashboard/output helpers out of the stable-input rate-limiter hash and uses flow-context publication caches to avoid resending unchanged helper values. Status and reason publish on change, target JSON is limited to at most one changed publish per 30 seconds, accuracy diagnostics to at most one changed publish per 60 seconds, and Insight rows are written individually only when that row changes. A five-minute forced refresh keeps the dashboard synchronized after unusual external helper changes. These changes affect diagnostics/UI traffic only; PV control decisions and safety gates are unchanged.
+
+### Percentage target quantization
+
+Percent-controlled inverter targets are converted to the entity's representable percentage step before per-inverter change detection. HPVC therefore compares the live limit with the effective command value, avoiding repeated writes of an already-applied percentage. The configured minimum Watt limit is never rounded downward.
+
+
+### Charge Priority release retries
+
+Charge Priority releases additional PV only while usable battery headroom exists. If the batteries actually absorb the released PV, the control converges normally. If the plant does not absorb the release and export returns, HPVC can reduce PV again and retry a later release after the normal cooldown/full-evaluation cadence. This is intentional closed-loop probing rather than a guaranteed one-shot release; there is no long exponential backoff in v1.5.0 because that could delay useful battery charging when conditions recover. Repeated release/limit activity should therefore be investigated as a battery-acceptance, HBC-execution, telemetry, or plant-response issue rather than hidden by a long retry delay.
+
+## Generic inverter adapter pipeline
+
+The control engine continues to calculate and distribute plant targets in Watts. The per-inverter adapter then converts the finalized target into the selected output mechanism. Number-entity adapters call `number.set_value`. Action/service adapters execute optional pre-actions, then the main service call with the dynamic Watt/Percent value inserted into the configured data field, and then optional post-actions. Each step waits for the previous Home Assistant action to complete successfully; any failure stops the remaining sequence. HPVC does not add an artificial delay, so integrations that require timed inter-step waits should be wrapped in a Home Assistant script. If an Action/service call fails, HPVC invalidates the optimistic command cache for that inverter, removes the failed item from the pending verification lock, raises a persistent notification, and allows the next eligible cycle to retry. When no cached Action/service command exists, HPVC performs one initial synchronization write so a fresh runtime cannot silently assume that the inverter is already at the desired limit. HPVC also fingerprints each adapter configuration; changing its method, action, payload, unit, range, step, readback or sequence invalidates the cached command and forces a new synchronization write. Action/service adapters can also refresh the current command at a configured interval for integrations that require a heartbeat. Initial synchronization and due refreshes are treated as pending runtime work, so the stable-input rate limiter does not postpone them; delivery follows the normal HPVC timer cadence.
+
+A configured readback entity participates in normal write verification. Without readback, HPVC records command-state only and does not claim physical confirmation. The Daily Control Accuracy headline remains available, but physical Control attribution requires real readback; without it, controller-caused error may remain Other/unclassified and attribution coverage can be lower.
+
 ## Restore and recovery
 
 PV is restored to full power when the market/export price rises above the limiting price plus exit hysteresis, or when measured PV remains at or below the Night Restore threshold for 120 continuous seconds.
@@ -108,6 +153,72 @@ Actual PV is authoritative for Night Restore; `sun.sun` is supporting context. A
 Night Restore can start only from a valid numeric low-PV measurement. If PV telemetry disappears after the timer has started, **Night Restore pending** preserves the bounded transition and may complete only when `sun.sun` also reports `below_horizon`; otherwise normal strict validation returns.
 
 Night Restore ends only after valid PV stays above `max(25 W, threshold + 15 W)` for 30 continuous seconds. Any dip back below that recovery level resets the timer.
+
+## Safe disable, external PV release and uninstall shutdown
+
+### Safe disable
+
+HPVC retains a compact runtime diagnostic for the most recent disable-restore attempt. This does not add another Home Assistant helper; it exists so a support report generated after HPVC reaches `Disabled` can still show whether PV and an HPVC-owned HBC override required restoration and whether that restoration completed.
+
+A master-disable transition is handled as a short shutdown/restore sequence rather than an immediate write stop. If HPVC still owns a reduced PV limit, the engine keeps only the restore path alive, bypasses the ordinary cooldown for that shutdown restore, commands the configured inverters back to full output, and allows any HPVC-owned negative-price HBC override to restore. After those owned states are released, the next evaluation settles at `Disabled`.
+
+If HPVC cannot access a usable configured inverter control path, it does not invent a successful restore. The runtime status/reason remains diagnostic so the condition is visible in the report.
+
+### Full uninstall safe-shutdown
+
+Full uninstall reuses the normal HPVC safe-disable/verification machinery before any destructive cleanup.
+
+- The uninstall re-entry guard allows only one cleanup run.
+- HPVC disables only the master first so inverter configuration is still available.
+- A fresh evaluation is triggered immediately and again while the uninstall watcher waits.
+- An active inverter write/verification is allowed to finish before the uninstall-specific restore proceeds.
+- Every configured inverter must have usable live/readback state and be confirmed at its configured full limit before destructive cleanup can begin. The watcher verifies this independently of the normal restore-state calculation, so an offline inverter cannot silently disappear from the shutdown decision.
+- If no inverter is configured, there is nothing to restore.
+- Sleeping/offline/unusable or otherwise unverifiable inverter control paths do not create an unbounded wait; the shutdown watcher waits for recovery only within its bounded window, then aborts cleanup and names the affected inverter(s) so their limits can be checked manually before retrying.
+- HPVC-owned HBC negative-price override state must be released before destructive cleanup.
+- Only then are helpers reset to fresh-install defaults and persisted for 15 seconds before registry/file/flow removal.
+
+This ordering preserves the control information needed for a safe restore and prevents a later reinstall from inheriting stale RestoreEntity values.
+
+### Smart Updater safe replacement
+
+Smart Update reuses the same safe-disable/restore gate but deliberately stops before uninstall-only cleanup. HPVC entities, helper values, inverter/HBC settings, `hpvc-data`, history and reports remain in place.
+
+Before any replacement, the updater obtains the latest GitHub release, downloads the tagged package/flow/dashboard files, validates the expected HPVC markers and version-matched Node-RED tabs, and compares the downloaded flow's `node-red-contrib-home-assistant-websocket` requirement with the version declared by the current Node-RED global configuration. If the current declaration is missing, unparsable or older, Smart Update aborts before replacement and requires a manual dependency update. It never rewrites shared Node-RED palette dependencies automatically. After safe shutdown is confirmed, HPVC launches a detached Node.js updater outside the managed flow lifecycle. That process can therefore continue while the old HPVC tabs are removed.
+
+Node-RED replacement is performed as one full-flow merge: the updater reads the current flow set, removes only tabs labelled as HPVC Inputs/Engine/Outputs/Reports plus their tab-owned nodes, appends the downloaded HPVC flow, preserves unrelated flows and shared configuration nodes, deploys the merged set, and verifies the new HPVC tab labels. The previous flow set and managed YAML files are retained in memory/temporary backup long enough for rollback if deployment fails.
+
+`hpvc_config.yaml` is replaced only at the managed `/config/packages/hpvc_config.yaml` path; a custom package path requires manual upgrade. `hpvc_dashboard.yaml` is replaced only if `/config/hpvc_dashboard.yaml` existed before update; custom/pasted dashboards are not touched. Successful replacement sets the Quick Reload requirement, and the dashboard button calls `homeassistant.reload_all` so reloadable YAML is activated without a full Home Assistant restart. A private maintenance helper remembers whether HPVC was enabled before shutdown and restores that enabled state only after Quick Reload completes.
+
+### Manual upgrade / flow removal
+
+**Remove HPVC Node-RED flows** reuses the same verified safe-shutdown gate as Smart Update and Full uninstall, but its destructive scope is limited to the four versioned HPVC Node-RED tabs. It does not reset helpers, remove entity-registry entries, delete `hpvc_config.yaml`, touch the dashboard, or delete `hpvc-data`/history/report files.
+
+After safe shutdown is confirmed, HPVC launches a detached remover before deleting the tabs, so removing the Inputs tab cannot terminate its own cleanup. The detached process verifies that all four HPVC tabs are gone and publishes a persistent success/failure notification. HPVC remains disabled until the flow is re-imported.
+
+### External-release handshake
+
+An external controller requests release with `input_boolean.hpvc_external_release_request`. HPVC remains enabled. Safety/minimum-price and restore states retain priority; otherwise HPVC waits for its ordinary cooldown/write-confirmation window, restores all configured inverter limits to full, and then publishes `binary_sensor.hpvc_external_release_active`.
+
+While the acknowledgement is On, normal HPVC PV curtailment is suspended but HPVC continues evaluating its safety and ownership states. When the request is removed, the acknowledgement clears and normal PV control resumes on the next evaluation. A requester should start its own handover/charger timer only after the acknowledgement turns On.
+
+### Slow inverter write isolation
+
+When an inverter has not yet confirmed a previous command, HPVC keeps normal export/downward control locked. If the grid is importing above the configured restore threshold and the requested PV movement is upward, HPVC may continue with the healthy inverters: the unconfirmed inverter is frozen at its live limit and the available increase is redistributed over the remaining inverter headroom. The temporary total target is capped at the output that those healthy inverters can reach.
+
+Safe master-disable restoration is higher priority than this normal write lock and sends the configured full-limit targets immediately, followed by normal verification/retry.
+
+## Negative-price and Charge Priority completion behavior
+
+The all-in-price sensor controls a dedicated override independently of normal market/export-price hysteresis.
+
+### Negative all-in-price state machine
+
+A valid all-in price `<= 0` always holds each inverter at its configured minimum. If HBC is unavailable, **Enable HBC** is off, or **Force charge at negative price** is off, HPVC stays in **PV only** mode and does not create a new HBC override.
+
+When both HBC permissions are enabled and the native HBC strategy/charge-goal entities exist, HPVC saves the original HBC values and proceeds through confirmed phases: **Entering strategy → Entering goal → Active → Restoring goal → Restoring strategy**. It forces strategy `Charge`, then charge goal `batteries are full`; Charge Priority is off during this override.
+
+A valid all-in price `> 0`, or disabling either HBC permission, starts restoration. If no forced HBC write was ever issued, the temporary override can be cleared directly. Once a forced write may have occurred, the confirmed restore sequence remains mandatory. An unavailable all-in sensor holds the current durable state rather than guessing an exit. PV-minimum protection continues independently until the all-in price becomes positive.
 
 ## HBC battery charge priority
 
@@ -176,17 +287,13 @@ At or above the charging cutoff, a battery contributes 0 W charging headroom and
 
 Each battery needs valid AC power, SOC, charging/discharging cutoffs, and—when used for HBC 4.15.0 control—RS485 mode `enable`. Negative AC power means charging. Maximum charge power must be positive; a remembered positive value may bridge a genuinely unavailable helper for up to 30 minutes, but malformed, zero, or negative live values contribute no headroom. Invalid telemetry excludes only that battery. If none remain usable, Charge Priority pauses until at least one battery has been healthy for 60 seconds.
 
-## Control boundaries and validation
+## HBC strategy integration
 
-HPVC requires `Export Start < Target Export < Import Restore`, `Import Restore >= 0 W`, and each inverter minimum to be lower than its full power. Invalid static configuration or a required live-input outage switches off the HPVC master toggle and blocks writes. When configuration validity and all required inputs remain healthy for 5 continuous seconds, HPVC resumes automatically only if it was running before the fault. Any unavailable configured inverter limit therefore stops all inverter writes.
+HBC remains the battery-strategy controller. The dashboard exposes HBC's own strategy selector, while HPVC reads `input_text.house_battery_strategy_active_sub_strategy` as the executing state.
 
-## Cooldown and deadband
+**Enable HBC** is the master permission for HPVC to control charging in HBC. Normal Charge Priority uses HBC's executing `Charge`/`Charge PV` state only inside the normal PV-limiting price zone. Negative all-in-price mode is separate: PV minimum is always enforced, while forced HBC charging occurs only when **Enable HBC** and **Force charge at negative price** are both on and the native override entities exist.
 
-Every inverter write starts the configured cooldown; HPVC keeps evaluating but sends no new PV write until it expires. A newly started cooldown always takes precedence over an old cooldown that happened to expire at the beginning of the same runtime evaluation.
-
-HPVC also keeps one authoritative inverter target in flight at a time. After a write, normal export/downward correction, ordinary restore, and HBC Charge Priority/taper releases wait until the live inverter-limit entities confirm the requested target and PV either moves materially in the commanded direction or a fresh PV observation shows that no measurable production response was physically required because the plant was already availability-limited. PV movement in the opposite direction does not release this lock. Two deliberate exceptions apply: an import-driven upward recovery may continue on healthy inverters while unconfirmed inverter(s) are frozen at their live limit, and a user-requested safe master-disable restore bypasses the normal in-flight lock so configured inverters can be returned to full immediately. A bounded timeout prevents a permanently stale sensor from freezing protected control paths forever. Negative-price minimum protection remains the higher-priority safety action.
-
-Deadband is evaluated at combined-plant level, so smaller proportional per-inverter shares are retained once the total change is meaningful. Daily Control Accuracy is separate: its 0–100 headline uses a side-aware, time-weighted normalized RMS excursion outside **Export Start…Import Restore**, normalized independently on the export and import sides. HBC Charge Priority has no sub-deadband full-restore exception.
+Battery freshness, SOC cutoffs, RS485 state, and charge-power capacity determine whether each battery can contribute headroom. An ineligible battery is excluded independently so healthy batteries can continue.
 
 ## Persistence and safeguards
 
@@ -198,7 +305,7 @@ A Home Assistant first-run automation applies the shipped defaults only when `in
 
 ### Persistent current-day journal
 
-HPVC stores current-day Insights, Power Control history, Daily Control Accuracy, and the durable negative-price override in `/config/hpvc-data/runtime-history.json`. Writes use a temporary file plus atomic rename so a partial journal is not promoted as valid state.
+HPVC stores current-day Insights, Power Control history, Daily Control Accuracy, and the durable negative-price override in `/config/hpvc-data/runtime-history.json`. Writes use a temporary file plus atomic rename so a partial journal is not promoted as valid state. If the temporary filesystem write itself fails, a scoped recovery path clears the active-write guard; the normal 10-second persistence cycle can then retry instead of leaving later journal writes blocked until Node-RED restarts. The retained runtime stores are explicitly bounded: inverter command history keeps the latest **12** entries, Power Control/activity history keeps at most **3,000** rows, and the current-day Insight journal keeps at most **1,000** entries. The dashboard publishes only the latest **10** Insights from that bounded journal.
 
 The negative-price override uses an additional persistence barrier: original HBC values must be durably published before the first forced HBC write is allowed. On restart, the journal is schema-validated and restored before runtime evaluation resumes.
 
@@ -217,7 +324,6 @@ Routine accuracy-counter changes are batched to reduce unnecessary storage write
 Battery telemetry and HBC safety warnings are transition-based. A changing age value does not create a new warning. The same active fault remains represented by one Insight until telemetry has been continuously healthy for 60 seconds, at which point a single recovery Insight is recorded.
 
 The dashboard and generated HTML report use the same consecutive grouping rule. Identical activities that occur directly after one another are shown once with an occurrence count such as `×5`; any different Insight closes the run. The downloadable TXT report intentionally keeps every raw Insight event as its own row, so it remains lossless even when HTML is compact. Both representations are derived from the same shared report model.
-
 
 The original HBC strategy and charge goal are persisted before the first forced HBC write. If either entity was initially unavailable, the values captured after recovery receive a new persistence token and a second acknowledged journal write before forcing can continue.
 
@@ -249,7 +355,7 @@ HBC 4.15.0 supports **1–6 configured batteries**. HPVC follows that native lim
 
 ### Decision and response diagnostics
 
-HPVC stores compact latest-calculation data, per-inverter calculated/requested targets, pending write verification, and current-day accuracy factors. Successful writes are confirmed internally; warnings are emitted only after an unsuperseded request exceeds the verification timeout.
+HPVC stores compact latest-calculation data, per-inverter calculated/requested targets, pending write verification, and current-day accuracy factors. Successful writes are confirmed internally. The plant write/settle lock is bounded by `max(120 seconds, 4 × cooldown)`; with the default 30-second cooldown this is 120 seconds. Verification can continue beyond that lock. The extended unresolved-write failure window is `max(120 seconds, 12 × cooldown)`; with the default cooldown this is 360 seconds (6 minutes). New retry writes do not reset that per-inverter unresolved episode, so the extended failure warning remains reachable across retries. A newer target may supersede an older pending target, and HPVC also warns after three consecutive unconfirmed supersessions for the same inverter.
 
 ### Unified HTML and TXT model
 
@@ -292,7 +398,6 @@ For inverter-limit changes of at least **500 W**, the shared post-write lock als
 
 The physical attribution detector requires a complete, physically observed inverter-limit group. **Number entity** adapters use the writable number entity as that observation. **Action/service** adapters participate when a real numeric **Readback entity** is configured and currently available. If any Action/service inverter has no real readback, HPVC continues the headline Daily Control Accuracy calculation and target-tracking metrics, but it deliberately disables physical cause attribution for that interval rather than treating HPVC's cached command value as proof of the inverter's applied limit.
 
-
 The attribution detector runs on every HPVC evaluation, even when the headline accuracy sample is temporarily ineligible. A significant grid step is held until a fresh post-trigger PV observation arrives, with an adaptive **20–30 second maximum reconciliation window** when OpenDTU is late, so later PV and inverter-limit updates can explain the same original event instead of being misclassified because sensors updated in a different order. Battery handling is deliberately causal rather than fully delayed: only battery movement already visible at trigger time may explain the original grid step. A battery change that appears after the trigger—such as a battery reducing discharge in response to a large import—is recorded as a later response and cannot retroactively replace the initiating House-load event with **Other**.
 
 Matched events can be reused only while they remain recent, on the same action-band side, and physically consistent. Core grid/PV/inverter telemetry breaks clear pending causal state. If battery-power telemetry alone is uncertain, HPVC continues in degraded mode but suppresses House-load inference rather than treating missing battery power as 0 W. One conservative exception exists for a numeric 0 W battery independently confirmed at its configured charging cutoff/full boundary; that unchanged full-idle value may remain valid physical evidence for House-load accounting. The support report records whether House inference was accepted or blocked and why, whether post-trigger HPVC PV was stripped, and whether independent battery movement was classified as Other.
@@ -307,7 +412,7 @@ Generation or report viewing never changes HPVC settings, inverter limits, or HB
 
 ### Insight retention and source
 
-The dashboard helpers expose the latest 20 Insights, while generated HTML and TXT reports read the complete current calendar day from the date-scoped Node-RED journal, up to 1000 entries. Helper rows are used only as a recovery fallback when no canonical current-day journal exists.
+The dashboard helpers expose the latest 10 Insights, while generated HTML and TXT reports read the complete current calendar day from the date-scoped Node-RED journal, up to 1000 entries. Helper rows are used only as a recovery fallback when no canonical current-day journal exists.
 
 ### Report semantics and parity
 - The Negative All-In Override block is presented consistently in both HTML and TXT output, including saved values, persistence state, fault state, retry state, and inverter drift.
@@ -328,48 +433,13 @@ Generated, inverter-write, and verification timestamps are formatted using Home 
 - Battery tables match the inverter table layout and hide entity IDs for cleaner presentation.
 - HBC battery charge priority uses its own Insight type, while normal PV limiting and restore actions use `PV limit`.
 
-## PV price hysteresis
-
-PV limiting enters at or below the configured limiting price. Once active, it remains active until the market/export price rises above `limiting price + hysteresis`. If the market/export price becomes unavailable, HPVC follows the safe-pause policy and holds current inverter limits until the sensor recovers.
-
-## Large-command transient damping
-
-HPVC keeps small target corrections responsive. Larger corrections are bounded relative to the configured total inverter range and applied in stages, with fresh plant feedback between stages. If the immediately preceding HPVC command was a large move in the opposite direction, the first reverse step is capped more conservatively. During HBC Charge Priority, loss of confirmed battery charging also starts a short bounded transition-settle window so the independent battery controller can change state before HPVC reacts to the full transient grid error. These rules are plant-size-relative and do not depend on a particular inverter, battery model, or entity name.
-
-Delayed inverter-limit motion remains associated with its originating HPVC command while that command is pending. If a newer HPVC command supersedes it, any progress already observed on the old command is retained for causal attribution so that the delayed HPVC response is not reclassified as a manual/external inverter change.
-
-## HBC strategy integration
-
-HBC remains the battery-strategy controller. The dashboard exposes HBC's own strategy selector, while HPVC reads `input_text.house_battery_strategy_active_sub_strategy` as the executing state.
-
-**Enable HBC** is the master permission for HPVC to control charging in HBC. Normal Charge Priority uses HBC's executing `Charge`/`Charge PV` state only inside the normal PV-limiting price zone. Negative all-in-price mode is separate: PV minimum is always enforced, while forced HBC charging occurs only when **Enable HBC** and **Force charge at negative price** are both on and the native override entities exist.
-
-Battery freshness, SOC cutoffs, RS485 state, and charge-power capacity determine whether each battery can contribute headroom. An ineligible battery is excluded independently so healthy batteries can continue.
-
-## Node-RED flow architecture
-
-The supplied flow is split into four tabs:
-
-| Tab | Purpose |
-|---|---|
-| **HPVC Inputs v1.5.2** | Reads Home Assistant state, validates configuration and live inputs, and restores persisted runtime state. |
-| **HPVC Engine v1.5.2** | Evaluates prices, cooldown, Night Restore, battery eligibility, Charge Priority, and the total PV target. |
-| **HPVC Outputs v1.5.2** | Distributes inverter targets, performs writes, verifies results, and publishes status, Insights, and accuracy. |
-| **HPVC Reports v1.5.2** | Builds and publishes the on-demand HTML/TXT support report. |
-
-Import the complete `hpvc_flow.json`; the tabs are designed to operate together.
-
 ## Report data timing
 
 The report captures a fresh Home Assistant snapshot when generated. Decision, inverter-target, battery-headroom, and taper details come from the latest completed HPVC evaluation and show their timestamp and age. A notice appears when those runtime diagnostics are old or not yet available.
 
 HTML and TXT use the same report model. The report's timestamps and current-day selection follow the Home Assistant configured time zone. Generate a new report whenever you need an up-to-date snapshot.
 
-[← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
-
-
-
-## v1.4.3 runtime state and performance model
+## Runtime state and performance model
 
 HPVC no longer deep-copies Home Assistant's complete `homeassistant.homeAssistant.states` object on each 10-second evaluation. The Inputs tab resolves the fixed HPVC helpers plus configured dynamic grid, price, PV and inverter-limit entities, then copies only those required state entries into a compact `msg.hpvc.cycleStates` snapshot. Predictable HBC/Marstek entities needed by battery safety and Charge Priority are included directly.
 
@@ -377,53 +447,22 @@ This preserves one coherent state picture for a control cycle without allocating
 
 For issue #2 verification, major runtime stages record bounded per-cycle elapsed times. HPVC stores only the latest stage timings plus aggregate total timing in `homePvControlPerformanceDiagnostics`. When the Node-RED Function sandbox exposes `process.memoryUsage()`, a heap sample is added at most once per minute; otherwise heap sampling is marked unavailable without affecting control. The same bounded diagnostics are rendered in both the HTML and TXT support reports.
 
+## Node-RED flow architecture
 
-## Stable-input rate limiting
+The supplied flow is split into four tabs:
 
-HPVC still wakes every 10 seconds. When the relevant live control inputs remain stable, it can skip the heavier downstream evaluation. Grid, PV and Marstek battery AC-power changes use the same **20 W + 2%** significance thresholds, measured against the values from the **last full HPVC evaluation** so gradual changes accumulate instead of being reset every 10 seconds. Battery SOC is normalized to whole-percentage changes for the stable-input hash; other control-relevant live states remain exact-match. A complete evaluation is forced at least every 30 seconds, and pending safety, write-verification, recovery, startup, settings, or adapter-heartbeat work always bypasses the limiter.
+| Tab | Purpose |
+|---|---|
+| **HPVC Inputs v1.5.3** | Reads Home Assistant state, validates configuration and live inputs, and restores persisted runtime state. |
+| **HPVC Engine v1.5.3** | Evaluates prices, cooldown, Night Restore, battery eligibility, Charge Priority, and the total PV target. |
+| **HPVC Outputs v1.5.3** | Distributes inverter targets, performs writes, verifies results, and publishes status, Insights, and accuracy. |
+| **HPVC Reports v1.5.3** | Builds and publishes the on-demand HTML/TXT support report. |
 
-A confirmed **Night Restore** state is itself considered stable and no longer forces every 10-second wake through the full pipeline. HPVC continues to take the lightweight live snapshot each wake. If valid PV rises above the Night Restore recovery level (`max(25 W, threshold + 15 W)`), or a Night Restore recovery timer is already active, the limiter is bypassed so the 30-second recovery persistence is evaluated on the normal timer cadence. This preserves recovery responsiveness while allowing quiet overnight cycles to be skipped.
+Import the complete `hpvc_flow.json`; the tabs are designed to operate together.
 
+## Next steps
 
-### v1.4.3 helper publishing
+- [Troubleshoot unexpected behavior](04-troubleshooting.md)
 
-v1.4.3 keeps HPVC-owned dashboard/output helpers out of the stable-input rate-limiter hash and uses flow-context publication caches to avoid resending unchanged helper values. Status and reason publish on change, target JSON is limited to at most one changed publish per 30 seconds, accuracy diagnostics to at most one changed publish per 60 seconds, and Insight rows are written individually only when that row changes. A five-minute forced refresh keeps the dashboard synchronized after unusual external helper changes. These changes affect diagnostics/UI traffic only; PV control decisions and safety gates are unchanged.
+[← README](../README.md) · [Installation](01-installation.md) · [Configuration](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
 
-### Percentage target quantization
-
-Percent-controlled inverter targets are converted to the entity's representable percentage step before per-inverter change detection. HPVC therefore compares the live limit with the effective command value, avoiding repeated writes of an already-applied percentage. The configured minimum Watt limit is never rounded downward.
-
-
-### Charge Priority release retries
-
-Charge Priority releases additional PV only while usable battery headroom exists. If the batteries actually absorb the released PV, the control converges normally. If the plant does not absorb the release and export returns, HPVC can reduce PV again and retry a later release after the normal cooldown/full-evaluation cadence. This is intentional closed-loop probing rather than a guaranteed one-shot release; there is no long exponential backoff in v1.5.0 because that could delay useful battery charging when conditions recover. Repeated release/limit activity should therefore be investigated as a battery-acceptance, HBC-execution, telemetry, or plant-response issue rather than hidden by a long retry delay.
-
-## Generic inverter adapter pipeline
-
-The control engine continues to calculate and distribute plant targets in Watts. The per-inverter adapter then converts the finalized target into the selected output mechanism. Number-entity adapters call `number.set_value`. Action/service adapters execute optional pre-actions, then the main service call with the dynamic Watt/Percent value inserted into the configured data field, and then optional post-actions. Each step waits for the previous Home Assistant action to complete successfully; any failure stops the remaining sequence. HPVC does not add an artificial delay, so integrations that require timed inter-step waits should be wrapped in a Home Assistant script. If an Action/service call fails, HPVC invalidates the optimistic command cache for that inverter, removes the failed item from the pending verification lock, raises a persistent notification, and allows the next eligible cycle to retry. When no cached Action/service command exists, HPVC performs one initial synchronization write so a fresh runtime cannot silently assume that the inverter is already at the desired limit. HPVC also fingerprints each adapter configuration; changing its method, action, payload, unit, range, step, readback or sequence invalidates the cached command and forces a new synchronization write. Action/service adapters can also refresh the current command at a configured interval for integrations that require a heartbeat. Initial synchronization and due refreshes are treated as pending runtime work, so the stable-input rate limiter does not postpone them; delivery follows the normal HPVC timer cadence.
-
-A configured readback entity participates in normal write verification. Without readback, HPVC records command-state only and does not claim physical confirmation. The Daily Control Accuracy headline remains available, but physical Control attribution requires real readback; without it, controller-caused error may remain Other/unclassified and attribution coverage can be lower.
-
-## Safe disable and external PV release (v1.5.2)
-
-### Safe disable
-
-HPVC retains a compact runtime diagnostic for the most recent disable-restore attempt. This does not add another Home Assistant helper; it exists so a support report generated after HPVC reaches `Disabled` can still show whether PV and an HPVC-owned HBC override required restoration and whether that restoration completed.
-
-A master-disable transition is handled as a short shutdown/restore sequence rather than an immediate write stop. If HPVC still owns a reduced PV limit, the engine keeps only the restore path alive, bypasses the ordinary cooldown for that shutdown restore, commands the configured inverters back to full output, and allows any HPVC-owned negative-price HBC override to restore. After those owned states are released, the next evaluation settles at `Disabled`.
-
-If HPVC cannot access a usable configured inverter control path, it does not invent a successful restore. The runtime status/reason remains diagnostic so the condition is visible in the report.
-
-### External-release handshake
-
-An external controller requests release with `input_boolean.hpvc_external_release_request`. HPVC remains enabled. Safety/minimum-price and restore states retain priority; otherwise HPVC waits for its ordinary cooldown/write-confirmation window, restores all configured inverter limits to full, and then publishes `binary_sensor.hpvc_external_release_active`.
-
-While the acknowledgement is On, normal HPVC PV curtailment is suspended but HPVC continues evaluating its safety and ownership states. When the request is removed, the acknowledgement clears and normal PV control resumes on the next evaluation. A requester should start its own handover/charger timer only after the acknowledgement turns On.
-
-### Slow inverter write isolation
-
-When an inverter has not yet confirmed a previous command, HPVC keeps normal export/downward control locked. If the grid is importing above the configured restore threshold and the requested PV movement is upward, HPVC may continue with the healthy inverters: the unconfirmed inverter is frozen at its live limit and the available increase is redistributed over the remaining inverter headroom. The temporary total target is capped at the output that those healthy inverters can reach.
-
-Safe master-disable restoration is higher priority than this normal write lock and sends the configured full-limit targets immediately, followed by normal verification/retry.
-
-[← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)

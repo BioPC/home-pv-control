@@ -1,15 +1,15 @@
-[← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
+[← README](../README.md) · [Installation](01-installation.md) · [Configuration](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
 
 # Inverter compatibility
 
-Home PV Control (HPVC) v1.5.2 controls inverter output through either a writable Home Assistant `number` entity or a configurable Home Assistant **Action/service** adapter. Limits can be expressed in **Watts** or **Percent**, while HPVC continues to calculate internally in Watts.
+Home PV Control (HPVC) v1.5.3 controls inverter output through either a writable Home Assistant `number` entity or a configurable Home Assistant **Action/service** adapter. Limits can be expressed in **Watts** or **Percent**, while HPVC continues to calculate internally in Watts.
 
 Compatibility depends on the **Home Assistant integration and the entities it exposes**, not only on the inverter brand or model. A writable grid-export limit is not automatically equivalent to an inverter active-power limit: HPVC expects to control the inverter production ceiling itself.
 
 
-## v1.5.0 adapter impact
+## Adapter model
 
-The matrix below describes integration fit, not a guarantee for every model/firmware. v1.5.0 adds generic **Action/service** adapters, so integrations previously marked **Action/service adapter** may now be configurable directly when Home Assistant exposes a stable action/service schema. Complex integrations can also use optional pre/post action sequences. Hardware field confirmation is still required before promoting a brand to **Confirmed direct**.
+The matrix below describes integration fit, not a guarantee for every model/firmware. Generic **Action/service** adapters allow integrations marked **Action/service adapter** to be configured directly when Home Assistant exposes a stable action/service schema. Complex integrations can also use optional pre/post action sequences. Hardware field confirmation is still required before promoting a brand to **Confirmed direct**.
 
 ## Compatibility status
 
@@ -17,7 +17,7 @@ The matrix below describes integration fit, not a guarantee for every model/firm
 |---|---|
 | **Confirmed direct** | Tested with HPVC on real hardware using one of the supported control methods and confirmed to work. |
 | **Compatible by design** | The integration exposes the kind of writable inverter active-power-limit entity HPVC requires, but that integration/model has not yet been field-tested with HPVC. |
-| **Action/service adapter** | The integration does not expose a directly usable writable limit `number`, but it exposes a stable Home Assistant action/service or register-write path that can be configured in HPVC v1.5.0. |
+| **Action/service adapter** | The integration does not expose a directly usable writable limit `number`, but it exposes a stable Home Assistant action/service or register-write path that can be configured in HPVC. |
 | **Not confirmed / not suitable** | No verified HPVC-compatible inverter active-power-limit entity was found, or the available control is for a different purpose such as site/grid export limiting. |
 
 ## Compatibility matrix
@@ -52,26 +52,30 @@ The matrix below describes integration fit, not a guarantee for every model/firm
 | **Solplanet / AISWEI** | **Not confirmed / not suitable** | Monitoring support exists, but direct inverter-output control suitable for HPVC has not been verified. |
 | **Sigenergy** | **Not confirmed / not suitable** | Advanced power controls exist, but a simple writable inverter active-power-limit `number` matching HPVC's current control model has not been verified. |
 
-## What HPVC v1.5.0 requires
+## Adapter requirements
 
 For **Number entity** control, the integration must expose a writable Home Assistant `number.*` representing the inverter active-power ceiling.
 
 For **Action/service** control, the integration must expose a stable Home Assistant action/service schema that HPVC can call with a dynamic Watt or Percent value. Optional pre/post actions can enable control modes, select modes or trigger a command. Optional command refresh can provide a heartbeat.
 
-A numeric readback entity is strongly recommended. Without one, HPVC tracks command-state only and does not claim physical inverter verification.
+A numeric readback entity is strongly recommended for normal control. For **Action/service** adapters it is required for automatic **Smart Update** and **Full uninstall**, because those maintenance workflows must verify the live inverter limit at full before replacing or removing HPVC configuration. Without readback, normal control can still use command-state tracking, but automatic maintenance stops safely rather than assuming physical restoration.
 
 A site/grid **export limit** is not automatically equivalent to an inverter active-power limit. Use it only when the integration semantics match HPVC's intended production-ceiling control.
 
 ## Readback and verification
 
-In **Number entity** mode HPVC verifies the configured writable limit entity. In **Action/service** mode HPVC verifies the optional readback entity when one is configured. Either value is independent physical inverter feedback only when the integration itself reports the applied inverter limit; a mirrored command-state value is not proof that the inverter applied the downstream command.
+In **Number entity** mode HPVC verifies the configured writable limit entity. In **Action/service** mode HPVC verifies the configured readback entity when one is present. That readback remains optional for normal control but is mandatory for automatic Smart Update and Full uninstall safe-limit verification. Either value is independent physical inverter feedback only when the integration itself reports the applied inverter limit; a mirrored command-state value is not proof that the inverter applied the downstream command.
 
 ## Help improve the matrix
 
 The matrix is intentionally conservative. If you successfully use an integration marked **Compatible by design** or **Action/service adapter** with HPVC, please open a GitHub issue or discussion with the inverter model, Home Assistant integration, control method, action/entity details and Limit unit so the status can be promoted to **Confirmed direct**.
 
-## v1.5.2 release/disable behavior
+## Safe disable and uninstall behavior
 
-Safe disable and the external PV-release handshake use the same configured Number-entity or Action/service write path as normal HPVC control. They do not create a separate inverter protocol. A real readback remains recommended: without independent readback, HPVC can confirm its command path but cannot prove the physical inverter response beyond the semantics exposed by the selected integration.
+Safe disable, external PV release and safe-uninstall restore use the same configured Number-entity or Action/service write path as normal HPVC control. They do not create a separate inverter protocol.
 
-[← README](../README.md) · [Installation](01-installation.md) · [Settings](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
+During full uninstall, HPVC keeps inverter configuration intact until safe shutdown is resolved so configured reachable inverters can be restored through the normal verification/retry path. For the complete uninstall sequence, see [Installation → Full uninstall](01-installation.md#full-uninstall).
+
+A real readback remains recommended. Without independent readback, HPVC can confirm its command path but cannot prove the physical inverter response beyond the semantics exposed by the selected integration.
+
+[← README](../README.md) · [Installation](01-installation.md) · [Configuration](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
