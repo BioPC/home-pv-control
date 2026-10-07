@@ -112,6 +112,19 @@ Night Restore enters after 120 continuous seconds at or below the configured thr
 
 HPVC uses HBC's own strategy selector rather than separate HPVC strategy helpers. **Enable HBC** is the master permission. If it is turned off during an active negative-price override, HPVC performs only the confirmed restore sequence and then stops HBC writes. PV-minimum protection at negative prices remains independent, so HBC-disabled operation stays safe and PV-only.
 
+## Restore defaults
+
+The **Restore defaults** tile reapplies shipped configurable values after confirmation. It preserves:
+
+- configured sensor entity IDs;
+- active inverter count;
+- all per-inverter control-path settings, including Control method, Limit entity, Limit unit, Maximum/Minimum power, Action/service, Value field, fixed/target JSON, Action Step, Refresh interval, pre/post actions, and readback entity;
+- the current HBC Strategy Control on/off state.
+
+It resets **Force charge at negative price** to its shipped default of **On**. The setting is also seeded **On** once on a fresh install or when first introduced by an upgrade. After that, a manual Off choice survives normal restarts and reloads. This does not grant HBC control by itself; **Enable HBC** remains the master permission and is preserved.
+
+It does not populate installation-specific sensor or inverter entities. Verify all entities, maximum and minimum powers, inverter count, and optional HBC strategy entity afterward.
+
 ## HBC battery charge priority
 
 When HBC is enabled and its active sub-strategy is `Charge` or `Charge PV`, that executing sub-strategy is the start signal for Charge Priority. If at least one usable battery has known useful headroom, HPVC suspends normal price-based PV limiting and releases PV in bounded steps; it does not wait for the battery-power sensor to show charging first. From 90% to 100%, HPVC uses controlled taper-aware increases and learns each battery's accepted power separately in five SOC bands (90–92, 92–94, 94–96, 96–98, and 98–100%).
@@ -155,23 +168,6 @@ When **Enable HBC** and **Force charge at negative price** are both on, and the 
 
 The restore sequence also starts if either HBC permission is turned off. The override is persisted in `/config/hpvc-data/runtime-history.json` so a restart cannot lose the original values. If an entry or restore phase remains unconfirmed for five minutes, `input_boolean.hpvc_negative_override_fault` and a persistent notification identify the stuck phase.
 
-## Restore defaults
-
-The **Restore defaults** tile reapplies shipped configurable values after confirmation. It preserves:
-
-- configured sensor entity IDs;
-- active inverter count;
-- all per-inverter control-path settings, including Control method, Limit entity, Limit unit, Maximum/Minimum power, Action/service, Value field, fixed/target JSON, Action Step, Refresh interval, pre/post actions, and readback entity;
-- the current HBC Strategy Control on/off state.
-
-It resets **Force charge at negative price** to its shipped default of **On**. The setting is also seeded **On** once on a fresh install or when first introduced by an upgrade. After that, a manual Off choice survives normal restarts and reloads. This does not grant HBC control by itself; **Enable HBC** remains the master permission and is preserved.
-
-It does not populate installation-specific sensor or inverter entities. Verify all entities, maximum and minimum powers, inverter count, and optional HBC strategy entity afterward.
-
-### Percentage step handling
-
-For `Limit unit: Percent`, HPVC quantizes the requested Watt target to the writable `number.*` entity's advertised percentage `step` before deciding whether a write is required. The configured minimum remains a hard Watt floor: if nearest-step rounding would fall below it, HPVC uses the first supported percentage at or above the minimum.
-
 ## Inverter control method
 
 Each inverter has its own **Control method**.
@@ -179,6 +175,10 @@ Each inverter has its own **Control method**.
 ### Number entity
 
 Use this for integrations that expose a writable Home Assistant `number.*` active-power limit. This is the existing HPVC path and remains the default. Configure **Limit entity**, **Limit unit**, **Max power**, and **Min power**.
+
+### Percentage step handling
+
+For `Limit unit: Percent`, HPVC quantizes the requested Watt target to the writable `number.*` entity's advertised percentage `step` before deciding whether a write is required. The configured minimum remains a hard Watt floor: if nearest-step rounding would fall below it, HPVC uses the first supported percentage at or above the minimum.
 
 ### Action/service
 

@@ -18,7 +18,7 @@ views:
               <div align="center">
 
 
-              ## Home PV Control (v1.5.3)
+              ## Home PV Control (v1.5.4)
 
               #### Standalone PV optimization for dynamic energy contracts.
               Optional HBC integration.
@@ -548,10 +548,10 @@ views:
               hide_state: true
               tap_action:
                 action: url
-                url_path: /local/hpvc/support-report.html?v=140-mobile-fresh-report
+                url_path: /local/hpvc/support-report.html?v=hpvc-report
               icon_tap_action:
                 action: url
-                url_path: /local/hpvc/support-report.html?v=140-mobile-fresh-report
+                url_path: /local/hpvc/support-report.html?v=hpvc-report
               hold_action:
                 action: none
               icon_hold_action:
@@ -2295,7 +2295,7 @@ views:
               </ha-alert>
           - type: tile
             entity: input_number.hpvc_inverter_count
-            name: Number of inverters
+            name: Inverters
             icon: mdi:solar-panel-large
             hide_state: true
             vertical: false
@@ -2315,8 +2315,8 @@ views:
             cards:
               - type: tile
                 entity: script.hpvc_previous_inverter
-                icon: mdi:chevron-left
                 name: ''
+                icon: mdi:chevron-left
                 hide_state: true
                 vertical: false
                 tap_action:
@@ -2326,12 +2326,15 @@ views:
                     entity_id: script.hpvc_previous_inverter
                 hold_action:
                   action: none
+                double_tap_action:
+                  action: none
                 grid_options:
                   rows: 1
               - type: tile
                 entity: input_select.hpvc_selected_inverter
-                name: Inverter
+                name: ''
                 icon: mdi:solar-panel
+                hide_state: false
                 vertical: false
                 tap_action:
                   action: none
@@ -2339,12 +2342,14 @@ views:
                   action: none
                 hold_action:
                   action: none
+                double_tap_action:
+                  action: none
                 grid_options:
                   rows: 1
               - type: tile
                 entity: script.hpvc_next_inverter
-                icon: mdi:chevron-right
                 name: ''
+                icon: mdi:chevron-right
                 hide_state: true
                 vertical: false
                 tap_action:
@@ -2353,6 +2358,8 @@ views:
                   target:
                     entity_id: script.hpvc_next_inverter
                 hold_action:
+                  action: none
+                double_tap_action:
                   action: none
                 grid_options:
                   rows: 1

@@ -2,7 +2,7 @@
 
 # Inverter compatibility
 
-Home PV Control (HPVC) v1.5.3 controls inverter output through either a writable Home Assistant `number` entity or a configurable Home Assistant **Action/service** adapter. Limits can be expressed in **Watts** or **Percent**, while HPVC continues to calculate internally in Watts.
+Home PV Control (HPVC) v1.5.4 controls inverter output through either a writable Home Assistant `number` entity or a configurable Home Assistant **Action/service** adapter. Limits can be expressed in **Watts** or **Percent**, while HPVC continues to calculate internally in Watts.
 
 Compatibility depends on the **Home Assistant integration and the entities it exposes**, not only on the inverter brand or model. A writable grid-export limit is not automatically equivalent to an inverter active-power limit: HPVC expects to control the inverter production ceiling itself.
 

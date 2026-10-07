@@ -12,6 +12,10 @@ input_boolean:
   hpvc_external_release_request:
     name: HPVC External PV Release Request
     icon: mdi:transmission-tower-export
+  hpvc_external_release_lease_valid:
+    name: HPVC External Release Lease Valid
+    icon: mdi:shield-clock-outline
+    initial: false
   hpvc_notifications:
     name: Home PV Control Notifications
     icon: mdi:bell-outline
@@ -610,6 +614,20 @@ input_select:
       - Percent
     icon: mdi:gauge
 input_number:
+  hpvc_engine_heartbeat_epoch:
+    name: HPVC Engine Heartbeat Epoch
+    min: 0
+    max: 4102444800
+    step: 1
+    mode: box
+    initial: 0
+  hpvc_external_release_verified_epoch:
+    name: HPVC External Release Verified Epoch
+    min: 0
+    max: 4102444800
+    step: 1
+    mode: box
+    initial: 0
   hpvc_inverter_count:
     name: Number of PV Inverters
     min: 1
@@ -1025,12 +1043,93 @@ input_button:
     icon: mdi:reload
 
 template:
+- trigger:
+  - platform: time_pattern
+    seconds: "/30"
+  - platform: homeassistant
+    event: start
+  sensor:
+  - name: HPVC Source Freshness
+    default_entity_id: sensor.hpvc_source_freshness
+    unique_id: hpvc_source_freshness
+    icon: mdi:timer-sync-outline
+    state: "{{ now().isoformat() }}"
+    attributes:
+      snapshot_epoch_ms: >-
+        {{ (as_timestamp(now(), 0) * 1000) | int }}
+      freshness_transport: "ha_template_last_reported_snapshot"
+      grid_last_reported_ms: >-
+        {% set e = states('input_text.hpvc_grid_power_sensor') | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
+      market_last_reported_ms: >-
+        {% set e = states('input_text.hpvc_market_price_sensor') | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
+      all_in_last_reported_ms: >-
+        {% set e = states('input_text.hpvc_all_in_price_sensor') | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
+      pv_last_reported_ms: >-
+        {% set e = states('input_text.hpvc_pv_power_sensor') | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
+      pv1_last_reported_ms: >-
+        {% set method = states('input_select.hpvc_pv1_control_method') | trim %}
+        {% set e = (states('input_text.hpvc_pv1_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv1_readback_entity')) | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
+      pv2_last_reported_ms: >-
+        {% set method = states('input_select.hpvc_pv2_control_method') | trim %}
+        {% set e = (states('input_text.hpvc_pv2_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv2_readback_entity')) | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
+      pv3_last_reported_ms: >-
+        {% set method = states('input_select.hpvc_pv3_control_method') | trim %}
+        {% set e = (states('input_text.hpvc_pv3_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv3_readback_entity')) | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
+      pv4_last_reported_ms: >-
+        {% set method = states('input_select.hpvc_pv4_control_method') | trim %}
+        {% set e = (states('input_text.hpvc_pv4_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv4_readback_entity')) | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
+      pv5_last_reported_ms: >-
+        {% set method = states('input_select.hpvc_pv5_control_method') | trim %}
+        {% set e = (states('input_text.hpvc_pv5_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv5_readback_entity')) | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
+      pv6_last_reported_ms: >-
+        {% set method = states('input_select.hpvc_pv6_control_method') | trim %}
+        {% set e = (states('input_text.hpvc_pv6_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv6_readback_entity')) | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
+      pv7_last_reported_ms: >-
+        {% set method = states('input_select.hpvc_pv7_control_method') | trim %}
+        {% set e = (states('input_text.hpvc_pv7_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv7_readback_entity')) | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
+      pv8_last_reported_ms: >-
+        {% set method = states('input_select.hpvc_pv8_control_method') | trim %}
+        {% set e = (states('input_text.hpvc_pv8_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv8_readback_entity')) | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
+      pv9_last_reported_ms: >-
+        {% set method = states('input_select.hpvc_pv9_control_method') | trim %}
+        {% set e = (states('input_text.hpvc_pv9_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv9_readback_entity')) | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
+      pv10_last_reported_ms: >-
+        {% set method = states('input_select.hpvc_pv10_control_method') | trim %}
+        {% set e = (states('input_text.hpvc_pv10_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv10_readback_entity')) | trim | lower %}
+        {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
+        {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
 - sensor:
   - name: HPVC Installed Version
     default_entity_id: sensor.hpvc_installed_version
     unique_id: hpvc_installed_version
     icon: mdi:tag
-    state: "1.5.3"
+    state: "1.5.4"
   # Explicit default_entity_id is intentional for this renamed v1.3.0 sensor so
   # fresh installs use the documented entity ID; other template sensors can derive theirs.
   - name: HPVC Diag Market/Export Price
@@ -1774,7 +1873,7 @@ template:
     icon: mdi:check-network-outline
     state: >-
       {% set bad = ['unknown', 'unavailable', 'none', 'select_entity_first', ''] %}
-      {% set ns = namespace(ready=is_state('binary_sensor.hpvc_configuration_valid', 'on')) %}
+      {% set ns = namespace(ready=is_state('binary_sensor.hpvc_configuration_valid', 'on'), usable=0) %}
       {% set night_restore = states('input_text.hpvc_status') in ['Night Restore', 'Night Restore pending'] %}
       {% set core = [
         states('input_text.hpvc_grid_power_sensor'),
@@ -1800,15 +1899,16 @@ template:
           {% set limit_ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim | lower %}
           {% set readback_ent = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
           {% if method == 'Number entity' %}
-            {% if limit_ent in bad or not (limit_ent | regex_match('^number[.][a-z0-9_]+$')) or not is_number(states(limit_ent)) %}
-              {% set ns.ready = false %}
+            {% if limit_ent not in bad and (limit_ent | regex_match('^number[.][a-z0-9_]+$')) and is_number(states(limit_ent)) %}
+              {% set ns.usable = ns.usable + 1 %}
             {% endif %}
-          {% elif method == 'Action/service' and readback_ent not in bad %}
-            {% if not (readback_ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) or not is_number(states(readback_ent)) %}
-              {% set ns.ready = false %}
+          {% elif method == 'Action/service' %}
+            {% if readback_ent in ['', 'select_entity_first'] or ((readback_ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) and is_number(states(readback_ent))) %}
+              {% set ns.usable = ns.usable + 1 %}
             {% endif %}
           {% endif %}
         {% endfor %}
+        {% if ns.usable == 0 %}{% set ns.ready = false %}{% endif %}
       {% endif %}
       {{ ns.ready }}
     attributes:
@@ -1868,7 +1968,11 @@ template:
     icon: mdi:solar-power-variant
     state: >-
       {{ is_state('input_boolean.hpvc_external_release_request', 'on')
-         and is_state('input_text.hpvc_status', 'External PV release active') }}
+         and is_state('input_text.hpvc_status', 'External PV release active')
+         and is_state('input_boolean.hpvc_enabled', 'on')
+         and is_state('input_boolean.hpvc_external_release_lease_valid', 'on')
+         and is_state('binary_sensor.hpvc_required_inputs_ready', 'on')
+         and is_state('input_boolean.hpvc_auto_resume_pending', 'off') }}
   - name: HPVC PV Limited
     unique_id: hpvc_pv_limited
     icon: mdi:solar-power-variant
@@ -2051,6 +2155,28 @@ script:
         entity_id: input_button.hpvc_defaults_restored_event
 
 automation:
+- id: hpvc_external_release_lease_watchdog
+  alias: HPVC External Release Lease Watchdog
+  mode: restart
+  trigger:
+    - platform: time_pattern
+      seconds: '/15'
+    - platform: homeassistant
+      event: start
+  condition:
+    - condition: state
+      entity_id: input_boolean.hpvc_external_release_lease_valid
+      state: 'on'
+    - condition: template
+      value_template: >-
+        {% set now_s = as_timestamp(now()) | float(0) %}
+        {% set hb = states('input_number.hpvc_engine_heartbeat_epoch') | float(0) %}
+        {% set verified = states('input_number.hpvc_external_release_verified_epoch') | float(0) %}
+        {{ hb <= 0 or verified <= 0 or (now_s - hb) > 45 or (now_s - verified) > 45 }}
+  action:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.hpvc_external_release_lease_valid
 - id: hpvc_keep_selected_inverter_in_range
   alias: HPVC - Keep selected inverter in range
   mode: restart
@@ -2326,7 +2452,6 @@ automation:
     target:
       entity_id: input_boolean.hpvc_auto_resume_pending
 
-
 - id: hpvc_reset_report_after_view
   alias: HPVC - Reset report after viewing
   description: Resets the report tile to Generate report when the generated HTML report is opened.
@@ -2336,7 +2461,7 @@ automation:
     webhook_id: hpvc_report_viewed_141
     allowed_methods:
     - POST
-    local_only: false
+    local_only: true
   action:
   - service: input_boolean.turn_off
     target:

@@ -71,7 +71,7 @@ This is expected. If a required configuration or live control input becomes inva
 
 ## One inverter is unavailable
 
-During normal daytime control, HPVC pauses all inverter writes when any configured inverter limit is unavailable. It does not redistribute the plant target across only the remaining inverters because the missing inverter may still be producing.
+During normal daytime control, HPVC isolates an unavailable inverter and continues controlling healthy inverters. If all configured inverter paths are unavailable, it pauses. The unreachable inverter may still produce, so HPVC cannot guarantee the export target during the outage. Release acknowledgement and destructive maintenance still require all configured inverters to be verified.
 
 During active Night Restore, expected nighttime loss of PV-power and inverter-limit telemetry is tolerated while grid and price safety inputs remain monitored.
 
@@ -106,6 +106,16 @@ If PV telemetry disappears while the timer is already running, **Night Restore p
 
 Import Restore can raise inverter limits even when measured PV is below Min PV for control. Low measured production may itself be caused by the active inverter limit.
 
+### External PV release waits on one inverter
+
+In v1.5.4, healthy inverters may continue restoring to full while a previous command remains unconfirmed on another inverter. External Release stays strict for the first **90 seconds**. If the request remains continuously active and one or more configured inverter readbacks are still genuinely unavailable after 90 seconds, HPVC can acknowledge a **degraded release** only when every reachable inverter is independently confirmed at full. A reachable inverter that is still below full continues to block release. The runtime reason and **Today’s Insights** identify the unavailable inverter(s) and the total PV capacity that could not be confirmed.
+
+### One inverter becomes unavailable
+
+In v1.5.4, a single temporarily unavailable inverter no longer pauses normal control for the rest of the plant. HPVC marks that inverter **Unavailable**, excludes it from active allocation, and continues controlling the remaining healthy inverter(s). If all configured inverter control/readback paths are unavailable, PV control pauses safely.
+
+When communication returns, HPVC marks the inverter **Recovered** and automatically reconciles it with the current target on the next safe control cycle. Today’s Insights records the unavailable/recovery transition; no extra dashboard card or Home Assistant helper is required.
+
 ### Inverter targets look wrong
 
 Check inverter count, entity assignment, Full power, Minimum power, current limit, requested target, and Difference from target in the report. A total increase must never reduce an individual inverter, and a total decrease must never raise one.
@@ -123,10 +133,6 @@ During confirmed Night Restore, the steady nighttime state may now be skipped. T
 ### `settingsTrigger` ReferenceError
 
 If a support report shows `ReferenceError: Cannot access 'settingsTrigger' before initialization` from `Read HPVC Core Configuration`, update to v1.4.2 or later. The settings-trigger flag is now declared before its first use so the 10-second control loop can complete normally.
-
-### Current runtime investigation
-
-The original full Home Assistant state deep-clone was removed before v1.4.2. If Node-RED memory growth or OOM behaviour is still observed with the current v1.5.3 build, treat it as a separate runtime investigation: confirm that HPVC runtime timestamps continue to advance, compare Node-RED RAM with HPVC enabled and disabled, and record Node-RED/Node.js versions, context storage, contrib nodes, and approximate Home Assistant entity count. Do not assume remaining heap growth is caused by the old deep-clone path.
 
 ## Charge Priority repeatedly releases and limits PV
 
@@ -178,9 +184,11 @@ Rows appear only for slots included by `input_number.hpvc_inverter_count`.
 
 The packaged dashboard includes the **HBC Price Intervals** graph with theme-aware grid and tooltip styling. It is shown only when onboarding is complete, HBC control is enabled, and `binary_sensor.hpvc_hbc_available` confirms HBC is available.
 
+To have Smart Update manage the dashboard automatically, switch to the file-backed dashboard installation described in [`01-installation.md`](01-installation.md): place `hpvc_dashboard.yaml` in the Home Assistant configuration root, next to `configuration.yaml` (normally `/config/hpvc_dashboard.yaml`), and register it once under `lovelace:`.
+
 ### Mobile report navigation buttons appear only after refresh
 
-Use the current v1.5.3 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
+Use the current v1.5.4 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
 
 ## Accuracy diagnostics
 
@@ -204,7 +212,7 @@ A grid spike is not classified from grid power alone. HPVC briefly reconciles it
 
 ### Internal attribution diagnostics
 
-For advanced troubleshooting, Node-RED global context stores the latest attribution audit record and a short rolling history with grid/PV/battery/limit deltas, causal weights, event age, and command verification state. These diagnostics do not alter dashboard behavior.
+For advanced troubleshooting, Node-RED global context stores the latest attribution diagnostic record and a short rolling history with grid/PV/battery/limit deltas, causal weights, event age, and command verification state. These diagnostics do not alter dashboard behavior.
 
 ## Reports
 
@@ -218,7 +226,9 @@ The report is an on-demand snapshot. Press **Generate report** again and wait fo
 
 ### Generate or View report state appears stuck
 
-Reload the dashboard and check Node-RED for a report-generation error. A successful generation publishes `/local/hpvc/support-report.html` and enables **View report**. Opening the report clears the Ready state through the bundled local webhook; the file itself remains until a newer report replaces it.
+Reload the dashboard and check Node-RED for a report-generation error. A successful generation publishes `/local/hpvc/support-report.html` and enables **View report**. Opening the report from the local Home Assistant network clears the Ready state through the bundled local-only webhook; remote viewing intentionally cannot trigger that reset. The file itself remains until a newer report replaces it.
+
+> Security note: `/local/` files are served without Home Assistant authentication. Keep the HPVC report URL limited to trusted network/exposure paths.
 
 ### Decision evaluation says Triggered while PV currently limited says No
 
@@ -262,9 +272,9 @@ For deeper telemetry, cutoff, persistence, attribution, and report semantics, se
 
 ## Node-RED latency or heap growth
 
-v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test the current v1.5.3 build unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
+v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test the current v1.5.4 build unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
 
-The runtime stores bounded diagnostics in the Node-RED global context key `homePvControlPerformanceDiagnostics`. It contains the latest cycle total, maximum and rolling average evaluation time, the latest per-stage timings, and—when the Function sandbox permits it—a memory sample no more than once per minute. No per-cycle timing or heap history is retained by this diagnostic.
+The runtime stores bounded diagnostics in the Node-RED global context key `homePvControlPerformanceDiagnostics`. It contains the latest cycle total, maximum and rolling average evaluation time, expanded per-stage timings for cooldown gates, battery-capacity learning, HBC charge priority, final-target calculation, transition logging, inverter service-call preparation and Insights/diagnostics, and—when the Function sandbox permits it—a memory sample no more than once per minute. No per-cycle timing or heap history is retained by this diagnostic.
 
 If heap sampling reports unavailable, this only means `process.memoryUsage()` is not exposed to Function nodes in that Node-RED environment; HPVC control continues normally. The HTML and TXT support reports include the current timing and heap diagnostics, so attach a fresh support report when investigating issue #2. Also include the Node-RED version, Home Assistant version, approximate entity count, and whether memory returns after garbage collection or continues establishing a higher baseline.
 
@@ -289,6 +299,13 @@ After Node-RED loses its runtime command cache, an Action/service inverter perfo
 From v1.5.2, Insight transitions use the remembered hysteresis state only when the current market/threshold values are valid. A transition into the limiting zone requires the market price to be at or below the limiting threshold; a transition out requires the price to be above the restore threshold. This prevents false `left`/`entered` alternation at values such as `0.0000` or `-0.0`.
 
 ## Smart Update troubleshooting
+
+### Smart Update says another updater process is active
+
+This is a safe refusal. The second detached process does not alter HPVC update helpers, status, resume intent, recovery transaction, or the active owner's result file. Wait for the active Smart Update to finish and then retry if needed. Do not delete `updater.lock` while the recorded owner process is still running. If the lock exists but its ownership metadata is unreadable or incomplete, Smart Update deliberately refuses automatic reclamation; investigate the interrupted update before removing the lock manually. Stale-owner recovery is serialized by `/config/hpvc-data/update-recovery/updater.reclaim.lock`; do not remove that guard while its recorded recovery process is alive. If the detached updater died abruptly **after safe shutdown had already authorized detached launch** and the dashboard still says an update is running, press **Update HPVC** again: HPVC launches a recovery-only probe without clearing the saved resume state. A live owner refuses the probe; a dead owner proceeds through verified transaction recovery only when an interrupted transaction exists. If HPVC is still in the ordinary safe-shutdown/restoration phase, repeated clicks are ignored and cannot bypass that gate. If the terminal transaction was already completed or rolled back but its required HA publication was lost, the same recovery-only probe verifies that recorded outcome and republishes it only while the terminal record is still unacknowledged. Once acknowledged, old terminal history is never replayed. Result-file and notification failures are best effort and cannot roll back a verified installation or block a verified rollback from restoring its saved live state; if the current files/flows no longer match the record, HPVC reports attention instead of changing them.
+
+If rollback recovery cannot restore `hpvc_enabled`, HPVC keeps the update marked in progress and retains the saved resume intention. Press **Update HPVC** again after the Home Assistant service issue is resolved; the retry stays recovery-only and continues the same transaction.
+
 
 ### Update available is not detected
 
@@ -355,9 +372,9 @@ This can be normal while an inverter command or verification is still active.
 
 ### WebSocket error: request requires a `type`
 
-Current v1.5.3 rebuilds a clean `config/entity_registry/list` WebSocket payload immediately before the entity-registry API node and uses the live-proven per-entity removal payload for `config/entity_registry/remove`.
+Current v1.5.4 rebuilds a clean `config/entity_registry/list` WebSocket payload immediately before the entity-registry API node and uses the live-proven per-entity removal payload for `config/entity_registry/remove`.
 
-If this error appears with a modified/older flow, re-import the complete current v1.5.3 flow rather than rewriting the registry API node manually.
+If this error appears with a modified/older flow, re-import the complete current v1.5.4 flow rather than rewriting the registry API node manually.
 
 ### Node-RED Global Context Store is disabled
 
@@ -378,15 +395,23 @@ A Node-RED cleanup failure does not block deletion of HPVC-owned files/data. If 
 
 ### Reinstall restores old settings
 
-Current v1.5.3 full uninstall resets the complete HPVC helper set to fresh-install defaults and waits 15 seconds for RestoreEntity persistence before entity-registry removal.
+Current v1.5.4 full uninstall resets the complete HPVC helper set to fresh-install defaults and waits 15 seconds for RestoreEntity persistence before entity-registry removal.
 
 If an older or interrupted uninstall left stale values:
 
-1. install/deploy the current complete v1.5.3 package;
+1. install/deploy the current complete v1.5.4 package;
 2. run **Uninstall HPVC** again and let it complete;
 3. restart Home Assistant after the final Inputs tab disappears;
-4. reinstall v1.5.3.
+4. reinstall v1.5.4.
 
 A normal update intentionally preserves helper values; only the full uninstall performs the clean-reset sequence.
+
+### External release stays requested but acknowledgement turns off
+
+HPVC protects the handoff with a 45-second verification lease. While the external-release request is active, Node-RED renews an engine heartbeat and verification timestamp on each full evaluation. If Node-RED stops, the HA-side watchdog revokes the lease automatically. Check Node-RED health, stale-input messages, per-inverter readback freshness, pending write verification, and any open-loop Action/service adapter without an independent readback. Open-loop adapters intentionally block degraded acknowledgement.
+
+### Required sensor is numeric but HPVC reports it stale
+
+HPVC checks communication freshness as well as numeric state. Power/inverter observations use `sensor.hpvc_source_freshness`, a Home Assistant template sensor that refreshes every 30 seconds and reads HA-core `last_reported` timestamps directly. Node-RED rejects the data if that snapshot itself stops updating, and it deliberately never uses `last_updated` as a heartbeat for constant valid values. Market/all-in price sensors have a longer scheduled-data window. Unknown freshness fails safe until Home Assistant supplies a valid report timestamp.
 
 [← README](../README.md) · [Installation](01-installation.md) · [Configuration](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)

@@ -1,5 +1,73 @@
 # Changelog
 
+## v1.5.4 — 2026-10-05
+
+v1.5.4 strengthens PV restore verification, per-inverter fault isolation, External Release coordination, telemetry safety, and Smart Update recovery after real-world multi-inverter testing and extensive regression validation.
+
+### Control and safety
+
+- Changed normal full-output restore status from **PV restored** to **Restoring PV** until inverter limits are actually verified.
+- Kept **Restoring PV** active across subsequent write-lock verification cycles until the pending restore is confirmed, preventing `PV full / price OK` or `Monitoring low price` from appearing while the plant is still below full.
+- Added restore-specific delayed/failure Insights that identify inverter limits not confirmed at full output.
+- Automatic safety pauses caused by invalid sensor/configuration state now hold the current inverter limits instead of forcing a full-output restore; healthy manual disable and verified maintenance paths retain their normal full-limit restore behavior.
+- Corrected Watt target rounding for inverters whose configured minimum does not align exactly with the configured step size.
+- Preserved validated core-price freshness through the inverter stage, so negative all-in-price minimum-PV protection and optional HBC negative-price charging remain active when the all-in sensor is healthy.
+- Source freshness is now derived from a Home Assistant-side snapshot of HA-core `last_reported`, refreshed every 30 seconds. Node-RED verifies both snapshot age and source report age; missing, invalid, stale or implausibly future freshness fails safe without using `last_updated`/`last_changed` as communication heartbeats.
+- External Release acknowledgement is protected by a 45-second HA-side verification lease; while release is requested HPVC forces full runtime evaluations so a stalled Node-RED engine cannot leave a historical acknowledgement active indefinitely.
+
+### Inverter, External Release and HBC reliability
+
+- Added internal per-inverter health monitoring (`Healthy`, `Unconfirmed`, `Slow`, `Unavailable`, `Recovered`) without new Home Assistant helpers or dashboard cards.
+- Isolated a temporarily unavailable inverter from the plant-wide live-input gate so healthy inverters can continue normal control.
+- Added automatic inverter recovery reconciliation: when communication/readback returns, HPVC resumes control for that inverter and forces Action/service adapters to resynchronize their target on the next safe control cycle.
+- Added transition Insights for inverter unavailable, slow confirmation, recovery, and recovered write/readback health.
+- Configured inverter readback failures now remain unavailable instead of falling back to a cached command, so a failed readback cannot be mistaken for a verified live limit.
+- Extended the slow-inverter isolation path to External Release so healthy inverters can restore to full while an older command remains unresolved on another inverter.
+- External Release now classifies every configured inverter explicitly. Open-loop/unverified adapters cannot disappear from release eligibility, and reachable inverters with pending write or active settling work block acknowledgement.
+- External Release remains strict for the first 90 seconds. After 90 continuous seconds, degraded acknowledgement may activate only when every independently reachable inverter is confirmed at full, remaining configured inverter(s) are genuinely unavailable, no reachable inverter has pending write/settling work, and no configured adapter is open-loop/unverified.
+- Degraded External Release reports unavailable/unverified inverter(s) and total unconfirmed PV capacity in runtime reason/Insights.
+- External Release now treats only an actually active post-write settling interval as blocking; an expired/timed-out retained settle record cannot strand a later full-output handoff.
+- Improved External Release status/reason text for active restoration and blocked verification.
+- Home Assistant readiness handling now allows per-inverter isolation so one unavailable inverter does not unnecessarily block healthy inverter control.
+
+### Smart Update and recovery
+
+- Smart Update now uses Node-RED API v2 revision checks, verified transactional recovery/rollback, response reconciliation, and preservation of unrelated concurrent Node-RED changes.
+- Release tags are resolved to immutable Git commits before managed files are downloaded, removing the tag-movement/TOCTOU window while retaining the existing GitHub trust model.
+- Package and dashboard YAML now require the complete `yaml` 2.x parser, duplicate-key rejection, real structure/version validation, post-write revalidation, and Home Assistant configuration validation before Node-RED deployment.
+- Detached updater ownership is atomically published only after complete ownership metadata is prepared; established or uncertain owners are never reclaimed as empty locks.
+- Stale-lock reclamation is serialized by a separate recovery-owner guard so concurrent retries cannot both reclaim the same dead updater lock.
+- A detached updater process that cannot acquire ownership exits without changing HPVC helpers, status, resume intent, transaction metadata, or the shared updater result file.
+- Ordinary safe-shutdown waiting and detached recovery are separate phases: repeated clicks during PV/HBC restoration cannot reach the installer, and recovery-only mode cannot begin a fresh installation without an interrupted transaction.
+- Abrupt updater death can be recovered through a recovery-only retry while preserving the saved resume intention; a live owner still refuses the probe.
+- Verified terminal `complete` and `rolled-back` transactions can be reconciled when final Home Assistant helper/status publication was lost. Mismatched terminal records fail safe without rollback or fresh installation.
+- Terminal publication is outcome-safe: result-file or notification failures cannot roll back a verified installation or block rollback resume. Required helper/status publication is completed before durable acknowledgement, and acknowledged terminal history is not replayed.
+- A fresh update persists its own launch marker before the first awaited resume-intent read, preventing older terminal history from restoring an obsolete enabled state after a later manual disable.
+- Rollback recovery keeps the update marked in progress and preserves saved resume intent until restoring `hpvc_enabled` succeeds; a failure remains recovery-only on the next click rather than starting a fresh update.
+
+### Diagnostics, performance and reports
+
+- Aligned Daily Control Accuracy journal preparation and restore on the shared schema/revision contract, including `headlineAttributionRevision`.
+- Expanded bounded runtime profiling for cooldown gates, battery-capacity learning, HBC charge priority, final-target calculation, transition logging, inverter service-call preparation, and Insights/diagnostics without retaining per-cycle history.
+- Increased the runtime evaluation stale-lock watchdog from 12 seconds to 30 seconds to reduce overlap risk during unusually slow Home Assistant/inverter operations.
+- Aligned Smart Update and full-uninstall safe-shutdown runtime-lock checks with the same **30-second** evaluation watchdog, preventing maintenance from treating a still-valid 15–30 second evaluation as idle.
+- Completed inverter service-call profiling on halted cycles so performance diagnostics remain accurate without changing control behavior.
+- Support reports retain the standard **Generate report → Generating… → View report** dashboard flow. HTML is published at `/config/www/hpvc/support-report.html` and opened through `/local/hpvc/support-report.html`.
+- The report-reset webhook is local-only; local viewing resets the tile to **Generate report**, while remote viewing does not reset it automatically.
+- The `/local/` report view requires no extra component, but `/local/` content is not protected by Home Assistant authentication; use it only on trusted exposure paths.
+- Replaced the historical report cache-busting label with the neutral `hpvc-report` query token.
+
+### Maintenance, cleanup and validation
+
+- Full-uninstall registry cleanup now includes the HPVC source-freshness sensor and the External Release heartbeat/lease helpers while retaining exact ownership matching.
+- Release validation covered control safety, External Release, updater transactions/recovery, YAML/templates, PV allocation, safe-shutdown boundaries, lock ownership, and terminal publication.
+- Runtime documentation now follows the supported Node-RED/Node.js compatibility matrix; for the declared websocket baseline, Node-RED 4.x requires Node.js 18.2.0 or newer and Node-RED 5.x requires Node.js 22 or newer.
+
+### Upgrade notes
+
+- Supported Home Assistant OS/Supervised Node-RED add-on installations can use **Settings → Maintenance → HPVC updates**.
+- Smart Update preserves HPVC entities, helper values, configuration and saved data; manual replacement of the Home Assistant package, Node-RED flow and dashboard remains supported.
+
 ## v1.5.3 — 2026-10-01
 
 v1.5.3 adds safe maintenance workflows for both future Smart Updates and complete uninstall while retaining the v1.5.2 control model.
@@ -71,7 +139,6 @@ v1.5.3 adds safe maintenance workflows for both future Smart Updates and complet
 - Do not uninstall to perform a normal upgrade. Existing helper/entity IDs are preserved so user configuration remains intact.
 - Restart Home Assistant only when required by the installation/update instructions or after a completed full uninstall.
 
-
 ## v1.5.2
 
 ### Fixed
@@ -83,13 +150,12 @@ v1.5.3 adds safe maintenance workflows for both future Smart Updates and complet
 - Safe master-disable restore no longer waits for an older in-flight normal-control command; HPVC immediately issues full-limit targets to all configured inverters and uses the existing verification/retry path afterwards.
 - Fixed price-zone Insight flapping at an exact threshold such as `0.0000 €/kWh`. Missing/partial evaluations no longer coerce the remembered state to false, and enter/leave transitions are logged only when the live price satisfies the corresponding hysteresis boundary.
 
-### Audit hardening
+### Reliability hardening
 
 - Corrected Power Flow ApexCharts zero-line annotations to use `y: 0`.
 - Reconciled published `controlAction` diagnostics with the allocator's final reachable target after slow-inverter target capping.
 - Aligned current documentation and README release references with v1.5.2.
 - Clarified the in-flight write-lock exceptions for import-driven upward recovery and safe master-disable restore.
-
 
 ## v1.5.1
 
@@ -102,7 +168,6 @@ v1.5.3 adds safe maintenance workflows for both future Smart Updates and complet
 - Added an active-only External PV Release badge to the dashboard; the request helper remains an integration/API helper rather than a normal user control.
 - Expanded HTML and TXT support reports with external-release request/active state and updated report version metadata.
 - Updated installation, configuration, architecture, troubleshooting and inverter-compatibility documentation for the v1.5.1 handshake and safe-disable semantics.
-
 
 ## v1.5.0
 
@@ -174,7 +239,6 @@ v1.5.3 adds safe maintenance workflows for both future Smart Updates and complet
 - Invalid, missing, unknown or unavailable per-inverter Limit unit values now fail safe as configuration errors instead of silently falling back to Watts.
 - Corrected remaining v1.4.2 runtime/dashboard version labels and refreshed v1.4.3 documentation/reference metadata (screenshots intentionally unchanged).
 
-
 ## v1.4.2
 
 ### Runtime efficiency
@@ -208,7 +272,6 @@ v1.5.3 adds safe maintenance workflows for both future Smart Updates and complet
 - Reused the bounded serialized-cycle snapshot object and explicitly drops `msg.hpvc.cycleStates` after diagnostics.
 - Added bounded internal retention counters for major HPVC histories to help isolate remaining heap growth.
 
-
 ## v1.4.1
 
 ### Performance and memory
@@ -231,7 +294,6 @@ v1.5.3 adds safe maintenance workflows for both future Smart Updates and complet
 
 - Updated README, installation, architecture/how-it-works, troubleshooting, dashboard version label, release notes, and release archive documentation for v1.4.1.
 - Added explicit testing guidance for issue #2.
-
 
 ## v1.4.0
 
@@ -356,7 +418,7 @@ v1.5.3 adds safe maintenance workflows for both future Smart Updates and complet
 - Reorganized Node-RED into four functional tabs and corrected cross-tab states that require shared global context.
 - Added scoped runtime Function error handling and removed obsolete/dead internal processing.
 - Reduced unnecessary report/runtime message payloads after the canonical report model is assembled.
-- Removed remaining declaration-only Function-node helpers/locals found by the final release audit; this cleanup does not change control behavior.
+- Removed remaining declaration-only Function-node helpers/locals found by the final release review; this cleanup does not change control behavior.
 - Removed the write-only `homePvControlDirectionHistory` flow-context reset after confirming no packaged runtime path reads that key.
 
 ### Documentation
@@ -373,7 +435,6 @@ v1.5.3 adds safe maintenance workflows for both future Smart Updates and complet
 - Replace the Home Assistant package, complete Node-RED flow and dashboard together.
 - **Force charge at negative price** is seeded **On** once after install/upgrade. It remains user-configurable, survives normal restarts/reloads after a manual Off choice, is reset to On by **Restore defaults**, and only has effect while **Enable HBC** is On.
 - Keep all HPVC files on the same release version.
-
 
 ## v1.3.0
 
@@ -393,19 +454,16 @@ v1.5.3 adds safe maintenance workflows for both future Smart Updates and complet
 
 - Added onboarding guidance, richer diagnostics, report improvements and dashboard cleanup.
 
-
 ## v1.2.0
 
 - Added automatic Adaptive Hidden PV Reveal with bounded reveal behavior and PV-response verification.
 - Improved first-run defaults, helper persistence, restore behavior and dashboard diagnostics.
 - Improved multi-inverter reveal allocation and battery-aware reveal limits.
 
-
 ## v1.1.1
 
 - Maintenance release with configuration-validation, persistence and dashboard fixes.
 - Improved entity-picker handling and HBC strategy change detection.
-
 
 ## v1.1.0
 
@@ -413,37 +471,30 @@ v1.5.3 adds safe maintenance workflows for both future Smart Updates and complet
 - Improved cooldown recovery, HBC strategy selection, battery charge awareness and dashboard diagnostics.
 - Expanded Insights and HBC price-zone visualization.
 
-
 ## v1.0.6
 
 - Improved default persistence, startup restore handling and internal cleanup.
-
 
 ## v1.0.5
 
 - Fixed negative-price minimum-PV behavior, configuration validation and diagnostics.
 - Completed the Home PV Control naming/dashboard cleanup.
 
-
 ## v1.0.4
 
 - Fixed clean-install template and dashboard entity mismatches.
-
 
 ## v1.0.3
 
 - Rebranded the project as **Home PV Control** and improved HBC/dashboard integration.
 
-
 ## v1.0.2
 
 - UI, dashboard and stability improvements.
 
-
 ## v1.0.1
 
 - Added configurable cooldown, faster evaluation and HBC battery-power support.
-
 
 ## v1.0.0
 
