@@ -122,21 +122,9 @@ Review the shipped thresholds and optional HBC settings before enabling any beha
 
 ### Shipped defaults
 
-| Setting | Shipped default |
-|---|---:|
-| HBC integration / Charge Priority | Off |
-| Force charge at negative price | On by default; used only when HBC control is enabled |
-| PV limiting price | `0.00 €/kWh` |
-| Price hysteresis | `0.02 €/kWh` |
-| Export start | `-150 W` |
-| Target export | `0 W` |
-| Import restore | `150 W` |
-| Min PV for control | `100 W` |
-| Night Restore threshold | `10 W` |
-| Cooldown | `30 s` |
-| Deadband | `25 W` |
+HPVC starts with conservative defaults so the installation is usable immediately, but these values are only starting points.
 
-These are starting points, not universal recommendations. Review them for your inverter, sensors, electricity contract and local rules.
+The authoritative defaults table, price-sensor guidance and tuning notes are maintained in [Configuration → Shipped defaults](02-configuration.md#shipped-defaults).
 
 ## Step 6 — Verify installation
 
@@ -195,6 +183,12 @@ Smart Update does **not** automatically change Node-RED palette dependencies. If
 For **Action/service** inverter control, automatic Smart Update also requires a valid numeric readback entity for every configured inverter. The readback is what lets HPVC confirm the live limit has returned to full before destructive replacement begins. Without it, the update stops safely and identifies the affected inverter; use the manual upgrade path after verifying/restoring the inverter limit yourself.
 
 If download, validation, file replacement or flow deployment fails, HPVC leaves its entities and saved data intact, reports the failure, attempts to restore the previous managed files/flows when replacement had already started, and restores the pre-update HPVC enabled state when rollback succeeds. A safe-shutdown timeout or update-path exception stops the update **before** managed HPVC replacement when possible. When the safe-shutdown/update path fails before the detached updater takes over, HPVC remains disabled; verify inverter limits before enabling HPVC or retrying.
+
+### Managed dashboard behavior
+
+Smart Update replaces `/config/hpvc_dashboard.yaml` only when that managed file already exists. Pasted/custom dashboards remain manual and are not overwritten automatically.
+
+After a successful Smart Update, use **Quick Reload Home Assistant** when prompted. HPVC uses Home Assistant reload services where possible; a full restart is only required when the release or local configuration requires it.
 
 ## Manual upgrade
 

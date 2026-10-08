@@ -36,25 +36,75 @@ See [Inverter compatibility](docs/05-inverter-compatibility.md) and [Configurati
 
 ## Contents
 
-- [Quick install](#quick-install)
-- [Requirements](#requirements)
 - [Main features](#main-features)
+- [Requirements](#requirements)
+- [Quick install](#quick-install)
 - [How HPVC works](#how-hpvc-works)
+- [Architecture](#architecture)
 - [Dashboard](#dashboard)
-- [Shipped defaults](#shipped-defaults)
 - [Home Battery Control integration](#home-battery-control-integration)
+- [Shipped defaults](#shipped-defaults)
 - [Safety](#safety)
 - [Accuracy, Insights and reports](#accuracy-insights-and-reports)
-- [Architecture](#architecture)
+- [Screenshots](#screenshots)
 - [Upgrading](#upgrading)
-- [Documentation](#documentation)
 - [Uninstalling](#uninstalling)
+- [Documentation](#documentation)
 - [Support](#support)
 - [Repository structure](#repository-structure)
 - [Support the project](#support-the-project)
 - [Credits](#credits)
 - [License](#license)
 - [Disclaimer](#disclaimer)
+
+## Main features
+
+### ☀️ PV control
+- Standalone PV export control
+- Dynamic export limiting and automatic import recovery
+- Multi-inverter support with per-inverter minimum and maximum limits
+- Per-inverter Watt or percentage limits
+- Generic Home Assistant Number entity and Action/service adapters
+- Negative all-in-price minimum-PV protection
+- Night Restore with PV recovery hysteresis
+
+### 🔋 Battery integration
+- Optional Home Battery Control (HBC) integration
+- Charge Priority for `Charge` and `Charge PV`
+- Optional HBC grid charging during negative prices
+- HBC multi-battery support for 1–6 batteries
+- Battery eligibility, headroom and taper-aware control
+
+### 🧠 Reliability
+- Healthy inverters continue operating when another configured inverter becomes unavailable
+- Degraded-mode grid-target correction uses only currently controllable inverter capacity
+- Automatic proportional rebalance when an unavailable inverter recovers
+- Recovery confirmation accounts for inverter command step size
+- Inverter telemetry freshness and write/readback verification
+- Routine `Unconfirmed → Healthy` write confirmations are suppressed from Insights
+- Automatic safety recovery can re-enable HPVC after the required inputs remain healthy for the confirmation window
+- Safe shutdown, restore and bounded recovery behavior
+
+### 📊 Visibility and diagnostics
+- Today’s Insights and Power Control history
+- Daily Control Accuracy with four loss factors
+- On-demand HTML and TXT support reports
+- Ready-to-import Home Assistant dashboard
+
+### 🔄 Maintenance
+- Smart Update from the HPVC dashboard
+- Installed Home Assistant websocket dependency verification through Node-RED `/nodes`
+- Transaction-safe update, rollback and recovery handling
+- Manual upgrade and safe uninstall workflows
+
+## Requirements
+
+- Home Assistant Core **2025.12 or newer** with package support. Earlier versions may work but are outside the documented support baseline.
+- A currently supported Node-RED runtime. Node-RED 4.x requires Node.js 18.2.0 or newer for the declared Home Assistant websocket 0.80.3 baseline; Node-RED 5.x requires Node.js 22 or newer. Home Assistant add-on users should use the runtime bundled by the supported Node-RED add-on rather than pinning a separate JavaScript-runtime minimum.
+- One or more PV inverters with either a writable `number.*` active-power limit or a stable Home Assistant action/service that can apply an active-power limit.
+- A valid grid-power sensor, market/export-price sensor, all-in-price sensor and PV-power sensor.
+- ApexCharts Card for the supplied dashboard graphs.
+- Home Battery Control only for optional HBC execution tracking and Charge Priority.
 
 ## Quick install
 
@@ -123,51 +173,51 @@ See [Inverter compatibility](docs/05-inverter-compatibility.md) and [Configurati
 
 See the full [installation guide](docs/01-installation.md) for dependencies and first-run verification.
 
-## Requirements
-
-- Home Assistant Core **2025.12 or newer** with package support. Earlier versions may work but are outside the documented support baseline.
-- A currently supported Node-RED runtime. Node-RED 4.x requires Node.js 18.2.0 or newer for the declared Home Assistant websocket 0.80.3 baseline; Node-RED 5.x requires Node.js 22 or newer. Home Assistant add-on users should use the runtime bundled by the supported Node-RED add-on rather than pinning a separate JavaScript-runtime minimum.
-- One or more PV inverters with either a writable `number.*` active-power limit or a stable Home Assistant action/service that can apply an active-power limit.
-- A valid grid-power sensor, market/export-price sensor, all-in-price sensor and PV-power sensor.
-- ApexCharts Card for the supplied dashboard graphs.
-- Home Battery Control only for optional HBC execution tracking and Charge Priority.
-
-## Main features
-
-| Feature | Status |
-|---|---:|
-| Standalone PV export control | ✅ |
-| Dynamic export limiting and import recovery | ✅ |
-| Multi-inverter support with per-inverter minimum/maximum limits | ✅ |
-| Per-inverter Watt or percentage limits | ✅ |
-| Generic per-inverter Number entity / Action/service adapters | ✅ |
-| Negative all-in-price minimum-PV protection | ✅ |
-| Optional HBC grid charging during negative prices | ✅ |
-| Optional HBC Charge Priority for `Charge` / `Charge PV` | ✅ |
-| HBC multi-battery support (1–6 batteries) | ✅ |
-| Night Restore with PV recovery hysteresis | ✅ |
-| Today’s Insights and Power Control history | ✅ |
-| Daily Control Accuracy with four loss factors | ✅ |
-| On-demand HTML and TXT support reports | ✅ |
-| Ready-to-import Home Assistant dashboard | ✅ |
-
 ## How HPVC works
 
-HPVC evaluates:
+HPVC evaluates live grid power, PV production, electricity prices and configured inverter limits every 10 seconds, as well as after startup and relevant setting changes.
 
-- every **10 seconds**;
-- immediately after deploy/startup;
-- when relevant HPVC settings change.
+It dynamically limits or restores PV output while respecting configured deadband, cooldown, inverter availability and optional HBC Charge Priority. Multi-inverter systems continue operating with healthy inverters if another becomes unavailable, and recovered inverters are automatically rebalanced.
 
-Normal control follows a simple priority order:
+See [How HPVC works](docs/03-how-it-works.md) for the complete control sequence, target calculations, inverter recovery, safety gates, HBC coordination and runtime behavior.
 
-1. Validate required inputs and configured inverter limits.
-2. Apply negative-price protection when the all-in price is `<= 0`.
-3. Handle Night Restore when PV production has effectively ended.
-4. Coordinate available PV with HBC Charge Priority when HBC is enabled and eligible.
-5. Limit export when price and grid conditions require it.
-6. Restore PV when import or price recovery makes more output appropriate.
-7. Respect cooldown and deadband so unnecessary writes are avoided.
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph HA["Home Assistant"]
+        PRICE["Market / all-in price"]
+        GRID["Grid power"]
+        PV["Total PV power"]
+        HBC["Optional HBC"]
+        BAT["Battery telemetry"]
+        CFG["HPVC settings"]
+    end
+
+    HPVC["Home PV Control<br/>Node-RED"]
+
+    ALLOC["Per-inverter target allocation"]
+
+    subgraph INV["PV inverters"]
+        INV1["Inverter 1"]
+        INVN["Inverter ..."]
+    end
+
+    PRICE --> HPVC
+    GRID --> HPVC
+    PV --> HPVC
+    HBC <--> HPVC
+    BAT --> HPVC
+    CFG --> HPVC
+
+    HPVC --> ALLOC
+    ALLOC -->|"Number entity / Action service"| INV1
+    ALLOC -->|"Number entity / Action service"| INVN
+```
+
+Node-RED runs the HPVC control engine while Home Assistant provides live sensors, configuration, helpers and the dashboard. HPVC can coordinate optional HBC control and dynamically distribute the calculated PV target across multiple inverter control paths.
+
+See [How HPVC works → Node-RED flow architecture](docs/03-how-it-works.md#node-red-flow-architecture) for the detailed control architecture, recovery behavior and runtime model.
 
 ## Dashboard
 
@@ -179,139 +229,29 @@ The supplied dashboard provides three main working areas:
 
 See [Installation](docs/01-installation.md) and [Configuration](docs/02-configuration.md) for setup details.
 
-## Shipped defaults
-
-These are starting points, not universal recommendations. Review them for your inverter, sensor definitions, electricity contract and local rules.
-
-| Setting | Shipped default |
-|---|---:|
-| HBC integration / Charge Priority | Off |
-| Force charge at negative price | On by default; effective only while HBC control is enabled |
-| PV limiting price | `0.00 €/kWh` |
-| Price hysteresis | `0.02 €/kWh` |
-| Export start | `-150 W` |
-| Target export | `0 W` |
-| Import restore | `150 W` |
-| Min PV for control | `100 W` |
-| Night restore PV threshold | `10 W` |
-| Cooldown | `30 s` |
-| Deadband | `25 W` |
-
-> **PV limiting price guidance:** use €0.00/kWh with a net export-price sensor. For a raw market-price sensor, account for fees, compensation and local rules.
-
-See [Configuration](docs/02-configuration.md#marketexport-price-sensor) for sensor guidance and examples.
-
 ## Home Battery Control integration
 
-HPVC can integrate with Home Battery Control (HBC) while keeping HBC optional.
+HPVC can optionally coordinate PV control with Home Battery Control (HBC), including Charge Priority, negative-price charging, multi-battery eligibility, taper handling and degraded HBC operation.
 
-- **Enable HBC** is the master permission for HPVC to control HBC strategy changes.
-- **Force charge at negative price** can request HBC charging while the all-in price is negative, but only when HBC control is enabled.
-- **Charge Priority** can release additional PV for eligible batteries and then return to normal export control if the battery cannot absorb it.
-- Battery freshness, eligibility and recovery are checked before HBC-dependent control is used.
+See [Configuration → HBC integration](docs/02-configuration.md#hbc-integration) for setup and [How HPVC works → HBC battery charge priority](docs/03-how-it-works.md#hbc-battery-charge-priority) for runtime behavior.
 
-For execution states, multi-battery behavior, taper/headroom handling and transition timing, see [How HPVC works](docs/03-how-it-works.md).
+## Shipped defaults
+
+HPVC ships with conservative starting values for price control, grid thresholds, cooldown, deadband and HBC behavior. They are starting points rather than universal recommendations.
+
+See [Configuration → Shipped defaults](docs/02-configuration.md#shipped-defaults) for the authoritative defaults table, price-sensor guidance and adjustment notes.
 
 ## Safety
 
-HPVC validates required sensors, inverter control paths, helper ranges and threshold relationships before writes. It also includes grouped-inverter safety, night restore, telemetry freshness checks, persisted negative-price state, bounded recovery behavior and safe shutdown during uninstall.
+HPVC validates required inputs, inverter control paths and configuration before sending writes, and uses bounded recovery, telemetry freshness checks and safe shutdown/restore behavior.
 
-If HBC telemetry becomes uncertain, HBC-dependent control can pause while normal PV control remains available where safe.
-
-See [How HPVC works](docs/03-how-it-works.md) for the control model and [Troubleshooting](docs/04-troubleshooting.md) for recovery cases.
+See [How HPVC works](docs/03-how-it-works.md) for the safety model and [Troubleshooting](docs/04-troubleshooting.md) for recovery cases.
 
 ## Accuracy, Insights and reports
 
-HPVC tracks current-day control behavior and exposes:
+HPVC provides Daily Control Accuracy, operational Insights, Power Control history and HTML/TXT support reports covering inverter, sensor, HBC, battery and runtime diagnostics.
 
-- **Daily Control Accuracy** with estimated loss factors for control response, house load changes, PV availability and other effects.
-- **Today’s Insights** for meaningful transitions, warnings, faults and recoveries.
-- **Power Control history** for current-day control activity.
-- **HTML/TXT support reports** with inverter, sensor, HBC, battery, override, accuracy and runtime diagnostics.
-
-Detailed attribution, reconciliation and reporting behavior is documented in [How HPVC works](docs/03-how-it-works.md).
-
-## Architecture
-
-```mermaid
-flowchart LR
-    PRICE[Market / all-in price]
-    GRID[Grid power]
-    PV[PV power]
-    HBC[Optional HBC]
-    BAT[Battery telemetry]
-    HPVC["Home PV Control<br/>Node-RED"]
-    LIMITS[PV inverter limits]
-
-    PRICE --> HPVC
-    GRID --> HPVC
-    PV --> HPVC
-    HBC --> HPVC
-    BAT --> HPVC
-    HPVC --> LIMITS
-```
-
-Node-RED runs the control logic while Home Assistant provides sensors, helpers, inverter control entities/actions and the dashboard. Current-day runtime history is stored privately in `hpvc-data/runtime-history.json`.
-
-For the detailed control lifecycle, persistence model and flow architecture, see [How HPVC works](docs/03-how-it-works.md).
-
-## Upgrading
-
-- **v1.5.4:** Partial inverter failures keep healthy units under control, recovered units are proportionally rebalanced with step-aware confirmation, and inverter-health Insights reflect degraded/recovered operation accurately.
-
-- **v1.5.4:** Recovered inverters are automatically rebalanced to the configured proportional limit split; the rebalance is also recorded in Insights.
-
-- **v1.5.4:** Smart Update and recovery verify the installed Node-RED Home Assistant websocket module directly through `GET /nodes`.
-
-From v1.5.3 onward, supported Home Assistant OS/Supervised Node-RED add-on installations can use **Maintenance → HPVC updates**. HPVC checks the latest GitHub release and shows **Update HPVC** only when a newer release is available.
-
-### Safe update lifecycle
-
-- Smart Update first uses HPVC's verified safe-shutdown path: PV limits are restored and confirmed, pending inverter writes are cleared, and HBC-owned restoration is completed before normal installation can begin.
-- Repeated clicks while safe shutdown is still in progress cannot reach the installer.
-- The updater replaces only managed HPVC package/flow/dashboard assets and preserves HPVC entities, helper values, configuration and saved `hpvc-data`.
-- `/config/hpvc_dashboard.yaml` is replaced only when that managed dashboard file already exists; custom/pasted dashboards remain manual.
-- If HPVC was enabled before a successful update it resumes after the required reload; if it was already Off it remains Off.
-
-### Recovery and transaction safety
-
-- Normal installation and recovery-only execution are separate. A recovery probe cannot start a fresh installation when no interrupted transaction exists.
-- Detached updater ownership is atomically published before shared update state can be changed. A refused contender cannot modify the active owner's helpers, status, resume intent, transaction metadata or result file.
-- Stale-owner recovery is serialized so concurrent retries cannot both reclaim the same dead updater lock.
-- Interrupted updates reuse the saved transaction and preserve the original enabled/disabled intent. Verified terminal completion/rollback records can republish lost HA helper/status state after a crash.
-- Required terminal helper/status publication is completed before durable acknowledgement. Result-file and notification failures are best effort and cannot undo a verified installation or block rollback resume.
-- Acknowledged terminal history is never replayed. A fresh launch marker is stored before the first awaited resume-intent read, protecting a later manual disable from stale rollback history.
-- If restoring `hpvc_enabled` fails during rollback recovery, the transaction stays unacknowledged and in progress, preserving the saved resume intention so the next click remains recovery-only.
-
-### Validation and trust model
-
-- The updater resolves the release tag to an immutable Git commit before downloading managed files.
-- Both managed YAML files require the bundled **`yaml` 2.x** parser, duplicate-key rejection, expected structure/version checks, and post-write revalidation. Home Assistant configuration validation runs before Node-RED deployment.
-- Node-RED deployment uses API v2 revision protection and managed-flow fingerprints so unrelated operator changes are preserved.
-- v1.5.4 does not use an independently trusted cryptographic release signature; authenticity ultimately relies on the official `BioPC/home-pv-control` GitHub repository and GitHub HTTPS delivery. See [Installation](docs/01-installation.md#smart-update-trust-model) for the trust model and manual-verification alternative.
-
-### Finish or upgrade manually
-
-After a successful Smart Update, use **Quick Reload Home Assistant** from Maintenance when prompted. HPVC uses `homeassistant.reload_all` for YAML that Home Assistant can reload without a full restart.
-
-Manual replacement of the Home Assistant package, Node-RED flow and dashboard remains the fallback. For the authoritative sequence and environment assumptions, see [Installation and upgrade](docs/01-installation.md#smart-update-from-v153-onward).
-
-See the [v1.5.4 release notes](releases/v1.5.4/release.md) for the full release summary.
-
-> **Managed dashboard:** For automatic dashboard updates, place `hpvc_dashboard.yaml` in the Home Assistant configuration root (the same folder as `configuration.yaml`, normally `/config/hpvc_dashboard.yaml`) and register it as a file-backed Lovelace dashboard. See [`docs/01-installation.md`](docs/01-installation.md) for the exact configuration.
-
-## Documentation
-
-- [Installation](docs/01-installation.md)
-- [Configuration](docs/02-configuration.md)
-- [How it works](docs/03-how-it-works.md)
-- [Troubleshooting](docs/04-troubleshooting.md)
-- [Inverter compatibility](docs/05-inverter-compatibility.md)
-- [Documentation index](docs/README.md)
-- [Changelog](CHANGELOG.md)
-- [v1.5.4 release notes](releases/v1.5.4/release.md)
-
-For Home Battery Control itself, see the [HBC documentation](https://docs.homebatterycontrol.com/).
+See [How HPVC works → Accuracy and factor attribution](docs/03-how-it-works.md#accuracy-and-factor-attribution) and [Report generation and diagnostics](docs/03-how-it-works.md#report-generation-and-diagnostics) for details.
 
 ## Screenshots
 
@@ -335,15 +275,36 @@ Reference Node-RED architecture screenshot.
 
 ![Home PV Control Node-RED flow](assets/screenshots/node_red_flow.png)
 
+## Upgrading
+
+From v1.5.3 onward, supported Home Assistant OS/Supervised Node-RED add-on installations can update from **Settings → Maintenance → HPVC updates**.
+
+Smart Update preserves HPVC configuration, helper values and saved data, validates the selected release, safely replaces managed HPVC assets and provides transaction, rollback and recovery protection. After a successful update, use **Quick Reload Home Assistant** when prompted.
+
+v1.5.4 also strengthens multi-inverter degraded operation and recovery: healthy inverters continue control when another is unavailable, recovered inverters are proportionally rebalanced, and recovery confirmation accounts for inverter command step size.
+
+For the authoritative update lifecycle, rollback/recovery behavior, trust model and manual upgrade procedure, see [Installation → Smart update from v1.5.3 onward](docs/01-installation.md#smart-update-from-v153-onward).
+
+See the [v1.5.4 release notes](releases/v1.5.4/release.md) for the full release summary.
+
 ## Uninstalling
 
-If you only need to rebuild the HPVC Node-RED side, use **Settings → Maintenance → Manual upgrade → Remove HPVC flows**. The action safely disables HPVC, restores configured PV limits, removes only the four HPVC Node-RED tabs, and keeps the Home Assistant package, entities, dashboard and saved data. Then install the new release `home assistant/hpvc_config.yaml`, import `node-red/hpvc_flow.json`, update the dashboard, reload/restart Home Assistant as required by the release, and turn HPVC back on.
+Use **Settings → Uninstall HPVC** for the supplied safe uninstall workflow. If you only need to rebuild the Node-RED side, use **Settings → Maintenance → Manual upgrade → Remove HPVC flows** instead.
 
-Use **Settings → Uninstall HPVC** from the supplied dashboard. HPVC performs its safe shutdown, removes its registered entities, deletes its owned files/data, and removes the HPVC Node-RED flows automatically. Restart Home Assistant after the uninstall completes.
+See [Installation → Full uninstall](docs/01-installation.md#full-uninstall) for the authoritative uninstall procedure, owned-file behavior and recovery guidance.
 
-Manual follow-up is only needed when HPVC reports that automatic Node-RED cleanup could not remove a tab, or when HPVC files/dashboard configuration were installed outside the documented owned paths. This includes a custom `hpvc_config.yaml` location, a pasted/custom dashboard, or a separately added YAML-dashboard registration in `configuration.yaml`.
+## Documentation
 
-See [Installation → Full uninstall](docs/01-installation.md#full-uninstall) for the authoritative uninstall procedure and recovery guidance.
+- [Installation](docs/01-installation.md)
+- [Configuration](docs/02-configuration.md)
+- [How it works](docs/03-how-it-works.md)
+- [Troubleshooting](docs/04-troubleshooting.md)
+- [Inverter compatibility](docs/05-inverter-compatibility.md)
+- [Documentation index](docs/README.md)
+- [Changelog](CHANGELOG.md)
+- [v1.5.4 release notes](releases/v1.5.4/release.md)
+
+For Home Battery Control itself, see the [HBC documentation](https://docs.homebatterycontrol.com/).
 
 ## Support
 

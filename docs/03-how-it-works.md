@@ -198,11 +198,9 @@ Node-RED replacement is performed as one full-flow merge: the updater reads the 
 
 ### Smart Update recovery and rollback
 
-Smart Update uses Node-RED API v2 revision checks and deploys modified flows. Concurrent deployments are refused rather than overwritten. Rollback restores only HPVC tabs against a fresh revision, preserving intervening unrelated changes. A lost response is reconciled by reading the active HPVC flows. File and flow rollback must be verified before automatic resume.
+During Smart Update, HPVC first reaches a safe replacement state, then the updater uses transaction and revision safeguards so interrupted or conflicting updates can recover without overwriting unrelated Node-RED changes.
 
-Private transaction metadata and original/intended files are kept in `/config/hpvc-data/update-recovery/`. If an update is interrupted or rollback cannot be verified, HPVC remains disabled and the backups remain available. Retrying Smart Update during the ordinary safe-shutdown wait does not start another process; the existing shutdown watcher remains authoritative. After safe shutdown has authorized detached launch, a later retry uses a separate recovery-only launcher. If the owner is still alive, the probe exits without shared-state changes. If the owner died and an interrupted transaction exists, the retry can reclaim the stale owner lock and recover it; if no interrupted transaction exists, recovery-only mode exits without beginning a fresh installation. After verified recovery and terminal publication acknowledgement, retry again to perform a fresh update. If HPVC files/flows were changed outside the transaction, recovery refuses to overwrite them. Inspect the notification and backups before making a manual repair.
-
-
+The authoritative updater lifecycle, rollback rules, Node-RED API v2 revision protection and recovery-only behavior are documented in [Installation → Smart Update recovery and rollback](01-installation.md#smart-update-recovery-and-rollback).
 
 ### Manual upgrade / flow removal
 
@@ -289,9 +287,11 @@ The support report exposes the response-window state, persistent-export age, fal
 
 ### Charge Priority state entity
 
-`binary_sensor.hpvc_charge_priority_active` is on only while HPVC has confirmed HBC Charge Priority is active. It can be used in dashboards and history graphs. During this state, new export-based PV reductions are blocked, although `binary_sensor.hpvc_pv_limited` may remain on temporarily while previously reduced limits are being raised.
+At runtime, `binary_sensor.hpvc_charge_priority_active` reflects whether HPVC is actively giving battery charging priority over normal export-target control.
 
-Presentation-state semantics distinguish charging state from control influence: **Off** means Charge Priority is not applicable or no eligible charging request is active; **Requested** is reserved for unresolved usable-battery telemetry; **Waiting** means HBC requests charging and usable headroom exists, but measured charging is not yet confirmed or no currently usable PV increase exists; **Active** requires confirmed charging operation. **Active may remain displayed after usable headroom reaches zero while charging continues.** In that case `HPVC export limiting suppressed` is `No`, normal PV limiting resumes, and the accuracy model may score eligible samples again.
+When active, HPVC may release additional PV only while eligible battery headroom exists. When the charge-priority condition ends, HPVC returns to normal export control and applies the usual inverter, cooldown and safety rules.
+
+For the entity definition, dashboard use and configuration details, see [Configuration → Charge Priority states and state entity](02-configuration.md#charge-priority-states-and-state-entity).
 
 ### Tiered battery telemetry freshness
 
@@ -468,6 +468,10 @@ HPVC no longer deep-copies Home Assistant's complete `homeassistant.homeAssistan
 This preserves one coherent state picture for a control cycle without allocating a second copy of every Home Assistant entity and its attributes. `msg.hpvc.haStates` is not used by v1.4.1 and is explicitly removed before output publication as a migration safety guard.
 
 For issue #2 verification, major runtime stages record bounded per-cycle elapsed times. v1.5.4 also attributes cooldown gates, battery-capacity learning, HBC charge priority, final-target calculation, transition logging, inverter service-call preparation, and Insights/diagnostics so `unaccountedMs` is more useful during profiling. HPVC stores only the latest stage timings plus aggregate total timing in `homePvControlPerformanceDiagnostics`. When the Node-RED Function sandbox exposes `process.memoryUsage()`, a heap sample is added at most once per minute; otherwise heap sampling is marked unavailable without affecting control. The same bounded diagnostics are rendered in both the HTML and TXT support reports. The runtime evaluation lock treats an evaluation as stale only after **30 seconds** (previously 12 seconds), so transiently slow Home Assistant or inverter operations are much less likely to overlap a later 10-second evaluation. Halted cycles also close the `serviceCalls` timing stage before returning, keeping the diagnostic totals complete.
+
+### Runtime ownership and storage
+
+Node-RED runs the HPVC control engine while Home Assistant supplies sensors, helpers, inverter control entities/actions and the dashboard. Current-day runtime history is stored privately in `hpvc-data/runtime-history.json` and is used by HPVC diagnostics and reporting.
 
 ## Node-RED flow architecture
 
