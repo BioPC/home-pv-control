@@ -16,6 +16,16 @@ v1.5.4 focuses first on control safety and multi-inverter reliability, then on r
 
 ## Inverter and External Release reliability
 
+- Writable Number-entity inverter limits are no longer rejected solely because their `last_reported` timestamp is old; unavailable/unknown/non-numeric states still fail safe.
+
+- Degraded multi-inverter control now tracks the grid target using only the currently controllable inverter-limit total when one or more configured inverters are unavailable.
+
+- Recovered inverters trigger a one-time proportional rebalance of available inverter limits while preserving the current total PV target, with step-aware confirmation tolerance.
+
+- Inverter-health Insights now distinguish partial availability from a true plant-wide pause and suppress normal `Unconfirmed → Healthy` write-confirmation noise.
+
+- Automatic safety shutdown recovery preserves the auto-resume latch and waits for a confirmed 5-second healthy window before re-enabling HPVC.
+
 - HPVC now tracks internal per-inverter health (`Healthy`, `Unconfirmed`, `Slow`, `Unavailable`, `Recovered`) and isolates a temporarily unavailable inverter instead of pausing the entire plant.
 - Recovered inverters automatically rejoin control and Action/service adapters resynchronize their target rather than trusting a stale command cache.
 - Configured readback failure remains unavailable instead of being replaced by cached command state.

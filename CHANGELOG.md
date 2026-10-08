@@ -17,6 +17,12 @@ v1.5.4 strengthens PV restore verification, per-inverter fault isolation, Extern
 
 ### Inverter, External Release and HBC reliability
 
+- Degraded inverter control now uses only the currently controllable inverter-limit total for grid-target correction when one or more configured inverters are unavailable.
+- Recovery rebalance confirmation now accounts for inverter command step size, avoiding a stuck pending rebalance on coarse-step adapters.
+- Inverter-health Insights distinguish partial availability from a plant-wide pause and no longer log normal `Unconfirmed → Healthy` confirmations as recoveries.
+
+- Recovered inverters now trigger a one-time proportional rebalance of the available inverter limits, preventing temporary degraded-mode limit skew from persisting after communication returns.
+
 - Added internal per-inverter health monitoring (`Healthy`, `Unconfirmed`, `Slow`, `Unavailable`, `Recovered`) without new Home Assistant helpers or dashboard cards.
 - Isolated a temporarily unavailable inverter from the plant-wide live-input gate so healthy inverters can continue normal control.
 - Added automatic inverter recovery reconciliation: when communication/readback returns, HPVC resumes control for that inverter and forces Action/service adapters to resynchronize their target on the next safe control cycle.

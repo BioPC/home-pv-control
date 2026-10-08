@@ -16,6 +16,12 @@ v1.5.4 focuses first on control safety and multi-inverter reliability, then on r
 
 ## Inverter and External Release reliability
 
+- When one or more configured inverters are unavailable, HPVC keeps controlling healthy units and calculates grid-target correction from the controllable inverter-limit total rather than total measured PV.
+- Recovered inverters are proportionally rebalanced automatically; confirmation tolerance now accounts for adapter command step size.
+- Inverter-health Insights now report partial recovery accurately and suppress routine write-confirmation recovery noise.
+
+- When an inverter returns after being unavailable, HPVC automatically rebalances the available inverter limits to the configured proportional split while preserving the calculated total PV target.
+
 - HPVC now tracks internal per-inverter health (`Healthy`, `Unconfirmed`, `Slow`, `Unavailable`, `Recovered`) and isolates a temporarily unavailable inverter instead of pausing the entire plant.
 - Recovered inverters automatically rejoin control and Action/service adapters resynchronize their target rather than trusting a stale command cache.
 - Configured readback failure remains unavailable instead of being replaced by cached command state.

@@ -257,6 +257,10 @@ For the detailed control lifecycle, persistence model and flow architecture, see
 
 ## Upgrading
 
+- **v1.5.4:** Partial inverter failures keep healthy units under control, recovered units are proportionally rebalanced with step-aware confirmation, and inverter-health Insights reflect degraded/recovered operation accurately.
+
+- **v1.5.4:** Recovered inverters are automatically rebalanced to the configured proportional limit split; the rebalance is also recorded in Insights.
+
 - **v1.5.4:** Smart Update and recovery verify the installed Node-RED Home Assistant websocket module directly through `GET /nodes`.
 
 From v1.5.3 onward, supported Home Assistant OS/Supervised Node-RED add-on installations can use **Maintenance → HPVC updates**. HPVC checks the latest GitHub release and shows **Update HPVC** only when a newer release is available.

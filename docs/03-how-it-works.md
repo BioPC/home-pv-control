@@ -79,6 +79,10 @@ target_total = 2500 - 600 - 0 = 1900 W
 
 ## Inverter target distribution
 
+- **Degraded inverter control:** if one or more configured inverters are unavailable, HPVC continues with healthy units and applies grid-error correction to the controllable inverter-limit total. When an inverter recovers, the current total target is redistributed proportionally across available units using configured maximum-power weights; confirmation allows for the inverter command step.
+
+- **Inverter recovery rebalance:** when an unavailable inverter returns, HPVC keeps the current total PV target but recalculates the available inverter limits from their configured maximum-power ratio. This prevents the temporary degraded-control split from becoming permanent. The rebalance is logged in Insights.
+
 The total target is distributed from the live inverter limits while preserving direction: an increase never lowers an inverter and a reduction never raises one. Allocation is proportional to configured inverter capacity and redistributes only when an inverter reaches its minimum or maximum.
 
 The deadband applies to the **combined plant change**, not to each inverter share. HPVC therefore keeps small proportional per-inverter shares once the total requested change is meaningful. Targets are whole watts, while decimal live limits are still reconciled accurately inside the allocator.

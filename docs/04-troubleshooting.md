@@ -71,6 +71,10 @@ This is expected. If a required configuration or live control input becomes inva
 
 ## One inverter is unavailable
 
+- If an inverter recovers with a different limit split, a yellow **Inverter rebalance** Insight is expected. HPVC preserves the current total target and redistributes it proportionally. Coarse-step adapters are accepted within the larger of the configured deadband or roughly half their command step.
+
+- After an inverter recovers, a yellow **Inverter rebalance** Insight is expected. HPVC redistributes the current total PV target proportionally across the available inverters; no manual reset is required.
+
 During normal daytime control, HPVC isolates an unavailable inverter and continues controlling healthy inverters. If all configured inverter paths are unavailable, it pauses. The unreachable inverter may still produce, so HPVC cannot guarantee the export target during the outage. Release acknowledgement and destructive maintenance still require all configured inverters to be verified.
 
 During active Night Restore, expected nighttime loss of PV-power and inverter-limit telemetry is tolerated while grid and price safety inputs remain monitored.

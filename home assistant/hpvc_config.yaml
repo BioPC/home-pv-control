@@ -2438,7 +2438,7 @@ automation:
 
 - id: hpvc_cancel_auto_resume_on_manual_disable
   alias: HPVC - Cancel automatic resume after manual switch-off
-  description: Clears the automatic-resume latch when a user manually switches HPVC off.
+  description: Clears the automatic-resume latch only for a direct user switch-off, not for an automatic safety shutdown that inherited a user context.
   mode: restart
   trigger:
   - platform: state
@@ -2446,7 +2446,9 @@ automation:
     to: 'off'
   condition:
   - condition: template
-    value_template: "{{ trigger.to_state.context.user_id is not none }}"
+    value_template: >-
+      {{ trigger.to_state.context.user_id is not none
+         and trigger.to_state.context.parent_id is none }}
   action:
   - service: input_boolean.turn_off
     target:
