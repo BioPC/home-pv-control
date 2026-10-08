@@ -32,6 +32,7 @@ v1.5.4 strengthens PV restore verification, per-inverter fault isolation, Extern
 
 ### Smart Update and recovery
 
+- Smart Update and the recovery probe now verify the installed `node-red-contrib-home-assistant-websocket` version through Node-RED `GET /nodes` instead of inferring it from flow JSON.
 - Smart Update now uses Node-RED API v2 revision checks, verified transactional recovery/rollback, response reconciliation, and preservation of unrelated concurrent Node-RED changes.
 - Release tags are resolved to immutable Git commits before managed files are downloaded, removing the tag-movement/TOCTOU window while retaining the existing GitHub trust model.
 - Package and dashboard YAML now require the complete `yaml` 2.x parser, duplicate-key rejection, real structure/version validation, post-write revalidation, and Home Assistant configuration validation before Node-RED deployment.

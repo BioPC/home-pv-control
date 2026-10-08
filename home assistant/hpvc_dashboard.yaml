@@ -3682,9 +3682,7 @@ views:
             grid_options:
               columns: 9
               rows: auto
-          - type: grid
-            columns: 1
-            square: false
+          - type: vertical-stack
             cards:
               - type: markdown
                 text_only: true
@@ -3842,9 +3840,7 @@ views:
             grid_options:
               columns: 9
               rows: auto
-          - type: grid
-            columns: 1
-            square: false
+          - type: vertical-stack
             cards:
               - type: markdown
                 text_only: true
@@ -3903,9 +3899,7 @@ views:
             grid_options:
               columns: 9
               rows: auto
-          - type: grid
-            columns: 1
-            square: false
+          - type: vertical-stack
             cards:
               - type: markdown
                 text_only: true

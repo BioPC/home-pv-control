@@ -325,7 +325,7 @@ The updater validates the downloaded package, dashboard and flow before replacem
 
 ### Smart Update requires a newer Home Assistant Node-RED integration
 
-The downloaded HPVC flow can declare a newer `node-red-contrib-home-assistant-websocket` version than the current Node-RED global configuration. Smart Update checks this before replacing any HPVC file or flow. Update the Home Assistant Node-RED integration manually, deploy/restart Node-RED if required, then run **Check for updates** and retry. HPVC deliberately does not rewrite shared palette dependencies automatically.
+The downloaded HPVC flow can declare a newer `node-red-contrib-home-assistant-websocket` version than the live installed Node-RED module list (`GET /nodes`). Smart Update checks this before replacing any HPVC file or flow. Update the Home Assistant Node-RED integration manually, deploy/restart Node-RED if required, then run **Check for updates** and retry. HPVC deliberately does not rewrite shared palette dependencies automatically.
 
 
 ### Custom/pasted dashboard was not updated

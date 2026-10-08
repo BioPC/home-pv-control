@@ -257,6 +257,8 @@ For the detailed control lifecycle, persistence model and flow architecture, see
 
 ## Upgrading
 
+- **v1.5.4:** Smart Update and recovery verify the installed Node-RED Home Assistant websocket module directly through `GET /nodes`.
+
 From v1.5.3 onward, supported Home Assistant OS/Supervised Node-RED add-on installations can use **Maintenance → HPVC updates**. HPVC checks the latest GitHub release and shows **Update HPVC** only when a newer release is available.
 
 ### Safe update lifecycle

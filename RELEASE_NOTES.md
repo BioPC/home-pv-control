@@ -27,6 +27,7 @@ v1.5.4 focuses first on control safety and multi-inverter reliability, then on r
 
 ## Smart Update and recovery
 
+- Smart Update and recovery now verify the live installed Node-RED Home Assistant websocket dependency via `GET /nodes`, avoiding false compatibility failures from stale or missing flow metadata.
 - Smart Update uses Node-RED API v2 revision protection, transactional backups/recovery, managed-flow fingerprints, and preservation of unrelated Node-RED changes.
 - Release tags are pinned to immutable Git commits before download.
 - Package/dashboard YAML requires the complete `yaml` 2.x parser with duplicate-key rejection, actual structure/version checks, post-write revalidation, and Home Assistant configuration validation before flow deployment.
