@@ -18,7 +18,7 @@ views:
               <div align="center">
 
 
-              ## Home PV Control (v1.5.4)
+              ## Home PV Control (v1.5.5)
 
               #### Standalone PV optimization for dynamic energy contracts.
               Optional HBC integration.
@@ -302,41 +302,43 @@ views:
                   {% if live %}✅{% else %}❌{% endif %} **{{ label }}**{% if configured %} — `{{ normalized }}`{% endif %}
                 {% endfor %}
 
-                {% set count = states('input_number.hpvc_inverter_count') |
-                int(0) %}
+                {% set count = states('input_number.hpvc_inverter_count') | int(0) %}
 
-                {% set inv = namespace(number_entities=[]) %}
+                {% set inv = namespace(number_entities=[], rows=[]) %}
 
                 {% for i in range(1, count + 1) %}
                   {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') | trim %}
                   {% set unit = states('input_select.hpvc_pv' ~ i ~ '_limit_unit') | trim %}
                   {% set full = states('input_number.hpvc_pv' ~ i ~ '_full_limit') | float(0) %}
                   {% set low = states('input_number.hpvc_pv' ~ i ~ '_low_limit') | float(-1) %}
-                  {% set base_valid = method in ['Number entity', 'Action/service'] and unit in ['Watts', 'Percent'] and full >
-                0 and low >= 0 and low < full %}
+                  {% set base_valid = method in ['Number entity', 'Action/service'] and unit in ['Watts', 'Percent'] and full > 0 and low >= 0 and low < full %}
+
                   {% if method == 'Number entity' %}
                     {% set ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim | lower %}
-                    {% set configured = base_valid and ent not in bad and (ent | regex_match('^number[.][a-z0-9_]+$')) and ent not
-                in inv.number_entities %}
+                    {% set configured = base_valid and ent not in bad and (ent | regex_match('^number[.][a-z0-9_]+$')) and ent not in inv.number_entities %}
                     {% set live = configured and states(ent) not in bad and is_number(states(ent)) %}
                     {% if configured %}{% set inv.number_entities = inv.number_entities + [ent] %}{% endif %}
-                    {% if live %}✅{% else %}❌{% endif %} **PV{{ i }} Number entity**{% if ent not in bad %} — `{{ ent }}`{% endif
-                %}
+                    {% set row = ('✅' if live else '❌') ~ ' <b>PV' ~ i ~ ' Number entity</b>' %}
+                    {% if ent not in bad %}{% set row = row ~ ' — <code>' ~ ent ~ '</code>' %}{% endif %}
+                    {% set inv.rows = inv.rows + [row] %}
+
                   {% elif method == 'Action/service' %}
                     {% set action = states('input_text.hpvc_pv' ~ i ~ '_action') | trim | lower %}
                     {% set value_field = states('input_text.hpvc_pv' ~ i ~ '_value_field') | trim %}
                     {% set readback = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
-                    {% set configured = base_valid and (action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) and value_field != ''
-                and (readback in bad or (readback |
-                regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))) %}
-                    {% set live = configured and (readback in bad or (states(readback) not in bad and is_number(states(readback))))
-                %}
-                    {% if live %}✅{% else %}❌{% endif %} **PV{{ i }} Action/service**{% if action %} — `{{ action }}`{% endif %}{%
-                if readback not in bad %} · readback `{{ readback }}`{% endif %}
+                    {% set configured = base_valid and (action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) and value_field != '' and (readback in bad or (readback | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))) %}
+                    {% set live = configured and (readback in bad or (states(readback) not in bad and is_number(states(readback)))) %}
+                    {% set row = ('✅' if live else '❌') ~ ' <b>PV' ~ i ~ ' Action/service</b>' %}
+                    {% if action %}{% set row = row ~ ' — <code>' ~ action ~ '</code>' %}{% endif %}
+                    {% if readback not in bad %}{% set row = row ~ ' · readback <code>' ~ readback ~ '</code>' %}{% endif %}
+                    {% set inv.rows = inv.rows + [row] %}
+
                   {% else %}
-                    ❌ **PV{{ i }} control method**
+                    {% set inv.rows = inv.rows + ['❌ <b>PV' ~ i ~ ' control method</b>'] %}
                   {% endif %}
                 {% endfor %}
+
+                {{ inv.rows | join('<br>') }}
 
                 {% set export_start =
                 states('input_number.hpvc_export_start_threshold') |
@@ -367,7 +369,7 @@ views:
         cards:
           - type: markdown
             content: |
-              ### 🎛️ PV Master Control
+              ### 🎛️ Master Control
             grid_options:
               columns: 12
           - type: markdown
@@ -1769,7 +1771,7 @@ views:
             content: >-
               <ha-alert alert-type="info">
                 For complete current-day history, press <b>Generate report</b>
-                in <b>PV Master Control</b>.
+                in <b>Master Control</b>.
               </ha-alert>
 
               <br>
@@ -3654,6 +3656,33 @@ views:
             grid_options:
               columns: 36
               rows: auto
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.hpvc_maintenance_inverter_warning
+                state: 'on'
+            card:
+              type: markdown
+              text_only: true
+              content: >-
+                <ha-alert title="Inverter unavailable" alert-type="warning">
+
+                {% set affected =
+                state_attr('binary_sensor.hpvc_maintenance_inverter_warning',
+                'affected_inverters') %}
+
+                {% if affected %}<b>{{ affected }}</b> is currently unavailable
+                or invalid.<br>{% else %}One or more configured PV inverters
+                are currently unavailable or invalid.<br>{% endif %}
+                Smart Update, Remove HPVC flows, and Uninstall HPVC may wait up
+                to <b>180 seconds</b> and then cancel safely if all configured
+                inverters cannot be restored and verified at full output.<br>
+                Restore inverter availability before continuing if possible.
+
+                </ha-alert>
+            grid_options:
+              columns: 36
+              rows: auto
           - type: grid
             columns: 1
             square: false
@@ -3682,7 +3711,9 @@ views:
             grid_options:
               columns: 9
               rows: auto
-          - type: vertical-stack
+          - type: grid
+            columns: 3
+            square: false
             cards:
               - type: markdown
                 text_only: true
@@ -3712,147 +3743,50 @@ views:
                   manually.</b>{% endif %}
 
                   </ha-alert>
-              - type: vertical-stack
-                cards:
-                  - type: tile
-                    entity: input_button.hpvc_check_update
-                    name: Check for updates
-                    icon: mdi:update
-                    hide_state: true
-                    tap_action:
-                      action: perform-action
-                      perform_action: input_button.press
-                      target:
-                        entity_id: input_button.hpvc_check_update
-                    icon_tap_action:
-                      action: perform-action
-                      perform_action: input_button.press
-                      target:
-                        entity_id: input_button.hpvc_check_update
-                    hold_action:
-                      action: none
-                    double_tap_action:
-                      action: none
-                    grid_options:
-                      columns: 12
-                      rows: 1
-                  - type: conditional
-                    conditions:
-                      - entity: input_boolean.hpvc_update_available
-                        state: 'on'
-                    card:
-                      type: tile
-                      entity: input_boolean.hpvc_update_available
-                      name: View release notes
-                      icon: mdi:file-document-outline
-                      color: blue
-                      hide_state: true
-                      tap_action:
-                        action: url
-                        url_path: >-
-                          https://github.com/BioPC/home-pv-control/releases/latest
-                      icon_tap_action:
-                        action: url
-                        url_path: >-
-                          https://github.com/BioPC/home-pv-control/releases/latest
-                      hold_action:
-                        action: none
-                      double_tap_action:
-                        action: none
-                      grid_options:
-                        columns: 12
-                        rows: 1
-                  - type: conditional
-                    conditions:
-                      - entity: input_boolean.hpvc_update_available
-                        state: 'on'
-                      - entity: input_boolean.hpvc_update_in_progress
-                        state: 'off'
-                    card:
-                      type: tile
-                      entity: input_button.hpvc_update
-                      name: Update HPVC
-                      icon: mdi:download
-                      color: green
-                      hide_state: true
-                      tap_action:
-                        action: perform-action
-                        perform_action: input_button.press
-                        target:
-                          entity_id: input_button.hpvc_update
-                        confirmation:
-                          text: >-
-                            Update HPVC to the latest GitHub release?
-
-                            HPVC will stop safely, restore PV limits, replace
-                            its managed files and Node-RED flows, and keep your
-                            HPVC entities, settings and saved data.
-                      icon_tap_action:
-                        action: perform-action
-                        perform_action: input_button.press
-                        target:
-                          entity_id: input_button.hpvc_update
-                        confirmation:
-                          text: >-
-                            Update HPVC to the latest GitHub release?
-
-                            HPVC will stop safely, restore PV limits, replace
-                            its managed files and Node-RED flows, and keep your
-                            HPVC entities, settings and saved data.
-                      hold_action:
-                        action: none
-                      double_tap_action:
-                        action: none
-                      grid_options:
-                        columns: 12
-                        rows: 1
-                  - type: conditional
-                    conditions:
-                      - entity: input_boolean.hpvc_update_reload_required
-                        state: 'on'
-                    card:
-                      type: tile
-                      entity: input_button.hpvc_quick_reload
-                      name: Quick Reload Home Assistant
-                      icon: mdi:reload
-                      color: blue
-                      hide_state: true
-                      tap_action:
-                        action: perform-action
-                        perform_action: input_button.press
-                        target:
-                          entity_id: input_button.hpvc_quick_reload
-                      icon_tap_action:
-                        action: perform-action
-                        perform_action: input_button.press
-                        target:
-                          entity_id: input_button.hpvc_quick_reload
-                      hold_action:
-                        action: none
-                      double_tap_action:
-                        action: none
-                      grid_options:
-                        columns: 12
-                        rows: 1
-                grid_options:
-                  columns: 9
-                  rows: auto
-            grid_options:
-              columns: 9
-              rows: auto
-          - type: vertical-stack
-            cards:
               - type: markdown
                 text_only: true
                 content: >-
                   <ha-alert style="height:104px;box-sizing:border-box;"
                   title="Manual upgrade" alert-type="info">
 
-                  Remove only the HPVC Node-RED flows. Use this to make a manual
-                  HPVC upgrade easier: install the new flow and config file,
-                  update the dashboard, then turn HPVC back on.
+                  Remove only the HPVC Node-RED flows to make a manual upgrade easier.
+                  Then install the new flow and config, update the dashboard,
+                  reload Home Assistant, and re-enable HPVC.
 
                   </ha-alert>
+              - type: markdown
+                text_only: true
+                content: >-
+                  <ha-alert style="height:104px;box-sizing:border-box;"
+                  title="Uninstall HPVC" alert-type="warning">
+
+                  Disable HPVC, restore PV limits and remove HPVC registered
+                  entities, files and Node-RED flows.<br>
+
+                  <b>Home Assistant restart required.</b><br><br>
+
+                  </ha-alert>
+              - type: tile
+                entity: input_button.hpvc_check_update
+                name: Check for updates
+                icon: mdi:update
+                hide_state: true
+                tap_action:
+                  action: perform-action
+                  perform_action: input_button.press
+                  target:
+                    entity_id: input_button.hpvc_check_update
+                icon_tap_action:
+                  action: perform-action
+                  perform_action: input_button.press
+                  target:
+                    entity_id: input_button.hpvc_check_update
+                hold_action:
+                  action: none
+                double_tap_action:
+                  action: none
+                grid_options:
+                  rows: 1
               - type: tile
                 entity: input_button.hpvc_remove_flows
                 name: Remove HPVC flows
@@ -3894,25 +3828,7 @@ views:
                 double_tap_action:
                   action: none
                 grid_options:
-                  columns: 9
                   rows: 1
-            grid_options:
-              columns: 9
-              rows: auto
-          - type: vertical-stack
-            cards:
-              - type: markdown
-                text_only: true
-                content: >-
-                  <ha-alert style="height:104px;box-sizing:border-box;"
-                  title="Uninstall HPVC" alert-type="warning">
-
-                  Disable HPVC, restore PV limits and remove HPVC registered
-                  entities, files and Node-RED flows.<br>
-
-                  <b>Home Assistant restart required.</b><br><br>
-
-                  </ha-alert>
               - type: tile
                 entity: input_button.hpvc_uninstall
                 name: Uninstall HPVC
@@ -3956,10 +3872,106 @@ views:
                 double_tap_action:
                   action: none
                 grid_options:
-                  columns: 9
                   rows: 1
+              - type: vertical-stack
+                cards:
+                  - type: conditional
+                    conditions:
+                      - entity: input_boolean.hpvc_update_available
+                        state: 'on'
+                    card:
+                      type: tile
+                      entity: input_boolean.hpvc_update_available
+                      name: View release notes
+                      icon: mdi:file-document-outline
+                      color: blue
+                      hide_state: true
+                      tap_action:
+                        action: url
+                        url_path: >-
+                          https://github.com/BioPC/home-pv-control/releases/latest
+                      icon_tap_action:
+                        action: url
+                        url_path: >-
+                          https://github.com/BioPC/home-pv-control/releases/latest
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                      grid_options:
+                        rows: 1
+                  - type: conditional
+                    conditions:
+                      - entity: input_boolean.hpvc_update_available
+                        state: 'on'
+                      - entity: input_boolean.hpvc_update_in_progress
+                        state: 'off'
+                    card:
+                      type: tile
+                      entity: input_button.hpvc_update
+                      name: Update HPVC
+                      icon: mdi:download
+                      color: green
+                      hide_state: true
+                      tap_action:
+                        action: perform-action
+                        perform_action: input_button.press
+                        target:
+                          entity_id: input_button.hpvc_update
+                        confirmation:
+                          text: >-
+                            Update HPVC to the latest GitHub release?
+
+                            HPVC will stop safely, restore PV limits, replace
+                            its managed files and Node-RED flows, and keep your
+                            HPVC entities, settings and saved data.
+                      icon_tap_action:
+                        action: perform-action
+                        perform_action: input_button.press
+                        target:
+                          entity_id: input_button.hpvc_update
+                        confirmation:
+                          text: >-
+                            Update HPVC to the latest GitHub release?
+
+                            HPVC will stop safely, restore PV limits, replace
+                            its managed files and Node-RED flows, and keep your
+                            HPVC entities, settings and saved data.
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                      grid_options:
+                        rows: 1
+                  - type: conditional
+                    conditions:
+                      - entity: input_boolean.hpvc_update_reload_required
+                        state: 'on'
+                    card:
+                      type: tile
+                      entity: input_button.hpvc_quick_reload
+                      name: Quick Reload Home Assistant
+                      icon: mdi:reload
+                      color: blue
+                      hide_state: true
+                      tap_action:
+                        action: perform-action
+                        perform_action: input_button.press
+                        target:
+                          entity_id: input_button.hpvc_quick_reload
+                      icon_tap_action:
+                        action: perform-action
+                        perform_action: input_button.press
+                        target:
+                          entity_id: input_button.hpvc_quick_reload
+                      hold_action:
+                        action: none
+                      double_tap_action:
+                        action: none
+                      grid_options:
+                        rows: 1
             grid_options:
-              columns: 9
+              columns: 27
               rows: auto
         grid_options:
           columns: 12
@@ -3972,6 +3984,30 @@ views:
           - type: markdown
             content: |
               ### 🛠️ Maintenance
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.hpvc_maintenance_inverter_warning
+                state: 'on'
+            card:
+              type: markdown
+              text_only: true
+              content: >-
+                <ha-alert title="Inverter unavailable" alert-type="warning">
+
+                {% set affected =
+                state_attr('binary_sensor.hpvc_maintenance_inverter_warning',
+                'affected_inverters') %}
+
+                {% if affected %}<b>{{ affected }}</b> is currently unavailable
+                or invalid.<br>{% else %}One or more configured PV inverters
+                are currently unavailable or invalid.<br>{% endif %}
+                Smart Update, Remove HPVC flows, and Uninstall HPVC may wait up
+                to <b>180 seconds</b> and then cancel safely if all configured
+                inverters cannot be restored and verified at full output.<br>
+                Restore inverter availability before continuing if possible.
+
+                </ha-alert>
           - type: markdown
             text_only: true
             content: >-
@@ -4150,9 +4186,9 @@ views:
             content: >-
               <ha-alert title="Manual upgrade" alert-type="info">
 
-              Remove only the HPVC Node-RED flows. Use this to make a manual
-              HPVC upgrade easier: install the new flow and config file, update
-              the dashboard, then turn HPVC back on.
+              Remove only the HPVC Node-RED flows to make a manual upgrade easier.
+              Then install the new flow and config, update the dashboard,
+              reload Home Assistant, and re-enable HPVC. 
 
               </ha-alert>
           - type: tile

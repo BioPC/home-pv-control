@@ -71,9 +71,7 @@ This is expected. If a required configuration or live control input becomes inva
 
 ## One inverter is unavailable
 
-- If an inverter recovers with a different limit split, a yellow **Inverter rebalance** Insight is expected. HPVC preserves the current total target and redistributes it proportionally. Coarse-step adapters are accepted within the larger of the configured deadband or roughly half their command step.
-
-- After an inverter recovers, a yellow **Inverter rebalance** Insight is expected. HPVC redistributes the current total PV target proportionally across the available inverters; no manual reset is required.
+- After an inverter recovers, a yellow **Inverter rebalance** Insight is expected when HPVC redistributes the current total PV target proportionally across the available inverters. No manual reset is required. Coarse-step adapters are accepted within the larger of the configured deadband or roughly half their command step.
 
 During normal daytime control, HPVC isolates an unavailable inverter and continues controlling healthy inverters. If all configured inverter paths are unavailable, it pauses. The unreachable inverter may still produce, so HPVC cannot guarantee the export target during the outage. Release acknowledgement and destructive maintenance still require all configured inverters to be verified.
 
@@ -117,6 +115,8 @@ In v1.5.4, healthy inverters may continue restoring to full while a previous com
 ### One inverter becomes unavailable
 
 In v1.5.4, a single temporarily unavailable inverter no longer pauses normal control for the rest of the plant. HPVC marks that inverter **Unavailable**, excludes it from active allocation, and continues controlling the remaining healthy inverter(s). If all configured inverter control/readback paths are unavailable, PV control pauses safely.
+
+In v1.5.5, entity-path existence is checked even during Night Restore. A mistyped/non-existent Solar entity or a configuration where no inverter control/readback path exists now opens the configuration/input warning instead of being hidden by the Night Restore telemetry exemption. An existing inverter entity that is merely unavailable/sleeping at night remains tolerated.
 
 When communication returns, HPVC marks the inverter **Recovered** and automatically reconciles it with the current target on the next safe control cycle. Today’s Insights records the unavailable/recovery transition; no extra dashboard card or Home Assistant helper is required.
 
@@ -192,7 +192,7 @@ To have Smart Update manage the dashboard automatically, switch to the file-back
 
 ### Mobile report navigation buttons appear only after refresh
 
-Use the current v1.5.4 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
+Use the current v1.5.5 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
 
 ## Accuracy diagnostics
 
@@ -230,7 +230,7 @@ The report is an on-demand snapshot. Press **Generate report** again and wait fo
 
 ### Generate or View report state appears stuck
 
-Reload the dashboard and check Node-RED for a report-generation error. A successful generation publishes `/local/hpvc/support-report.html` and enables **View report**. Opening the report from the local Home Assistant network clears the Ready state through the bundled local-only webhook; remote viewing intentionally cannot trigger that reset. The file itself remains until a newer report replaces it.
+Reload the dashboard and check Node-RED for a report-generation error. A successful generation publishes `/local/hpvc/support-report.html` and enables **View report**. Opening the report from the local Home Assistant network clears the Ready state immediately through the bundled local-only webhook. Remote viewing intentionally cannot call that webhook, so HPVC automatically clears the Ready state after **60 seconds** as a fallback. The report file itself remains until a newer report replaces it.
 
 > Security note: `/local/` files are served without Home Assistant authentication. Keep the HPVC report URL limited to trusted network/exposure paths.
 
@@ -276,7 +276,7 @@ For deeper telemetry, cutoff, persistence, attribution, and report semantics, se
 
 ## Node-RED latency or heap growth
 
-v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test the current v1.5.4 build unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
+v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test the current v1.5.5 build unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
 
 The runtime stores bounded diagnostics in the Node-RED global context key `homePvControlPerformanceDiagnostics`. It contains the latest cycle total, maximum and rolling average evaluation time, expanded per-stage timings for cooldown gates, battery-capacity learning, HBC charge priority, final-target calculation, transition logging, inverter service-call preparation and Insights/diagnostics, and—when the Function sandbox permits it—a memory sample no more than once per minute. No per-cycle timing or heap history is retained by this diagnostic.
 
@@ -344,6 +344,14 @@ HPVC resumes automatically only when it was enabled before the update. If it was
 
 The Maintenance button uses `homeassistant.reload_all`, which reloads YAML domains that support reload and performs Home Assistant's basic configuration check first. If a future HPVC release explicitly requires a full restart for a non-reloadable Home Assistant change, follow that release's notes.
 
+### Quick Reload says Home Assistant restart required
+
+Smart Update detected one or more HPVC-owned entities that are newly defined by the staged `hpvc_config.yaml`. Quick Reload waits up to 20 seconds for Home Assistant to expose them in the current states API. Readiness is based on entity existence only; an entity may legitimately be `unknown` or `unavailable` because of runtime inputs, and that does not mean the package failed to load. If a newly introduced package entity is still missing, HPVC deliberately does not restore its previous enabled state.
+
+Restart Home Assistant. HPVC keeps the update activation pending and rechecks automatically after Home Assistant returns. The recheck is driven by durable transaction/readiness metadata and verifies the release tag, commit and transaction ID; it does not depend on human-readable status text. A transaction-bound activation lease prevents the automatic probe from overlapping a live Quick Reload attempt. If a process stops while the durable phase is `checking`, that phase becomes retryable only after its lease is stale. When all newly introduced package entities exist, HPVC restores the saved enabled/disabled helper while the update-activation gate is still on, verifies preparation, records durable activation completion, and reconciles final reload/status cleanup idempotently. Stale or duplicate results are ignored. If the restart does not resolve readiness, inspect `/config/packages/hpvc_config.yaml` and Home Assistant configuration errors; do not repeatedly press Quick Reload.
+
+This mechanism is automatic for future HPVC-owned helpers and template sensor/binary-sensor entities defined by `hpvc_config.yaml`; adding them does not require maintaining a separate updater dependency list or scanning arbitrary Node-RED references. Verified rollback also removes pending readiness metadata so an aborted update cannot leave stale activation requirements behind.
+
 ## Manual upgrade / Node-RED flow removal
 
 ### Manual upgrade: remove and reinstall the HPVC Node-RED flows
@@ -376,9 +384,9 @@ This can be normal while an inverter command or verification is still active.
 
 ### WebSocket error: request requires a `type`
 
-Current v1.5.4 rebuilds a clean `config/entity_registry/list` WebSocket payload immediately before the entity-registry API node and uses the live-proven per-entity removal payload for `config/entity_registry/remove`.
+Current v1.5.5 rebuilds a clean `config/entity_registry/list` WebSocket payload immediately before the entity-registry API node and uses the live-proven per-entity removal payload for `config/entity_registry/remove`.
 
-If this error appears with a modified/older flow, re-import the complete current v1.5.4 flow rather than rewriting the registry API node manually.
+If this error appears with a modified/older flow, re-import the complete current v1.5.5 flow rather than rewriting the registry API node manually.
 
 ### Node-RED Global Context Store is disabled
 
@@ -399,14 +407,14 @@ A Node-RED cleanup failure does not block deletion of HPVC-owned files/data. If 
 
 ### Reinstall restores old settings
 
-Current v1.5.4 full uninstall resets the complete HPVC helper set to fresh-install defaults and waits 15 seconds for RestoreEntity persistence before entity-registry removal.
+Current v1.5.5 full uninstall resets the complete HPVC helper set to fresh-install defaults and waits 15 seconds for RestoreEntity persistence before entity-registry removal.
 
 If an older or interrupted uninstall left stale values:
 
-1. install/deploy the current complete v1.5.4 package;
+1. install/deploy the current complete v1.5.5 package;
 2. run **Uninstall HPVC** again and let it complete;
 3. restart Home Assistant after the final Inputs tab disappears;
-4. reinstall v1.5.4.
+4. reinstall v1.5.5.
 
 A normal update intentionally preserves helper values; only the full uninstall performs the clean-reset sequence.
 

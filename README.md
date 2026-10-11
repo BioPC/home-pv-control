@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="releases/v1.5.4/release.md"><img src="https://img.shields.io/badge/release-v1.5.4-blue" alt="Release v1.5.4"></a>
+  <a href="releases/v1.5.5/release.md"><img src="https://img.shields.io/badge/release-v1.5.5-blue" alt="Release v1.5.5"></a>
   <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant ready"></a>
   <a href="https://nodered.org/"><img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED flow"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="GPL-3.0-or-later"></a>
@@ -100,7 +100,7 @@ See [Inverter compatibility](docs/05-inverter-compatibility.md) and [Configurati
 ## Requirements
 
 - Home Assistant Core **2025.12 or newer** with package support. Earlier versions may work but are outside the documented support baseline.
-- A currently supported Node-RED runtime. Node-RED 4.x requires Node.js 18.2.0 or newer for the declared Home Assistant websocket 0.80.3 baseline; Node-RED 5.x requires Node.js 22 or newer. Home Assistant add-on users should use the runtime bundled by the supported Node-RED add-on rather than pinning a separate JavaScript-runtime minimum.
+- A currently supported Node-RED runtime. Node-RED 4.x requires Node.js 18.2.0 or newer for the declared Home Assistant websocket 0.80.3 baseline; Node-RED 5.x requires Node.js 22.9.0 or newer. Home Assistant add-on users should use the runtime bundled by the supported Node-RED add-on rather than pinning a separate JavaScript-runtime minimum.
 - One or more PV inverters with either a writable `number.*` active-power limit or a stable Home Assistant action/service that can apply an active-power limit.
 - A valid grid-power sensor, market/export-price sensor, all-in-price sensor and PV-power sensor.
 - ApexCharts Card for the supplied dashboard graphs.
@@ -108,34 +108,16 @@ See [Inverter compatibility](docs/05-inverter-compatibility.md) and [Configurati
 
 ## Quick install
 
-1. **Enable Home Assistant packages and install the HPVC package file.**
+1. Copy `home assistant/hpvc_config.yaml` to `/config/packages/hpvc_config.yaml`.
 
-   Open `configuration.yaml` and make sure package loading is enabled:
+   Make sure packages are enabled in `configuration.yaml`:
 
    ```yaml
    homeassistant:
      packages: !include_dir_named packages
    ```
 
-   If your `configuration.yaml` already contains a `homeassistant:` section, add the `packages:` line under that existing section instead of creating a second `homeassistant:` key.
-
-   Copy [`home assistant/hpvc_config.yaml`](home%20assistant/hpvc_config.yaml) to:
-
-   ```text
-   /config/packages/hpvc_config.yaml
-   ```
-
-2. **Install and register the HPVC dashboard.**
-
-   Recommended — managed dashboard with automatic Smart Update support:
-
-   Copy [`home assistant/hpvc_dashboard.yaml`](home%20assistant/hpvc_dashboard.yaml) to the Home Assistant configuration root, in the same folder as `configuration.yaml`:
-
-   ```text
-   /config/hpvc_dashboard.yaml
-   ```
-
-   Register it in `configuration.yaml`:
+2. Copy `home assistant/hpvc_dashboard.yaml` to `/config/hpvc_dashboard.yaml`, then add this to `configuration.yaml`:
 
    ```yaml
    lovelace:
@@ -144,34 +126,20 @@ See [Inverter compatibility](docs/05-inverter-compatibility.md) and [Configurati
        hpvc-dashboard:
          mode: yaml
          title: Home PV Control
-         icon: mdi:solar-power
+         icon: mdi:solar-power-variant
          show_in_sidebar: true
          filename: hpvc_dashboard.yaml
    ```
 
-   If a `lovelace:` section already exists, merge the `hpvc-dashboard:` entry into the existing `dashboards:` section instead of adding a second `lovelace:` key.
+3. Check the Home Assistant configuration and restart Home Assistant.
 
-   Alternative — custom dashboard:
+4. Import `node-red/hpvc_flow.json` into Node-RED and deploy it.
 
-   Create a dashboard/view in Home Assistant and paste the supplied dashboard YAML manually. This works, but Smart Update will not modify that custom dashboard.
+5. Open **Home PV Control → Settings** and configure the required sensors and inverter control paths.
 
-3. **Check the Home Assistant configuration and restart Home Assistant once.**
+HPVC enables automatically when the required configuration and live inputs are valid.
 
-   Do this only after the package file and dashboard registration are both in place.
-
-4. **Import and deploy the Node-RED flow.**
-
-   Import [`node-red/hpvc_flow.json`](node-red/hpvc_flow.json) into Node-RED and deploy it.
-
-5. **Configure HPVC.**
-
-   Open the always-visible **Settings** tab and configure the grid-power, market/export-price, all-in-price, PV-power and per-inverter control paths.
-
-6. **Verify first startup.**
-
-   Wait for first-install validation to complete. HPVC enables automatically once all required live inputs and control settings are valid.
-
-See the full [installation guide](docs/01-installation.md) for dependencies and first-run verification.
+For dependencies, existing `homeassistant:` / `lovelace:` sections, custom dashboards and first-run verification, see the [full installation guide](docs/01-installation.md).
 
 ## How HPVC works
 
@@ -255,7 +223,7 @@ See [How HPVC works → Accuracy and factor attribution](docs/03-how-it-works.md
 
 ## Screenshots
 
-The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.5.4 YAML and Node-RED flow are authoritative.
+The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.5.5 YAML and Node-RED flow are authoritative.
 
 ### Settings
 
@@ -277,15 +245,19 @@ Reference Node-RED architecture screenshot.
 
 ## Upgrading
 
+### Smart Update
+
 From v1.5.3 onward, supported Home Assistant OS/Supervised Node-RED add-on installations can update from **Settings → Maintenance → HPVC updates**.
 
 Smart Update preserves HPVC configuration, helper values and saved data, validates the selected release, safely replaces managed HPVC assets and provides transaction, rollback and recovery protection. After a successful update, use **Quick Reload Home Assistant** when prompted.
 
-v1.5.4 also strengthens multi-inverter degraded operation and recovery: healthy inverters continue control when another is unavailable, recovered inverters are proportionally rebalanced, and recovery confirmation accounts for inverter command step size.
-
 For the authoritative update lifecycle, rollback/recovery behavior, trust model and manual upgrade procedure, see [Installation → Smart update from v1.5.3 onward](docs/01-installation.md#smart-update-from-v153-onward).
 
-See the [v1.5.4 release notes](releases/v1.5.4/release.md) for the full release summary.
+### v1.5.5 upgrade notes
+
+v1.5.5 separates configuration-path existence from live PV availability. Mistyped or non-existent Solar/PV control entities now surface as configuration/input errors even during Night Restore, while an existing but sleeping/unavailable PV path remains tolerated at night and one healthy inverter can still carry degraded daytime control.
+
+See the [v1.5.5 release notes](releases/v1.5.5/release.md) for the full release summary.
 
 ## Uninstalling
 
@@ -302,13 +274,13 @@ See [Installation → Full uninstall](docs/01-installation.md#full-uninstall) fo
 - [Inverter compatibility](docs/05-inverter-compatibility.md)
 - [Documentation index](docs/README.md)
 - [Changelog](CHANGELOG.md)
-- [v1.5.4 release notes](releases/v1.5.4/release.md)
+- [v1.5.5 release notes](releases/v1.5.5/release.md)
 
 For Home Battery Control itself, see the [HBC documentation](https://docs.homebatterycontrol.com/).
 
 ## Support
 
-The HTML support report is published at `/local/hpvc/support-report.html`. The dashboard keeps the **Generate report → Generating… → View report** workflow, and opening the report on the local Home Assistant network resets the tile to **Generate report** through the bundled local-only Home Assistant webhook. Remote viewing still opens the report, but the local-only reset webhook is intentionally rejected. Because `/local/` files are served without Home Assistant authentication, treat the report URL as locally accessible diagnostic output and avoid exposing it beyond networks you trust.
+The HTML support report is published at `/local/hpvc/support-report.html`. The dashboard keeps the **Generate report → Generating… → View report** workflow. Opening the report on the local Home Assistant network resets the tile to **Generate report** immediately through the bundled local-only Home Assistant webhook. Remote viewing (for example through Tailscale) intentionally cannot call that webhook, so HPVC now also clears the Ready state automatically after **60 seconds**. The generated report file remains available until a newer report replaces it. Because `/local/` files are served without Home Assistant authentication, treat the report URL as locally accessible diagnostic output and avoid exposing it beyond networks you trust.
 
 Before opening an issue:
 
@@ -352,7 +324,7 @@ docs/
 releases/
   v1.0.0/
   ...
-  v1.5.4/
+  v1.5.5/
 ```
 
 ## Support the project

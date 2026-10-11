@@ -39,6 +39,8 @@ HPVC separates **configuration validity** from **live input readiness**.
 - HPVC resumes automatically only when it was disabled by this safety path and all required inputs have been healthy for 5 continuous seconds.
 - During normal control, unavailable measurements are never replaced with invented `0 W` or full-limit values.
 
+- Configuration-path existence is checked separately from live PV availability. The configured Solar entity must exist, and at least one configured inverter control/readback path must exist, even during Night Restore. This catches mistyped/non-existent entity IDs without treating a valid sleeping inverter as a daytime-style telemetry failure at night.
+
 Night Restore is the deliberate exception: after a valid low-PV transition has started, expected nighttime loss of PV-power or inverter-limit telemetry can be tolerated while grid and price safety inputs remain monitored. During daytime control an unavailable inverter is excluded independently; healthy inverters remain controllable. If all inverters are unavailable, control pauses. An unavailable inverter may still produce, so export control cannot guarantee the requested plant behavior while that inverter is unreachable.
 
 ## Control boundaries and validation
@@ -185,6 +187,8 @@ Full uninstall reuses the normal HPVC safe-disable/verification machinery before
 
 This ordering preserves the control information needed for a safe restore and prevents a later reinstall from inheriting stale RestoreEntity values.
 
+Full-uninstall registry deletion is deliberately explicit rather than wildcard-based. The release validator derives the complete HPVC-owned package inventory (deterministic helper/script/template entity IDs plus template/automation unique IDs) from `hpvc_config.yaml` and requires exact parity with the uninstall allowlists. Template discovery walks all template entity domains generically, so a future HPVC template switch/button/number/select or other template platform is covered automatically when it has an HPVC `unique_id` and deterministic `default_entity_id`. The same validator rejects duplicate YAML mapping keys in the shipped package/dashboard. This makes future ownership omissions, stale delete permissions, and ambiguous duplicate YAML release-blocking without adding runtime scanning or broad deletion.
+
 ### Smart Updater safe replacement
 
 Smart Update reuses the same safe-disable/restore gate but deliberately stops before uninstall-only cleanup. Recovery-only mode also handles the narrow case where a terminal completion or rollback was recorded durably but required Home Assistant publication was lost: it verifies the recorded installed/prior state before republishing an unacknowledged terminal outcome, durably acknowledges successful publication, never replays acknowledged history, and refuses mismatches without starting a new install. HPVC entities, helper values, inverter/HBC settings, `hpvc-data`, history and reports remain in place.
@@ -193,7 +197,7 @@ Before flow replacement, the updater obtains the latest GitHub release, resolves
 
 Node-RED replacement is performed as one full-flow merge: the updater reads the current flow set, removes only tabs labelled as HPVC Inputs/Engine/Outputs/Reports plus their tab-owned nodes, appends the downloaded HPVC flow, preserves unrelated flows and shared configuration nodes, deploys the merged set, and verifies the new HPVC tab labels. The previous flow set and managed YAML files are retained in memory/temporary backup long enough for rollback if deployment fails.
 
-`hpvc_config.yaml` is replaced only at the managed `/config/packages/hpvc_config.yaml` path; a custom package path requires manual upgrade. `hpvc_dashboard.yaml` is replaced only if `/config/hpvc_dashboard.yaml` existed before update; custom/pasted dashboards are not touched. Successful replacement sets the Quick Reload requirement, and the dashboard button calls `homeassistant.reload_all` so reloadable YAML is activated without a full Home Assistant restart. A private maintenance helper remembers whether HPVC was enabled before shutdown and restores that enabled state only after Quick Reload completes.
+`hpvc_config.yaml` is replaced only at the managed `/config/packages/hpvc_config.yaml` path; a custom package path requires manual upgrade. `hpvc_dashboard.yaml` is replaced only if `/config/hpvc_dashboard.yaml` existed before update; custom/pasted dashboards are not touched. Successful replacement sets the Quick Reload requirement, and the dashboard button calls `homeassistant.reload_all` so reloadable YAML is activated without a full Home Assistant restart. Smart Update automatically compares the installed and staged `hpvc_config.yaml` package inventories and records every newly introduced HPVC-owned helper/template entity. Template entities use explicit `default_entity_id` values, so discovery never guesses an entity ID from `unique_id`. After Quick Reload, HPVC fetches the Home Assistant states API once per readiness poll (up to 20 seconds) and verifies existence only. Runtime states such as `unknown` or `unavailable` are handled by normal HPVC sensor-health logic and do not block package activation. The persisted update transaction carries the pre-update enabled/disabled intent, so HPVC restores that state only after the recorded transaction and readiness metadata match and all new package entities exist. Activation uses an exclusive transaction-bound lease. Manual Quick Reload and the periodic recovery probe therefore cannot overlap; a persisted `checking` phase is recoverable only after its lease is stale, while `awaiting_quick_reload` remains user-authorized only. Lease creation is race-hardened with an atomic lock-directory claim: an owner record that is not yet readable is considered busy until filesystem age proves staleness, stale claims are quarantined before reclamation, and each heartbeat verifies that the current attempt still owns the lease. The saved master-control state is restored while `hpvc_update_reload_required` still acts as a runtime control gate, then those prepared helper states are acknowledged before the transaction records durable activation completion. Final reload/status cleanup is a separate idempotent reconciliation step; stale or duplicate results are ignored and cannot undo a newer completed activation. Failure helper/status publication is performed while the failing attempt still owns the lease; the downstream result handler is side-effect free for delayed failures, preventing an older process result from re-arming a transaction that a newer attempt already finalized. The transient readiness file is removed only after finalization is acknowledged. If the new entities do not appear, HPVC keeps control gated and requires a full Home Assistant restart; the same transaction-bound check runs again after restart.
 
 
 ### Smart Update recovery and rollback
@@ -426,7 +430,7 @@ Matched events can be reused only while they remain recent, on the same action-b
 
 ## Report generation and diagnostics
 
-Reports are generated only when **Generate report** is pressed. One shared snapshot/model is rendered to HTML and TXT, written through a generation-scoped temporary file, and atomically published only if that generation still owns the report lock. A watchdog prevents late or stalled generations from replacing a newer report. Report-storage initialization is retried through a bounded recovery path after transient startup/filesystem failures; the periodic recovery check runs every 30 seconds and user report requests can trigger the same throttled retry path without creating a tight loop. If a later report file write or atomic publication shows that previously-ready storage has disappeared, HPVC invalidates the cached ready state and uses the same recovery path; a recent report request is retained briefly for replay after storage returns.
+Reports are generated only when **Generate report** is pressed. One shared snapshot/model is rendered to HTML and TXT, written through a generation-scoped temporary file, and atomically published only if that generation still owns the report lock. The dashboard Ready state is cleared immediately when a local report view reaches the local-only webhook, with a 60-second automatic fallback so trusted remote access paths such as Tailscale do not leave **View report** latched indefinitely. A watchdog prevents late or stalled generations from replacing a newer report. Report-storage initialization is retried through a bounded recovery path after transient startup/filesystem failures; the periodic recovery check runs every 30 seconds and user report requests can trigger the same throttled retry path without creating a tight loop. If a later report file write or atomic publication shows that previously-ready storage has disappeared, HPVC invalidates the cached ready state and uses the same recovery path; a recent report request is retained briefly for replay after storage returns.
 
 The HTML report includes executive status, live inputs, decision evaluation, accuracy, inverter diagnostics, HBC/battery diagnostics, settings, sensor health, Insights, and Power Control history. Mobile **Collapse** and **Top** controls are recalculated after page restore, scrolling, viewport/orientation changes, and tab visibility changes.
 
@@ -479,10 +483,10 @@ The supplied flow is split into four tabs:
 
 | Tab | Purpose |
 |---|---|
-| **HPVC Inputs v1.5.4** | Reads Home Assistant state, validates configuration and live inputs, and restores persisted runtime state. |
-| **HPVC Engine v1.5.4** | Evaluates prices, cooldown, Night Restore, battery eligibility, Charge Priority, and the total PV target. |
-| **HPVC Outputs v1.5.4** | Distributes inverter targets, performs writes, verifies results, and publishes status, Insights, and accuracy. |
-| **HPVC Reports v1.5.4** | Builds and publishes the on-demand HTML/TXT support report. |
+| **HPVC Inputs v1.5.5** | Reads Home Assistant state, validates configuration and live inputs, and restores persisted runtime state. |
+| **HPVC Engine v1.5.5** | Evaluates prices, cooldown, Night Restore, battery eligibility, Charge Priority, and the total PV target. |
+| **HPVC Outputs v1.5.5** | Distributes inverter targets, performs writes, verifies results, and publishes status, Insights, and accuracy. |
+| **HPVC Reports v1.5.5** | Builds and publishes the on-demand HTML/TXT support report. |
 
 Import the complete `hpvc_flow.json`; the tabs are designed to operate together.
 
@@ -491,4 +495,3 @@ Import the complete `hpvc_flow.json`; the tabs are designed to operate together.
 - [Troubleshoot unexpected behavior](04-troubleshooting.md)
 
 [← README](../README.md) · [Installation](01-installation.md) · [Configuration](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
-

@@ -55,7 +55,7 @@ HPVC always calculates plant and inverter targets internally in watts. With **Li
 
 The writable number entity is also used as the command-state readback for write verification. In **Number entity** mode, HPVC does not require a separate physical inverter-feedback sensor. If **Limit unit** is missing, unavailable, or not exactly `Watts` or `Percent`, configuration is treated as invalid and inverter writes are blocked rather than silently assuming Watts. For percentage entities, HPVC uses the Home Assistant `number` entity's `step` attribute when available, rounds commands to that supported percentage resolution, and verifies the effective Watt equivalent. If an integration does not expose a writable percentage `number` entity directly, use the v1.5.0 **Action/service** control method when the integration exposes a stable action/register-write path. A template/bridge number remains an alternative when preferred. A bridge that mirrors its requested value provides command-state confirmation only; it is not independent proof that the physical inverter accepted the underlying service/register write.
 
-Invalid inverter limits or a percentage entity reporting outside 0–100% block writes and produce a configuration error.
+A slot-local invalid inverter configuration is excluded from allocation and reported while another valid inverter can continue degraded control. If every configured slot is invalid, control stops with a configuration error. Shared/ambiguous faults such as duplicate physical Number targets remain plant-wide blocking. A percentage entity reporting outside 0–100% is treated as a slot-local invalid configuration.
 
 ### Inverter navigation
 
@@ -228,7 +228,7 @@ The package intentionally retains these nine schema-11 diagnostic sensors even t
 
 They are retained for backward compatibility with v1.4.3 installations and for user automations, history cards, or external dashboards. Removing them from the package would leave existing installations with orphaned entity-registry entries. They are therefore **public diagnostic outputs**, not runtime dependencies.
 
-`default_entity_id` is used only for `sensor.hpvc_diag_market_export_price` because that entity was renamed in v1.3.0 and the explicit default preserves the intended fresh-install entity ID. The remaining template sensors derive their default entity IDs from their names and `unique_id` values.
+Every HPVC template entity now declares an explicit `default_entity_id`. This keeps fresh-install entity IDs deterministic, lets Smart Update identify newly introduced package entities without guessing from `unique_id`, and lets release validation prove exact uninstall ownership even if an existing registry entity has been renamed by the user.
 
 ## Update and uninstall persistence
 

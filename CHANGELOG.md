@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.5.5 — 2026-10-11
+
+### Smart Update readiness
+
+- Activation completion is now durable, serialized, and retryable: restart recovery uses transaction metadata instead of status prose, an exclusive transaction-bound activation lease prevents overlapping Quick Reload/recovery attempts, abandoned `checking` attempts are recoverable after the lease becomes stale, readiness metadata survives until final helper reconciliation, and stale results cannot undo a newer completed activation.
+- Activation lease acquisition is race-hardened: a lock directory is claimed atomically, a just-created/unreadable owner record is treated as busy until filesystem age proves staleness, stale-lock reclamation is quarantined, heartbeat renewal verifies ownership, and delayed failure output is side-effect free so an older attempt cannot re-arm a transaction finalized by a newer attempt.
+- Pending update activation now acts as an explicit runtime control gate. The saved master enable state can be restored while the gate remains on, but normal PV/HBC control resumes only after preparation is acknowledged and final activation cleanup is reconciled.
+- Smart Update now derives newly introduced activation entities automatically from the installed/staged `hpvc_config.yaml` inventories. All newly introduced HPVC package entities are checked for existence only; runtime `unknown`/`unavailable` states do not block activation. HPVC template entities use explicit `default_entity_id` values so discovery never guesses from `unique_id`. Quick Reload polls Home Assistant with one states API request per cycle for up to 20 seconds, verifies readiness metadata against the completed update transaction, and restores the persisted pre-update enabled/disabled intent only after readiness succeeds. If readiness is not confirmed, HPVC remains disabled and requests a full Home Assistant restart; the same transaction-bound check runs again after restart. The normal and recovery launchers now embed the same updater implementation, and verified rollback removes stale readiness metadata. No new HA helper is required.
+- External Release heartbeat/lease writes are suppressed while update activation is pending or while their helper entities are unavailable, preventing the missing-entity error flood reported in issue #8.
+- Added GitHub Actions release validation (`.github/workflows/validate-release.yml`) with `scripts/validate_release.py` and behavioral `scripts/test_activation_recovery.py` coverage for release/version consistency, strict YAML/Node-RED structure, deterministic template entity IDs, updater/recovery parity, activation interruption/concurrency, uninstall ownership, degraded-inverter policy, desktop Maintenance alignment, Function/embedded Node.js syntax, and Exec shell syntax.
+- Hardened release validation so template ownership discovery is generic across every HPVC template domain and both shipped YAML files are parsed with duplicate-key rejection; future template platforms therefore cannot bypass uninstall parity merely by using a new domain.
+- Fixed the desktop Maintenance layout so **Check for updates**, **Remove HPVC flows**, and **Uninstall HPVC** share one explicit three-column action row with single-row tiles, preventing the manual/uninstall buttons from stretching to double height when the Updates column has additional actions. The release validator now enforces this structure.
+
+### Fixed
+
+- Full uninstall ownership now includes the maintenance inverter warning and both HPVC-owned automation unique IDs so registry cleanup does not leave those entries behind.
+- Added a 60-second automatic fallback for the support-report Ready state. Local report viewing still resets **View report** immediately through the existing `local_only: true` webhook, while trusted remote access paths such as Tailscale now return to **Generate report** without exposing the reset webhook remotely.
+- Added a conditional Maintenance warning when one or more configured PV inverters are unavailable or invalid. It explains that Smart Update, Remove HPVC flows, and Uninstall HPVC can wait up to 180 seconds and then cancel safely.
+- Fixed degraded multi-inverter validation: slot-local inverter configuration defects no longer globally safety-pause HPVC when at least one inverter remains valid; invalid slots are excluded from allocation while shared/ambiguous plant faults remain blocking.
+- Fixed automatic safety-resume status synchronization: `hpvc_enabled` and `hpvc_auto_resume_pending` are now read live every runtime cycle, preventing the dashboard from showing **Disabled** after HPVC has automatically re-enabled.
+- Separated configured PV path existence from live PV telemetry readiness.
+- A mistyped/non-existent Solar entity now fails readiness even during Night Restore.
+- A configuration with no existing inverter control/readback path now fails readiness even during Night Restore.
+- Night Restore still tolerates existing-but-unavailable/sleeping PV telemetry, and daytime degraded control still works when at least one inverter path remains usable.
+- `unavailable_entities` now exposes non-existent Solar/inverter paths during Night Restore for clearer dashboard diagnostics.
+
 ## v1.5.4 — 2026-10-05
 
 v1.5.4 strengthens PV restore verification, per-inverter fault isolation, External Release coordination, telemetry safety, and Smart Update recovery after real-world multi-inverter testing and extensive regression validation.
@@ -67,8 +93,9 @@ v1.5.4 strengthens PV restore verification, per-inverter fault isolation, Extern
 ### Maintenance, cleanup and validation
 
 - Full-uninstall registry cleanup now includes the HPVC source-freshness sensor and the External Release heartbeat/lease helpers while retaining exact ownership matching.
+- Release validation now derives the complete HPVC-owned entity/unique-ID inventory from `hpvc_config.yaml` and requires exact parity with the explicit full-uninstall allowlists, failing on both missing future ownership and stale/extra delete permissions. Runtime uninstall remains explicit and does not use wildcard deletion.
 - Release validation covered control safety, External Release, updater transactions/recovery, YAML/templates, PV allocation, safe-shutdown boundaries, lock ownership, and terminal publication.
-- Runtime documentation now follows the supported Node-RED/Node.js compatibility matrix; for the declared websocket baseline, Node-RED 4.x requires Node.js 18.2.0 or newer and Node-RED 5.x requires Node.js 22 or newer.
+- Runtime documentation now follows the supported Node-RED/Node.js compatibility matrix; for the declared websocket baseline, Node-RED 4.x requires Node.js 18.2.0 or newer and Node-RED 5.x requires Node.js 22.9.0 or newer.
 
 ### Upgrade notes
 

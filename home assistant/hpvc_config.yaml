@@ -1129,9 +1129,10 @@ template:
     default_entity_id: sensor.hpvc_installed_version
     unique_id: hpvc_installed_version
     icon: mdi:tag
-    state: "1.5.4"
+    state: "1.5.5"
   # Explicit default_entity_id is intentional for this renamed v1.3.0 sensor so
-  # fresh installs use the documented entity ID; other template sensors can derive theirs.
+  # fresh installs use the documented entity ID; all HPVC template entities use
+  # explicit default_entity_id values so Smart Update can verify activation deterministically.
   - name: HPVC Diag Market/Export Price
     default_entity_id: sensor.hpvc_diag_market_export_price
     unique_id: hpvc_diag_market_export_price
@@ -1144,6 +1145,7 @@ template:
       {% set ent = states('input_text.hpvc_market_price_sensor') %}
       {{ states(ent) | float }}
   - name: HPVC Diag All In Price
+    default_entity_id: sensor.hpvc_diag_all_in_price
     unique_id: hpvc_diag_all_in_price
     unit_of_measurement: €/kWh
     icon: mdi:cash-multiple
@@ -1154,6 +1156,7 @@ template:
       {% set ent = states('input_text.hpvc_all_in_price_sensor') %}
       {{ states(ent) | float }}
   - name: HPVC Diag Grid Power
+    default_entity_id: sensor.hpvc_diag_grid_power
     unique_id: hpvc_diag_grid_power
     unit_of_measurement: W
     device_class: power
@@ -1166,6 +1169,7 @@ template:
       {% set ent = states('input_text.hpvc_grid_power_sensor') %}
       {{ states(ent) | float | round(0) }}
   - name: HPVC Diag PV Power
+    default_entity_id: sensor.hpvc_diag_pv_power
     unique_id: hpvc_diag_pv_power
     unit_of_measurement: W
     device_class: power
@@ -1178,10 +1182,12 @@ template:
       {% set ent = states('input_text.hpvc_pv_power_sensor') %}
       {{ states(ent) | float | round(0) }}
   - name: HPVC Diag HBC Strategy
+    default_entity_id: sensor.hpvc_diag_hbc_strategy
     unique_id: hpvc_diag_hbc_strategy
     icon: mdi:battery-sync
     state: '{{ states(''input_select.house_battery_strategy'') }}'
   - name: HPVC Total HBC Charging Power
+    default_entity_id: sensor.hpvc_total_hbc_charging_power
     unique_id: hpvc_total_hbc_charging_power
     unit_of_measurement: W
     device_class: power
@@ -1201,6 +1207,7 @@ template:
       {% endfor %}
       {{ ns.total | round(0) }}
   - name: HPVC Daily Target Accuracy
+    default_entity_id: sensor.hpvc_daily_target_accuracy
     unique_id: hpvc_daily_target_accuracy
     unit_of_measurement: "%"
     icon: mdi:target
@@ -1214,6 +1221,7 @@ template:
       {% set value = data.get('da', 0) %}
       {{ [[value | float(0), 0] | max, 100] | min | round(1) }}
   - name: HPVC Daily Target Accuracy Samples
+    default_entity_id: sensor.hpvc_daily_target_accuracy_samples
     unique_id: hpvc_daily_target_accuracy_samples
     icon: mdi:counter
     availability: >-
@@ -1224,6 +1232,7 @@ template:
       {{ (states('input_text.hpvc_accuracy_diagnostics_json') | from_json(default={})).get('tc',
       0) | int(0) }}
   - name: HPVC Daily Band Excursions
+    default_entity_id: sensor.hpvc_daily_band_excursions
     unique_id: hpvc_daily_band_excursions
     icon: mdi:chart-scatter-plot
     availability: >-
@@ -1232,6 +1241,7 @@ template:
     state: >-
       {{ (states('input_text.hpvc_accuracy_diagnostics_json') | from_json(default={})).get('tbx', 0) | int(0) }}
   - name: HPVC Daily RMS Control Error
+    default_entity_id: sensor.hpvc_daily_rms_control_error
     unique_id: hpvc_daily_rms_control_error
     unit_of_measurement: W
     device_class: power
@@ -1243,6 +1253,7 @@ template:
     state: >-
       {{ (states('input_text.hpvc_accuracy_diagnostics_json') | from_json(default={})).get('trms', 0) | float(0) | round(1) }}
   - name: HPVC Daily MAE Control Error
+    default_entity_id: sensor.hpvc_daily_mae_control_error
     unique_id: hpvc_daily_mae_control_error
     unit_of_measurement: W
     device_class: power
@@ -1254,6 +1265,7 @@ template:
     state: >-
       {{ (states('input_text.hpvc_accuracy_diagnostics_json') | from_json(default={})).get('tmae', 0) | float(0) | round(1) }}
   - name: HPVC Daily Time Outside Target Deadband
+    default_entity_id: sensor.hpvc_daily_time_outside_target_deadband
     unique_id: hpvc_daily_time_outside_target_deadband
     unit_of_measurement: "%"
     state_class: measurement
@@ -1264,6 +1276,7 @@ template:
     state: >-
       {{ (states('input_text.hpvc_accuracy_diagnostics_json') | from_json(default={})).get('toutp', 0) | float(0) | round(1) }}
   - name: HPVC Deadband Exceedance RMS MAE Ratio
+    default_entity_id: sensor.hpvc_deadband_exceedance_rms_mae_ratio
     unique_id: hpvc_deadband_exceedance_rms_mae_ratio
     icon: mdi:division
     availability: >-
@@ -1272,6 +1285,7 @@ template:
     state: >-
       {{ (states('input_text.hpvc_accuracy_diagnostics_json') | from_json(default={})).get('tratio', 0) | float(0) | round(2) }}
   - name: HPVC Tracking Error Attribution Coverage
+    default_entity_id: sensor.hpvc_tracking_error_attribution_coverage
     unique_id: hpvc_tracking_error_attribution_coverage
     unit_of_measurement: "%"
     state_class: measurement
@@ -1282,6 +1296,7 @@ template:
     state: >-
       {{ (states('input_text.hpvc_accuracy_diagnostics_json') | from_json(default={})).get('tcoverp', 0) | float(0) | round(1) }}
   - name: HPVC Tracking Error No Action Excluded
+    default_entity_id: sensor.hpvc_tracking_error_no_action_excluded
     unique_id: hpvc_tracking_error_no_action_excluded
     unit_of_measurement: "%"
     state_class: measurement
@@ -1292,6 +1307,7 @@ template:
     state: >-
       {{ (states('input_text.hpvc_accuracy_diagnostics_json') | from_json(default={})).get('tpolicyx', 0) | float(0) | round(1) }}
   - name: HPVC Tracking Error Continuity Gap Excluded
+    default_entity_id: sensor.hpvc_tracking_error_continuity_gap_excluded
     unique_id: hpvc_tracking_error_continuity_gap_excluded
     unit_of_measurement: "%"
     state_class: measurement
@@ -1302,6 +1318,7 @@ template:
     state: >-
       {{ (states('input_text.hpvc_accuracy_diagnostics_json') | from_json(default={})).get('tgapx', 0) | float(0) | round(1) }}
   - name: HPVC Tracking Error Factor State
+    default_entity_id: sensor.hpvc_tracking_error_factor_state
     unique_id: hpvc_tracking_error_factor_state
     icon: mdi:state-machine
     availability: >-
@@ -1313,6 +1330,7 @@ template:
   # contributions to the Daily Control Accuracy headline loss (100 - accuracy), not raw
   # schema-11 attribution shares. Raw shares remain in the compact diagnostics JSON/report.
   - name: HPVC Target Control Response Impact
+    default_entity_id: sensor.hpvc_target_control_response_impact
     unique_id: hpvc_target_control_response_impact
     unit_of_measurement: "%"
     icon: mdi:swap-horizontal-bold
@@ -1324,6 +1342,7 @@ template:
       {{ (states('input_text.hpvc_accuracy_diagnostics_json') | from_json(default={})).get('tctrlp',
       0) | float(0) | round(1) }}
   - name: HPVC Target Other Impact
+    default_entity_id: sensor.hpvc_target_other_impact
     unique_id: hpvc_target_other_impact
     unit_of_measurement: "%"
     icon: mdi:arrow-oscillating
@@ -1335,6 +1354,7 @@ template:
       {{ (states('input_text.hpvc_accuracy_diagnostics_json') | from_json(default={})).get('totherp',
       0) | float(0) | round(1) }}
   - name: HPVC Target PV Availability Impact
+    default_entity_id: sensor.hpvc_target_pv_availability_impact
     unique_id: hpvc_target_pv_availability_impact
     unit_of_measurement: "%"
     icon: mdi:weather-cloudy
@@ -1346,6 +1366,7 @@ template:
       {{ (states('input_text.hpvc_accuracy_diagnostics_json') | from_json(default={})).get('tpvavailp',
       0) | float(0) | round(1) }}
   - name: HPVC Target House Load Changes Impact
+    default_entity_id: sensor.hpvc_target_house_load_changes_impact
     unique_id: hpvc_target_house_load_changes_impact
     unit_of_measurement: "%"
     icon: mdi:home-lightning-bolt-outline
@@ -1357,6 +1378,7 @@ template:
       {{ (states('input_text.hpvc_accuracy_diagnostics_json') | from_json(default={})).get('thloadp',
       0) | float(0) | round(1) }}
   - name: HPVC PV1 Actual Limit
+    default_entity_id: sensor.hpvc_pv1_actual_limit
     unique_id: hpvc_pv1_actual_limit
     unit_of_measurement: W
     device_class: power
@@ -1379,6 +1401,7 @@ template:
       {% set raw = states(ent) | float(0) %}
       {{ ((raw / 100 * maximum) if unit == 'Percent' else raw) | round(0) }}
   - name: HPVC PV2 Actual Limit
+    default_entity_id: sensor.hpvc_pv2_actual_limit
     unique_id: hpvc_pv2_actual_limit
     unit_of_measurement: W
     device_class: power
@@ -1401,6 +1424,7 @@ template:
       {% set raw = states(ent) | float(0) %}
       {{ ((raw / 100 * maximum) if unit == 'Percent' else raw) | round(0) }}
   - name: HPVC PV3 Actual Limit
+    default_entity_id: sensor.hpvc_pv3_actual_limit
     unique_id: hpvc_pv3_actual_limit
     unit_of_measurement: W
     device_class: power
@@ -1423,6 +1447,7 @@ template:
       {% set raw = states(ent) | float(0) %}
       {{ ((raw / 100 * maximum) if unit == 'Percent' else raw) | round(0) }}
   - name: HPVC PV4 Actual Limit
+    default_entity_id: sensor.hpvc_pv4_actual_limit
     unique_id: hpvc_pv4_actual_limit
     unit_of_measurement: W
     device_class: power
@@ -1445,6 +1470,7 @@ template:
       {% set raw = states(ent) | float(0) %}
       {{ ((raw / 100 * maximum) if unit == 'Percent' else raw) | round(0) }}
   - name: HPVC PV5 Actual Limit
+    default_entity_id: sensor.hpvc_pv5_actual_limit
     unique_id: hpvc_pv5_actual_limit
     unit_of_measurement: W
     device_class: power
@@ -1467,6 +1493,7 @@ template:
       {% set raw = states(ent) | float(0) %}
       {{ ((raw / 100 * maximum) if unit == 'Percent' else raw) | round(0) }}
   - name: HPVC PV6 Actual Limit
+    default_entity_id: sensor.hpvc_pv6_actual_limit
     unique_id: hpvc_pv6_actual_limit
     unit_of_measurement: W
     device_class: power
@@ -1489,6 +1516,7 @@ template:
       {% set raw = states(ent) | float(0) %}
       {{ ((raw / 100 * maximum) if unit == 'Percent' else raw) | round(0) }}
   - name: HPVC PV7 Actual Limit
+    default_entity_id: sensor.hpvc_pv7_actual_limit
     unique_id: hpvc_pv7_actual_limit
     unit_of_measurement: W
     device_class: power
@@ -1511,6 +1539,7 @@ template:
       {% set raw = states(ent) | float(0) %}
       {{ ((raw / 100 * maximum) if unit == 'Percent' else raw) | round(0) }}
   - name: HPVC PV8 Actual Limit
+    default_entity_id: sensor.hpvc_pv8_actual_limit
     unique_id: hpvc_pv8_actual_limit
     unit_of_measurement: W
     device_class: power
@@ -1533,6 +1562,7 @@ template:
       {% set raw = states(ent) | float(0) %}
       {{ ((raw / 100 * maximum) if unit == 'Percent' else raw) | round(0) }}
   - name: HPVC PV9 Actual Limit
+    default_entity_id: sensor.hpvc_pv9_actual_limit
     unique_id: hpvc_pv9_actual_limit
     unit_of_measurement: W
     device_class: power
@@ -1555,6 +1585,7 @@ template:
       {% set raw = states(ent) | float(0) %}
       {{ ((raw / 100 * maximum) if unit == 'Percent' else raw) | round(0) }}
   - name: HPVC PV10 Actual Limit
+    default_entity_id: sensor.hpvc_pv10_actual_limit
     unique_id: hpvc_pv10_actual_limit
     unit_of_measurement: W
     device_class: power
@@ -1579,42 +1610,52 @@ template:
 
 - binary_sensor:
   - name: HPVC Show Inverter Slot 2
+    default_entity_id: binary_sensor.hpvc_show_inverter_slot_2
     unique_id: hpvc_show_inverter_slot_2
     icon: mdi:eye-outline
     state: '{{ states(''input_number.hpvc_inverter_count'')|int(1) >= 2 }}'
   - name: HPVC Show Inverter Slot 3
+    default_entity_id: binary_sensor.hpvc_show_inverter_slot_3
     unique_id: hpvc_show_inverter_slot_3
     icon: mdi:eye-outline
     state: '{{ states(''input_number.hpvc_inverter_count'')|int(1) >= 3 }}'
   - name: HPVC Show Inverter Slot 4
+    default_entity_id: binary_sensor.hpvc_show_inverter_slot_4
     unique_id: hpvc_show_inverter_slot_4
     icon: mdi:eye-outline
     state: '{{ states(''input_number.hpvc_inverter_count'')|int(1) >= 4 }}'
   - name: HPVC Show Inverter Slot 5
+    default_entity_id: binary_sensor.hpvc_show_inverter_slot_5
     unique_id: hpvc_show_inverter_slot_5
     icon: mdi:eye-outline
     state: '{{ states(''input_number.hpvc_inverter_count'')|int(1) >= 5 }}'
   - name: HPVC Show Inverter Slot 6
+    default_entity_id: binary_sensor.hpvc_show_inverter_slot_6
     unique_id: hpvc_show_inverter_slot_6
     icon: mdi:eye-outline
     state: '{{ states(''input_number.hpvc_inverter_count'')|int(1) >= 6 }}'
   - name: HPVC Show Inverter Slot 7
+    default_entity_id: binary_sensor.hpvc_show_inverter_slot_7
     unique_id: hpvc_show_inverter_slot_7
     icon: mdi:eye-outline
     state: '{{ states(''input_number.hpvc_inverter_count'')|int(1) >= 7 }}'
   - name: HPVC Show Inverter Slot 8
+    default_entity_id: binary_sensor.hpvc_show_inverter_slot_8
     unique_id: hpvc_show_inverter_slot_8
     icon: mdi:eye-outline
     state: '{{ states(''input_number.hpvc_inverter_count'')|int(1) >= 8 }}'
   - name: HPVC Show Inverter Slot 9
+    default_entity_id: binary_sensor.hpvc_show_inverter_slot_9
     unique_id: hpvc_show_inverter_slot_9
     icon: mdi:eye-outline
     state: '{{ states(''input_number.hpvc_inverter_count'')|int(1) >= 9 }}'
   - name: HPVC Show Inverter Slot 10
+    default_entity_id: binary_sensor.hpvc_show_inverter_slot_10
     unique_id: hpvc_show_inverter_slot_10
     icon: mdi:eye-outline
     state: '{{ states(''input_number.hpvc_inverter_count'')|int(1) >= 10 }}'
   - name: HPVC PV1 Limit Range Invalid
+    default_entity_id: binary_sensor.hpvc_pv1_limit_range_invalid
     unique_id: hpvc_pv1_limit_range_invalid
     icon: mdi:alert-outline
     state: >-
@@ -1626,6 +1667,7 @@ template:
             >= states('input_number.hpvc_pv1_full_limit') | float(0)
       }}
   - name: HPVC PV2 Limit Range Invalid
+    default_entity_id: binary_sensor.hpvc_pv2_limit_range_invalid
     unique_id: hpvc_pv2_limit_range_invalid
     icon: mdi:alert-outline
     state: >-
@@ -1637,6 +1679,7 @@ template:
             >= states('input_number.hpvc_pv2_full_limit') | float(0)
       }}
   - name: HPVC PV3 Limit Range Invalid
+    default_entity_id: binary_sensor.hpvc_pv3_limit_range_invalid
     unique_id: hpvc_pv3_limit_range_invalid
     icon: mdi:alert-outline
     state: >-
@@ -1648,6 +1691,7 @@ template:
             >= states('input_number.hpvc_pv3_full_limit') | float(0)
       }}
   - name: HPVC PV4 Limit Range Invalid
+    default_entity_id: binary_sensor.hpvc_pv4_limit_range_invalid
     unique_id: hpvc_pv4_limit_range_invalid
     icon: mdi:alert-outline
     state: >-
@@ -1659,6 +1703,7 @@ template:
             >= states('input_number.hpvc_pv4_full_limit') | float(0)
       }}
   - name: HPVC PV5 Limit Range Invalid
+    default_entity_id: binary_sensor.hpvc_pv5_limit_range_invalid
     unique_id: hpvc_pv5_limit_range_invalid
     icon: mdi:alert-outline
     state: >-
@@ -1670,6 +1715,7 @@ template:
             >= states('input_number.hpvc_pv5_full_limit') | float(0)
       }}
   - name: HPVC PV6 Limit Range Invalid
+    default_entity_id: binary_sensor.hpvc_pv6_limit_range_invalid
     unique_id: hpvc_pv6_limit_range_invalid
     icon: mdi:alert-outline
     state: >-
@@ -1681,6 +1727,7 @@ template:
             >= states('input_number.hpvc_pv6_full_limit') | float(0)
       }}
   - name: HPVC PV7 Limit Range Invalid
+    default_entity_id: binary_sensor.hpvc_pv7_limit_range_invalid
     unique_id: hpvc_pv7_limit_range_invalid
     icon: mdi:alert-outline
     state: >-
@@ -1692,6 +1739,7 @@ template:
             >= states('input_number.hpvc_pv7_full_limit') | float(0)
       }}
   - name: HPVC PV8 Limit Range Invalid
+    default_entity_id: binary_sensor.hpvc_pv8_limit_range_invalid
     unique_id: hpvc_pv8_limit_range_invalid
     icon: mdi:alert-outline
     state: >-
@@ -1703,6 +1751,7 @@ template:
             >= states('input_number.hpvc_pv8_full_limit') | float(0)
       }}
   - name: HPVC PV9 Limit Range Invalid
+    default_entity_id: binary_sensor.hpvc_pv9_limit_range_invalid
     unique_id: hpvc_pv9_limit_range_invalid
     icon: mdi:alert-outline
     state: >-
@@ -1714,6 +1763,7 @@ template:
             >= states('input_number.hpvc_pv9_full_limit') | float(0)
       }}
   - name: HPVC PV10 Limit Range Invalid
+    default_entity_id: binary_sensor.hpvc_pv10_limit_range_invalid
     unique_id: hpvc_pv10_limit_range_invalid
     icon: mdi:alert-outline
     state: >-
@@ -1725,6 +1775,7 @@ template:
             >= states('input_number.hpvc_pv10_full_limit') | float(0)
       }}
   - name: HPVC Export Threshold Range Invalid
+    default_entity_id: binary_sensor.hpvc_export_threshold_range_invalid
     unique_id: hpvc_export_threshold_range_invalid
     icon: mdi:alert-outline
     state: >-
@@ -1741,6 +1792,7 @@ template:
       }}
 - binary_sensor:
   - name: HPVC Configuration Valid
+    default_entity_id: binary_sensor.hpvc_configuration_valid
     unique_id: hpvc_configuration_valid
     icon: mdi:check-decagram-outline
     state: >-
@@ -1800,80 +1852,61 @@ template:
 
       {% set count_raw = states('input_number.hpvc_inverter_count') | float(0) %}
       {% set count = states('input_number.hpvc_inverter_count') | int(0) %}
-      {% if count_raw != count or count < 1 or count > 10 %}{% set ns.valid = false %}{% endif %}
-      {% for i in range(1, count + 1) %}
-        {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') | trim %}
-        {% set unit = states('input_select.hpvc_pv' ~ i ~ '_limit_unit') | trim %}
-        {% set limit_ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim | lower %}
-        {% set readback_ent = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
-        {% set action = states('input_text.hpvc_pv' ~ i ~ '_action') | trim | lower %}
-        {% set value_field = states('input_text.hpvc_pv' ~ i ~ '_value_field') | trim %}
-        {% set fixed_data = states('input_text.hpvc_pv' ~ i ~ '_fixed_data_json') | from_json(default=none) %}
-        {% set target_data = states('input_text.hpvc_pv' ~ i ~ '_target_json') | from_json(default=none) %}
-        {% set pre_actions = states('input_text.hpvc_pv' ~ i ~ '_pre_actions_json') | from_json(default=none) %}
-        {% set post_actions = states('input_text.hpvc_pv' ~ i ~ '_post_actions_json') | from_json(default=none) %}
-        {% set action_step = states('input_number.hpvc_pv' ~ i ~ '_action_step') | float(-1) %}
-        {% set refresh_seconds = states('input_number.hpvc_pv' ~ i ~ '_refresh_seconds') | float(-1) %}
-        {% set full = states('input_number.hpvc_pv' ~ i ~ '_full_limit') | float(0) %}
-        {% set low = states('input_number.hpvc_pv' ~ i ~ '_low_limit') | float(-1) %}
-
-        {% if method not in ['Number entity', 'Action/service'] or unit not in ['Watts', 'Percent'] %}
+      {% set inv = namespace(valid_paths=0, number_entities=[]) %}
+      {% if count < 1 or count > 10 %}
+        {% set ns.valid = false %}
+      {% else %}
+        {% for i in range(1, count + 1) %}
+          {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') | trim %}
+          {% set unit = states('input_select.hpvc_pv' ~ i ~ '_limit_unit') | trim %}
+          {% set full = states('input_number.hpvc_pv' ~ i ~ '_full_limit') | float(0) %}
+          {% set low = states('input_number.hpvc_pv' ~ i ~ '_low_limit') | float(-1) %}
+          {% set base_valid = method in ['Number entity', 'Action/service']
+            and unit in ['Watts', 'Percent']
+            and full > 0 and full <= 10000
+            and low >= 0 and low <= 10000
+            and low < full %}
+          {% if method == 'Number entity' %}
+            {% set ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim | lower %}
+            {% set ent_exists = states | selectattr('entity_id', 'eq', ent) | list | count > 0 %}
+            {% set path_valid = base_valid
+              and ent not in bad
+              and (ent | regex_match('^number[.][a-z0-9_]+$'))
+              and ent_exists
+              and ent not in inv.number_entities %}
+            {% if path_valid %}
+              {% set inv.valid_paths = inv.valid_paths + 1 %}
+              {% set inv.number_entities = inv.number_entities + [ent] %}
+            {% endif %}
+          {% elif method == 'Action/service' %}
+            {% set action = states('input_text.hpvc_pv' ~ i ~ '_action') | trim | lower %}
+            {% set value_field = states('input_text.hpvc_pv' ~ i ~ '_value_field') | trim %}
+            {% set readback = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
+            {% set readback_exists = readback not in ['', 'select_entity_first']
+              and (states | selectattr('entity_id', 'eq', readback) | list | count > 0) %}
+            {% set path_valid = base_valid
+              and (action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+              and value_field != ''
+              and (readback in ['', 'select_entity_first']
+                or ((readback | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) and readback_exists)) %}
+            {% if path_valid %}
+              {% set inv.valid_paths = inv.valid_paths + 1 %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        {% if inv.valid_paths == 0 %}
           {% set ns.valid = false %}
         {% endif %}
+      {% endif %}
 
-        {% if method == 'Number entity' %}
-          {% if limit_ent in bad or not (limit_ent | regex_match('^number[.][a-z0-9_]+$')) %}
-            {% set ns.valid = false %}
-          {% elif limit_ent in ns.inverter_entities %}
-            {% set ns.valid = false %}
-          {% else %}
-            {% set ns.inverter_entities = ns.inverter_entities + [limit_ent] %}
-          {% endif %}
-        {% elif method == 'Action/service' %}
-          {% if not (action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) or value_field == '' %}
-            {% set ns.valid = false %}
-          {% endif %}
-          {% if fixed_data is not mapping or target_data is not mapping %}
-            {% set ns.valid = false %}
-          {% endif %}
-          {% if pre_actions is not sequence or pre_actions is string or post_actions is not sequence or post_actions is string %}
-            {% set ns.valid = false %}
-          {% else %}
-            {% for step in pre_actions %}
-              {% if step is not mapping or step.get('action', '') is not string or not (step.get('action', '') | trim | lower | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) %}
-                {% set ns.valid = false %}
-              {% endif %}
-            {% endfor %}
-            {% for step in post_actions %}
-              {% if step is not mapping or step.get('action', '') is not string or not (step.get('action', '') | trim | lower | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) %}
-                {% set ns.valid = false %}
-              {% endif %}
-            {% endfor %}
-          {% endif %}
-          {% if readback_ent not in bad and not (readback_ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) %}
-            {% set ns.valid = false %}
-          {% endif %}
-          {% if action_step < 0 or refresh_seconds < 0 %}
-            {% set ns.valid = false %}
-          {% endif %}
-          {% if unit == 'Percent' and action_step > 100 %}
-            {% set ns.valid = false %}
-          {% elif unit == 'Watts' and full > 0 and action_step > full %}
-            {% set ns.valid = false %}
-          {% endif %}
-        {% endif %}
-
-        {% if full <= 0 or full > 10000 or low < 0 or low > 10000 or low >= full %}
-          {% set ns.valid = false %}
-        {% endif %}
-      {% endfor %}
       {{ ns.valid }}
   - name: HPVC Required Inputs Ready
+    default_entity_id: binary_sensor.hpvc_required_inputs_ready
     unique_id: hpvc_required_inputs_ready
     icon: mdi:check-network-outline
     state: >-
       {% set bad = ['unknown', 'unavailable', 'none', 'select_entity_first', ''] %}
-      {% set ns = namespace(ready=is_state('binary_sensor.hpvc_configuration_valid', 'on'), usable=0) %}
+      {% set ns = namespace(ready=is_state('binary_sensor.hpvc_configuration_valid', 'on'), usable=0, configured_usable=0) %}
       {% set night_restore = states('input_text.hpvc_status') in ['Night Restore', 'Night Restore pending'] %}
       {% set core = [
         states('input_text.hpvc_grid_power_sensor'),
@@ -1885,31 +1918,55 @@ template:
           {% set ns.ready = false %}
         {% endif %}
       {% endfor %}
-      {% if not night_restore %}
-        {% set ent = states('input_text.hpvc_pv_power_sensor') | trim %}
-        {% if ent in bad or not (ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) or not is_number(states(ent)) %}
-          {% set ns.ready = false %}
-        {% endif %}
+
+      {# The configured solar entity must always exist, even during Night Restore. #}
+      {# Night Restore relaxes live numeric telemetry only; it must not hide a mistyped entity ID. #}
+      {% set pv_ent = states('input_text.hpvc_pv_power_sensor') | trim | lower %}
+      {% set pv_exists = states | selectattr('entity_id', 'eq', pv_ent) | list | count > 0 %}
+      {% set pv_configured = pv_ent not in bad
+        and (pv_ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+        and pv_exists %}
+      {% if not pv_configured %}
+        {% set ns.ready = false %}
+      {% elif not night_restore and not is_number(states(pv_ent)) %}
+        {% set ns.ready = false %}
       {% endif %}
+
       {% set count = states('input_number.hpvc_inverter_count') | int(0) %}
       {% if count < 1 or count > 10 %}{% set ns.ready = false %}{% endif %}
-      {% if not night_restore %}
-        {% for i in range(1, count + 1) %}
-          {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') | trim %}
-          {% set limit_ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim | lower %}
-          {% set readback_ent = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
-          {% if method == 'Number entity' %}
-            {% if limit_ent not in bad and (limit_ent | regex_match('^number[.][a-z0-9_]+$')) and is_number(states(limit_ent)) %}
-              {% set ns.usable = ns.usable + 1 %}
-            {% endif %}
-          {% elif method == 'Action/service' %}
-            {% if readback_ent in ['', 'select_entity_first'] or ((readback_ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) and is_number(states(readback_ent))) %}
+      {% for i in range(1, count + 1) %}
+        {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') | trim %}
+        {% set limit_ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim | lower %}
+        {% set readback_ent = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
+        {% if method == 'Number entity' %}
+          {% set limit_exists = states | selectattr('entity_id', 'eq', limit_ent) | list | count > 0 %}
+          {% set configured_path = limit_ent not in bad
+            and (limit_ent | regex_match('^number[.][a-z0-9_]+$'))
+            and limit_exists %}
+          {% if configured_path %}
+            {% set ns.configured_usable = ns.configured_usable + 1 %}
+            {% if is_number(states(limit_ent)) %}
               {% set ns.usable = ns.usable + 1 %}
             {% endif %}
           {% endif %}
-        {% endfor %}
-        {% if ns.usable == 0 %}{% set ns.ready = false %}{% endif %}
-      {% endif %}
+        {% elif method == 'Action/service' %}
+          {% set readback_exists = readback_ent not in ['', 'select_entity_first']
+            and (states | selectattr('entity_id', 'eq', readback_ent) | list | count > 0) %}
+          {% set configured_path = readback_ent in ['', 'select_entity_first']
+            or ((readback_ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) and readback_exists) %}
+          {% if configured_path %}
+            {% set ns.configured_usable = ns.configured_usable + 1 %}
+            {% if readback_ent in ['', 'select_entity_first'] or is_number(states(readback_ent)) %}
+              {% set ns.usable = ns.usable + 1 %}
+            {% endif %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+
+      {# At least one configured inverter path must really exist at all times. #}
+      {# During Night Restore, existing-but-unavailable PV telemetry remains tolerated. #}
+      {% if ns.configured_usable == 0 %}{% set ns.ready = false %}{% endif %}
+      {% if not night_restore and ns.usable == 0 %}{% set ns.ready = false %}{% endif %}
       {{ ns.ready }}
     attributes:
       unavailable_entities: >-
@@ -1929,31 +1986,137 @@ template:
             {% set ns.items = ns.items + [ent if ent not in bad else 'unconfigured core sensor'] %}
           {% endif %}
         {% endfor %}
-        {% if not night_restore %}
-          {% set ent = states('input_text.hpvc_pv_power_sensor') | trim %}
-          {% if ent in bad or not (ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) or not is_number(states(ent)) %}
-            {% set ns.items = ns.items + [ent if ent not in bad else 'unconfigured PV sensor'] %}
-          {% endif %}
+
+        {% set pv_ent = states('input_text.hpvc_pv_power_sensor') | trim | lower %}
+        {% set pv_exists = states | selectattr('entity_id', 'eq', pv_ent) | list | count > 0 %}
+        {% set pv_configured = pv_ent not in bad
+          and (pv_ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+          and pv_exists %}
+        {% if not pv_configured %}
+          {% set ns.items = ns.items + [pv_ent if pv_ent not in bad else 'unconfigured PV sensor'] %}
+        {% elif not night_restore and not is_number(states(pv_ent)) %}
+          {% set ns.items = ns.items + [pv_ent] %}
         {% endif %}
+
         {% set count = states('input_number.hpvc_inverter_count') | int(0) %}
-        {% if not night_restore %}
-          {% for i in range(1, count + 1) %}
-            {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') | trim %}
-            {% set limit_ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim | lower %}
-            {% set readback_ent = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
-            {% if method == 'Number entity' %}
-              {% if limit_ent in bad or not (limit_ent | regex_match('^number[.][a-z0-9_]+$')) or not is_number(states(limit_ent)) %}
-                {% set ns.items = ns.items + [limit_ent if limit_ent not in bad else 'PV' ~ i ~ ' limit'] %}
+        {% set inv = namespace(configured_usable=0) %}
+        {% for i in range(1, count + 1) %}
+          {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') | trim %}
+          {% set limit_ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim | lower %}
+          {% set readback_ent = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
+          {% if method == 'Number entity' %}
+            {% set limit_exists = states | selectattr('entity_id', 'eq', limit_ent) | list | count > 0 %}
+            {% set configured_path = limit_ent not in bad
+              and (limit_ent | regex_match('^number[.][a-z0-9_]+$'))
+              and limit_exists %}
+            {% if configured_path %}
+              {% set inv.configured_usable = inv.configured_usable + 1 %}
+              {% if not night_restore and not is_number(states(limit_ent)) %}
+                {% set ns.items = ns.items + [limit_ent] %}
               {% endif %}
-            {% elif method == 'Action/service' and readback_ent not in bad %}
-              {% if not (readback_ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) or not is_number(states(readback_ent)) %}
+            {% else %}
+              {% set ns.items = ns.items + [limit_ent if limit_ent not in bad else 'PV' ~ i ~ ' limit'] %}
+            {% endif %}
+          {% elif method == 'Action/service' %}
+            {% set readback_exists = readback_ent not in ['', 'select_entity_first']
+              and (states | selectattr('entity_id', 'eq', readback_ent) | list | count > 0) %}
+            {% set configured_path = readback_ent in ['', 'select_entity_first']
+              or ((readback_ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) and readback_exists) %}
+            {% if configured_path %}
+              {% set inv.configured_usable = inv.configured_usable + 1 %}
+              {% if not night_restore and readback_ent not in bad and not is_number(states(readback_ent)) %}
                 {% set ns.items = ns.items + [readback_ent] %}
               {% endif %}
+            {% else %}
+              {% set ns.items = ns.items + [readback_ent if readback_ent not in bad else 'PV' ~ i ~ ' readback'] %}
             {% endif %}
-          {% endfor %}
+          {% endif %}
+        {% endfor %}
+        {% if inv.configured_usable == 0 %}
+          {% set ns.items = ns.items + ['no configured inverter control path exists'] %}
         {% endif %}
         {{ ns.items | unique | join(', ') }}
+  - name: HPVC Maintenance Inverter Warning
+    default_entity_id: binary_sensor.hpvc_maintenance_inverter_warning
+    unique_id: hpvc_maintenance_inverter_warning
+    icon: mdi:solar-power-variant-outline
+    state: >-
+      {% set bad = ['unknown', 'unavailable', 'none', 'select_entity_first', ''] %}
+      {% set count = states('input_number.hpvc_inverter_count') | int(0) %}
+      {% set ns = namespace(missing=0) %}
+      {% for i in range(1, count + 1) %}
+        {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') | trim %}
+        {% if method == 'Number entity' %}
+          {% set ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim | lower %}
+          {% set exists = states | selectattr('entity_id', 'eq', ent) | list | count > 0 %}
+          {% set available = ent not in bad
+            and (ent | regex_match('^number[.][a-z0-9_]+$'))
+            and exists
+            and is_number(states(ent)) %}
+          {% if not available %}{% set ns.missing = ns.missing + 1 %}{% endif %}
+        {% elif method == 'Action/service' %}
+          {% set action = states('input_text.hpvc_pv' ~ i ~ '_action') | trim | lower %}
+          {% set value_field = states('input_text.hpvc_pv' ~ i ~ '_value_field') | trim %}
+          {% set readback = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
+          {% set readback_exists = readback not in bad
+            and (states | selectattr('entity_id', 'eq', readback) | list | count > 0) %}
+          {% set available = (action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+            and value_field != ''
+            and (
+              readback in ['', 'select_entity_first']
+              or (
+                (readback | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+                and readback_exists
+                and is_number(states(readback))
+              )
+            ) %}
+          {% if not available %}{% set ns.missing = ns.missing + 1 %}{% endif %}
+        {% else %}
+          {% set ns.missing = ns.missing + 1 %}
+        {% endif %}
+      {% endfor %}
+      {{ count > 0 and ns.missing > 0 }}
+    attributes:
+      affected_inverters: >-
+        {% set bad = ['unknown', 'unavailable', 'none', 'select_entity_first', ''] %}
+        {% set count = states('input_number.hpvc_inverter_count') | int(0) %}
+        {% set ns = namespace(items=[]) %}
+        {% for i in range(1, count + 1) %}
+          {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') | trim %}
+          {% set unavailable = false %}
+          {% if method == 'Number entity' %}
+            {% set ent = states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim | lower %}
+            {% set exists = states | selectattr('entity_id', 'eq', ent) | list | count > 0 %}
+            {% set unavailable = ent in bad
+              or not (ent | regex_match('^number[.][a-z0-9_]+$'))
+              or not exists
+              or not is_number(states(ent)) %}
+          {% elif method == 'Action/service' %}
+            {% set action = states('input_text.hpvc_pv' ~ i ~ '_action') | trim | lower %}
+            {% set value_field = states('input_text.hpvc_pv' ~ i ~ '_value_field') | trim %}
+            {% set readback = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
+            {% set readback_exists = readback not in bad
+              and (states | selectattr('entity_id', 'eq', readback) | list | count > 0) %}
+            {% set unavailable = not (action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+              or value_field == ''
+              or (
+                readback not in ['', 'select_entity_first']
+                and (
+                  not (readback | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+                  or not readback_exists
+                  or not is_number(states(readback))
+                )
+              ) %}
+          {% else %}
+            {% set unavailable = true %}
+          {% endif %}
+          {% if unavailable %}
+            {% set ns.items = ns.items + ['PV' ~ i] %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.items | join(', ') }}
   - name: HPVC HBC Available
+    default_entity_id: binary_sensor.hpvc_hbc_available
     unique_id: hpvc_hbc_available
     icon: mdi:battery-check
     state: >-
@@ -1964,6 +2127,7 @@ template:
       {{ states(strategy) not in bad and options is sequence and options is not string
       and options | count > 0 and states(executing) not in bad }}
   - name: HPVC External Release Active
+    default_entity_id: binary_sensor.hpvc_external_release_active
     unique_id: hpvc_external_release_active
     icon: mdi:solar-power-variant
     state: >-
@@ -1974,6 +2138,7 @@ template:
          and is_state('binary_sensor.hpvc_required_inputs_ready', 'on')
          and is_state('input_boolean.hpvc_auto_resume_pending', 'off') }}
   - name: HPVC PV Limited
+    default_entity_id: binary_sensor.hpvc_pv_limited
     unique_id: hpvc_pv_limited
     icon: mdi:solar-power-variant
     state: >-
@@ -1995,12 +2160,14 @@ template:
       {% endfor %}
       {{ ns.limited }}
   - name: HPVC Charge Priority Active
+    default_entity_id: binary_sensor.hpvc_charge_priority_active
     unique_id: hpvc_charge_priority_active
     icon: mdi:battery-charging-high
     state: >-
       {% set data = states('input_text.hpvc_last_targets_json') | from_json(default={}) %}
       {{ data.get('cps', 'a' if data.get('cp', false) else 'o') == 'a' }}
   - name: HPVC Cooldown Active
+    default_entity_id: binary_sensor.hpvc_cooldown_active
     unique_id: hpvc_cooldown_active
     icon: mdi:timer-sand
     state: '{% set data = states(''input_text.hpvc_last_targets_json'') | from_json(default={})
@@ -2008,6 +2175,7 @@ template:
 
       '
   - name: HPVC Negative Price Mode
+    default_entity_id: binary_sensor.hpvc_negative_price_mode
     unique_id: hpvc_negative_price_mode
     icon: mdi:cash-minus
     state: >-
@@ -2020,6 +2188,7 @@ template:
         {{ states(ent) | float(999) <= 0 }}
       {% endif %}
   - name: HPVC At Minimum PV
+    default_entity_id: binary_sensor.hpvc_at_minimum_pv
     unique_id: hpvc_at_minimum_pv
     icon: mdi:solar-power-variant-outline
     state: >-
@@ -2050,6 +2219,7 @@ template:
       {% endif %}
 - sensor:
   - name: HPVC Charge Priority State
+    default_entity_id: sensor.hpvc_charge_priority_state
     unique_id: hpvc_charge_priority_state
     icon: mdi:battery-sync-outline
     state: >-
@@ -2464,6 +2634,20 @@ automation:
     allowed_methods:
     - POST
     local_only: true
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.hpvc_report_ready
+
+- id: hpvc_reset_report_ready_timeout
+  alias: HPVC - Reset report ready after timeout
+  description: Resets the report tile after 60 seconds as a safe fallback for remote access paths such as Tailscale, while keeping the report-view webhook local-only.
+  mode: restart
+  trigger:
+  - platform: state
+    entity_id: input_boolean.hpvc_report_ready
+    to: 'on'
+    for: '00:01:00'
   action:
   - service: input_boolean.turn_off
     target:

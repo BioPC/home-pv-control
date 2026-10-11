@@ -9,7 +9,7 @@ Home PV Control can run independently or alongside Home Battery Control. Use Ste
 Before installing HPVC, make sure you have:
 
 - Home Assistant Core **2025.12 or newer** with package support. Earlier versions may work but are outside the documented support baseline.
-- A currently supported Node-RED runtime. Node-RED 4.x requires Node.js 18.2.0 or newer for the declared Home Assistant websocket 0.80.3 baseline; Node-RED 5.x requires Node.js 22 or newer. Home Assistant add-on users should use the runtime bundled by the supported Node-RED add-on rather than pinning a separate JavaScript-runtime minimum.
+- A currently supported Node-RED runtime. Node-RED 4.x requires Node.js 18.2.0 or newer for the declared Home Assistant websocket 0.80.3 baseline; Node-RED 5.x requires Node.js 22.9.0 or newer. Home Assistant add-on users should use the runtime bundled by the supported Node-RED add-on rather than pinning a separate JavaScript-runtime minimum.
 - `node-red-contrib-home-assistant-websocket` **0.80.3 or newer**.
 - Global Context Store enabled in the Node-RED Home Assistant server configuration.
 - At least one PV inverter with either a writable Home Assistant `number` entity or a stable Home Assistant action/service that can apply an active-power limit.
@@ -67,7 +67,7 @@ lovelace:
     hpvc-dashboard:
       mode: yaml
       title: Home PV Control
-      icon: mdi:solar-power
+      icon: mdi:solar-power-variant
       show_in_sidebar: true
       filename: hpvc_dashboard.yaml
 ```
@@ -174,6 +174,14 @@ Private transaction metadata and original/intended files are kept in `/config/hp
 
 
 
+### Quick Reload package-entity readiness
+
+Smart Update automatically builds the activation-readiness set by comparing the installed and staged `hpvc_config.yaml` package inventories. It includes newly defined deterministic helpers (`input_boolean`, `input_number`, `input_text`, `input_select`, `input_button`, `input_datetime`, `counter`, `timer`, and `script`) plus HPVC template entities across supported template domains when they carry an HPVC `unique_id` and explicit `default_entity_id`. No manual dependency list is maintained and arbitrary Node-RED references are not treated as activation dependencies.
+
+After **Quick Reload Home Assistant**, HPVC waits for Home Assistant to expose those newly added entities. The check starts immediately and polls once per second for up to 20 seconds using one Home Assistant states API request per cycle. Readiness is based on entity existence only; runtime states such as `unknown` or `unavailable` do not block package activation. Each activation attempt owns an exclusive transaction-bound lease, so repeated button presses and the periodic recovery probe cannot run the same activation concurrently. A persisted `checking` phase is retried only after that lease is no longer live, which makes a process/add-on/host interruption recoverable without crossing the initial `awaiting_quick_reload` boundary automatically. HPVC restores the saved pre-update enabled/disabled helper while `hpvc_update_reload_required` still acts as a runtime control gate, verifies that preparation, records durable activation completion, and then reconciles the final reload/status cleanup idempotently. Stale or duplicate results cannot undo a newer completed activation. If readiness cannot be confirmed, HPVC keeps control gated and reports **Restart Home Assistant required**.
+
+The readiness inventory is stored only in `/config/hpvc-data/update-recovery/reload-readiness.json`; no extra Home Assistant helper is created for this mechanism. HPVC template entities use explicit `default_entity_id` values so Smart Update never has to infer an entity ID from `unique_id`. Verified rollback deletes the pending readiness metadata so an aborted update cannot leave stale activation requirements behind.
+
 ### Smart Update trust model
 
 Smart Update retrieves the release tag from the GitHub Releases API, resolves that tag through the GitHub Git API to an immutable 40-character commit SHA, and downloads `hpvc_config.yaml`, `hpvc_flow.json`, and `hpvc_dashboard.yaml` over HTTPS from `raw.githubusercontent.com/BioPC/home-pv-control/<commit>/`. This removes the tag-movement/TOCTOU window between release discovery and the managed-file downloads. HPVC strictly parses both YAML files with duplicate-key rejection, validates required structure and actual package/dashboard version fields, validates the Node-RED JSON/tab labels and Home Assistant websocket dependency, then re-parses the exact staged files and calls Home Assistant's own configuration check before Node-RED deployment. A failed Home Assistant configuration check enters the same verified rollback path and the new Node-RED flow is not deployed. Smart Update requires the bundled Node-RED `yaml` 2.x parser and refuses to proceed if that complete parser cannot be resolved; it does not downgrade to marker-only or regex YAML checks. A private filesystem process lock also prevents overlapping detached updater writers. The updater still does **not** use an independently trusted cryptographic signature, so authenticity ultimately relies on the integrity of the `BioPC/home-pv-control` GitHub repository and GitHub HTTPS/API delivery. If that trust model is not acceptable for an installation, use the manual upgrade path and verify the downloaded release files independently before installing them.
@@ -254,6 +262,8 @@ The automatic cleanup removes these HPVC-owned paths when present:
 - `/config/www/hpvc/`
 
 HPVC does **not** remove shared Node-RED server configuration or external inverter, battery, HBC, P1/grid-meter entities.
+
+Release validation treats `hpvc_config.yaml` as the ownership source of truth and requires the explicit uninstall entity-ID/unique-ID allowlists to match that inventory exactly. Template ownership discovery is domain-generic: any HPVC template platform that supplies an HPVC `unique_id` and deterministic `default_entity_id` is included automatically, not just template sensors/binary sensors. Adding a future HPVC helper, script, template entity, or automation without matching uninstall ownership therefore fails local/GitHub release validation before publication; stale delete permissions fail as well. The validator also rejects duplicate YAML mapping keys in both shipped YAML files. The runtime uninstall itself remains an explicit allowlist and never broad-deletes entities by an `hpvc_*` wildcard.
 
 Node-RED tab cleanup tries local Admin API access, direct access with `SUPERVISOR_TOKEN`, and Supervisor ingress. Under normal conditions the HPVC Node-RED tabs are removed automatically. Only if all automatic paths fail does HPVC report a manual follow-up. A Node-RED access failure does not block HPVC-owned file/data cleanup.
 
