@@ -217,7 +217,7 @@ See [How HPVC works](docs/03-how-it-works.md) for the safety model and [Troubles
 
 ## Accuracy, Insights and reports
 
-HPVC provides Daily Control Accuracy, operational Insights, Power Control history and HTML/TXT support reports covering inverter, sensor, HBC, battery and runtime diagnostics.
+HPVC provides Daily Control Accuracy, operational Insights, Power Control history and HTML/TXT support reports covering inverter, sensor, HBC, battery and runtime diagnostics. Reported Accuracy uses one coherent snapshot for the headline and its factor/engineering diagnostics.
 
 See [How HPVC works → Accuracy and factor attribution](docs/03-how-it-works.md#accuracy-and-factor-attribution) and [Report generation and diagnostics](docs/03-how-it-works.md#report-generation-and-diagnostics) for details.
 
@@ -247,7 +247,9 @@ Reference Node-RED architecture screenshot.
 
 ### Smart Update
 
-From v1.5.3 onward, supported Home Assistant OS/Supervised Node-RED add-on installations can update from **Settings → Maintenance → HPVC updates**.
+**Smart Update is supported only on Home Assistant OS / Supervised installations using the Node-RED add-on. Other setups should use the manual update method.**
+
+From v1.5.3 onward, supported installations can update from **Settings → Maintenance → HPVC updates**.
 
 Smart Update preserves HPVC configuration, helper values and saved data, validates the selected release, safely replaces managed HPVC assets and provides transaction, rollback and recovery protection. After a successful update, use **Quick Reload Home Assistant** when prompted.
 
@@ -280,7 +282,7 @@ For Home Battery Control itself, see the [HBC documentation](https://docs.homeba
 
 ## Support
 
-The HTML support report is published at `/local/hpvc/support-report.html`. The dashboard keeps the **Generate report → Generating… → View report** workflow. Opening the report on the local Home Assistant network resets the tile to **Generate report** immediately through the bundled local-only Home Assistant webhook. Remote viewing (for example through Tailscale) intentionally cannot call that webhook, so HPVC now also clears the Ready state automatically after **60 seconds**. The generated report file remains available until a newer report replaces it. Because `/local/` files are served without Home Assistant authentication, treat the report URL as locally accessible diagnostic output and avoid exposing it beyond networks you trust.
+The HTML support report is published at `/local/hpvc/support-report.html`. With **Enable Insights** on, the dashboard keeps the **Generate report → Generating… → View report** workflow. Turning Insights off hides the 10-Insights section and report controls and stops optional analytics/report background work while core control and Daily Control Accuracy remain active. Opening the report on the local Home Assistant network resets the tile to **Generate report** immediately through the bundled local-only Home Assistant webhook. Remote viewing (for example through Tailscale) intentionally cannot call that webhook, so HPVC now also clears the Ready state automatically after **60 seconds**. The generated report file remains available until a newer report replaces it. Because `/local/` files are served without Home Assistant authentication, treat the report URL as locally accessible diagnostic output and avoid exposing it beyond networks you trust.
 
 Before opening an issue:
 

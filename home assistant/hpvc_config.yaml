@@ -16,6 +16,9 @@ input_boolean:
     name: HPVC External Release Lease Valid
     icon: mdi:shield-clock-outline
     initial: false
+  hpvc_insights_enabled:
+    name: Enable Insights
+    icon: mdi:lightbulb-on-outline
   hpvc_notifications:
     name: Home PV Control Notifications
     icon: mdi:bell-outline
@@ -2062,14 +2065,10 @@ template:
             and (states | selectattr('entity_id', 'eq', readback) | list | count > 0) %}
           {% set available = (action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
             and value_field != ''
-            and (
-              readback in ['', 'select_entity_first']
-              or (
-                (readback | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
-                and readback_exists
-                and is_number(states(readback))
-              )
-            ) %}
+            and readback not in bad
+            and (readback | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+            and readback_exists
+            and is_number(states(readback)) %}
           {% if not available %}{% set ns.missing = ns.missing + 1 %}{% endif %}
         {% else %}
           {% set ns.missing = ns.missing + 1 %}
@@ -2099,19 +2098,35 @@ template:
               and (states | selectattr('entity_id', 'eq', readback) | list | count > 0) %}
             {% set unavailable = not (action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
               or value_field == ''
-              or (
-                readback not in ['', 'select_entity_first']
-                and (
-                  not (readback | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
-                  or not readback_exists
-                  or not is_number(states(readback))
-                )
-              ) %}
+              or readback in bad
+              or not (readback | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+              or not readback_exists
+              or not is_number(states(readback)) %}
           {% else %}
             {% set unavailable = true %}
           {% endif %}
           {% if unavailable %}
             {% set ns.items = ns.items + ['PV' ~ i] %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.items | join(', ') }}
+      verification_unavailable_inverters: >-
+        {% set bad = ['unknown', 'unavailable', 'none', 'select_entity_first', ''] %}
+        {% set count = states('input_number.hpvc_inverter_count') | int(0) %}
+        {% set ns = namespace(items=[]) %}
+        {% for i in range(1, count + 1) %}
+          {% set method = states('input_select.hpvc_pv' ~ i ~ '_control_method') | trim %}
+          {% if method == 'Action/service' %}
+            {% set readback = states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim | lower %}
+            {% set readback_exists = readback not in bad
+              and (states | selectattr('entity_id', 'eq', readback) | list | count > 0) %}
+            {% set readable = readback not in bad
+              and (readback | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+              and readback_exists
+              and is_number(states(readback)) %}
+            {% if not readable %}
+              {% set ns.items = ns.items + ['PV' ~ i] %}
+            {% endif %}
           {% endif %}
         {% endfor %}
         {{ ns.items | join(', ') }}
@@ -2319,7 +2334,11 @@ script:
         value: 25
     - service: input_boolean.turn_on
       target:
-        entity_id: input_boolean.hpvc_negative_price_hbc_charge
+        entity_id:
+        - input_boolean.hpvc_negative_price_hbc_charge
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.hpvc_insights_enabled
     - service: input_button.press
       target:
         entity_id: input_button.hpvc_defaults_restored_event
@@ -2425,6 +2444,7 @@ automation:
       entity_id:
       - input_boolean.hpvc_enabled
       - input_boolean.hpvc_control_hbc_strategy
+      - input_boolean.hpvc_insights_enabled
       - input_boolean.hpvc_onboarding_complete
       - input_boolean.hpvc_auto_resume_pending
   - service: input_number.set_value

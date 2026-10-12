@@ -358,7 +358,7 @@ views:
                 {% if thresholds_valid %}✅{% else %}❌{% endif %} **Power control
                 settings**
             grid_options:
-              columns: 12
+              columns: 27
               rows: auto
         grid_options:
           columns: 12
@@ -475,8 +475,19 @@ views:
             features_position: inline
             features:
               - type: toggle
+          - type: tile
+            entity: input_boolean.hpvc_insights_enabled
+            name: Enable Insights
+            icon: mdi:lightbulb-on-outline
+            hide_state: true
+            vertical: false
+            features_position: inline
+            features:
+              - type: toggle
           - type: conditional
             conditions:
+              - entity: input_boolean.hpvc_insights_enabled
+                state: 'on'
               - entity: input_boolean.hpvc_report_ready
                 state: 'off'
               - entity: input_boolean.hpvc_report_generating
@@ -507,10 +518,12 @@ views:
               icon_double_tap_action:
                 action: none
             grid_options:
-              columns: 6
+              columns: 12
               rows: 1
           - type: conditional
             conditions:
+              - entity: input_boolean.hpvc_insights_enabled
+                state: 'on'
               - entity: input_boolean.hpvc_report_generating
                 state: 'on'
             card:
@@ -533,10 +546,12 @@ views:
               icon_double_tap_action:
                 action: none
             grid_options:
-              columns: 6
+              columns: 12
               rows: 1
           - type: conditional
             conditions:
+              - entity: input_boolean.hpvc_insights_enabled
+                state: 'on'
               - entity: input_boolean.hpvc_report_ready
                 state: 'on'
               - entity: input_boolean.hpvc_report_generating
@@ -563,7 +578,7 @@ views:
               icon_double_tap_action:
                 action: none
             grid_options:
-              columns: 6
+              columns: 12
               rows: 1
           - type: conditional
             conditions:
@@ -585,7 +600,7 @@ views:
                     This will restore all recommended HPVC settings.
                     Press OK and wait until complete.
             grid_options:
-              columns: 6
+              columns: 12
               rows: auto
           - type: conditional
             conditions:
@@ -611,7 +626,7 @@ views:
               icon_double_tap_action:
                 action: none
             grid_options:
-              columns: 6
+              columns: 12
               rows: auto
         visibility:
           - condition: state
@@ -1885,6 +1900,9 @@ views:
         visibility:
           - condition: state
             entity: input_boolean.hpvc_onboarding_complete
+            state: 'on'
+          - condition: state
+            entity: input_boolean.hpvc_insights_enabled
             state: 'on'
       - type: custom:apexcharts-card
         section_mode: true
@@ -3665,19 +3683,19 @@ views:
               type: markdown
               text_only: true
               content: >-
-                <ha-alert title="Inverter unavailable" alert-type="warning">
-
                 {% set affected =
                 state_attr('binary_sensor.hpvc_maintenance_inverter_warning',
                 'affected_inverters') %}
+                {% set verification =
+                state_attr('binary_sensor.hpvc_maintenance_inverter_warning',
+                'verification_unavailable_inverters') %}
 
-                {% if affected %}<b>{{ affected }}</b> is currently unavailable
-                or invalid.<br>{% else %}One or more configured PV inverters
-                are currently unavailable or invalid.<br>{% endif %}
-                Smart Update, Remove HPVC flows, and Uninstall HPVC may wait up
-                to <b>180 seconds</b> and then cancel safely if all configured
-                inverters cannot be restored and verified at full output.<br>
-                Restore inverter availability before continuing if possible.
+                <ha-alert title="Maintenance verification unavailable" alert-type="warning">
+
+                An inverter is unavailable or cannot be verified at full output.
+                If Night Restore already confirmed full output, Maintenance can
+                continue safely. Otherwise it may wait up to <b>180 seconds</b>
+                and cancel.
 
                 </ha-alert>
             grid_options:
@@ -3993,19 +4011,19 @@ views:
               type: markdown
               text_only: true
               content: >-
-                <ha-alert title="Inverter unavailable" alert-type="warning">
-
                 {% set affected =
                 state_attr('binary_sensor.hpvc_maintenance_inverter_warning',
                 'affected_inverters') %}
+                {% set verification =
+                state_attr('binary_sensor.hpvc_maintenance_inverter_warning',
+                'verification_unavailable_inverters') %}
 
-                {% if affected %}<b>{{ affected }}</b> is currently unavailable
-                or invalid.<br>{% else %}One or more configured PV inverters
-                are currently unavailable or invalid.<br>{% endif %}
-                Smart Update, Remove HPVC flows, and Uninstall HPVC may wait up
-                to <b>180 seconds</b> and then cancel safely if all configured
-                inverters cannot be restored and verified at full output.<br>
-                Restore inverter availability before continuing if possible.
+                <ha-alert title="Maintenance verification unavailable" alert-type="warning">
+
+                An inverter is unavailable or cannot be verified at full output.
+                If Night Restore already confirmed full output, Maintenance can
+                continue safely. Otherwise it may wait up to <b>180 seconds</b>
+                and cancel.
 
                 </ha-alert>
           - type: markdown

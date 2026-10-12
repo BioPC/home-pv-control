@@ -130,7 +130,7 @@ Set that inverter's **Limit unit** to **Percent**, while keeping Full power and 
 
 ## Rate limiter and 10-second control
 
-The HPVC trigger remains every 10 seconds. A stable 10-second check may skip the heavier evaluation to reduce CPU and allocation pressure. Grid, PV and Marstek battery AC power use a cumulative 20 W + 2% significance threshold compared with the last full evaluation. Battery SOC is reduced to whole-percentage changes for the stable-input hash, while other control-relevant states remain exact-match. HPVC still forces a complete evaluation at least every 30 seconds and does not skip pending safety, write/recovery, settings or adapter-heartbeat work.
+The HPVC trigger remains every 10 seconds. A stable 10-second check may skip the heavier evaluation to reduce CPU and allocation pressure. The runtime-history journal is checked/persisted on a separate 60-second cadence, so file work no longer runs alongside every control wake. Grid, PV and Marstek battery AC power use a cumulative 20 W + 2% significance threshold compared with the last full evaluation. Battery SOC is reduced to whole-percentage changes for the stable-input hash, while other control-relevant states remain exact-match. HPVC still forces a complete evaluation at least every 30 seconds and does not skip pending safety, write/recovery, settings or adapter-heartbeat work.
 
 During confirmed Night Restore, the steady nighttime state may now be skipped. This is expected. If valid PV rises above the Night Restore recovery threshold, or a recovery timer has already started, the limiter is bypassed so recovery is checked on the normal timer cadence.
 
@@ -222,7 +222,7 @@ For advanced troubleshooting, Node-RED global context stores the latest attribut
 
 ### Generate report does not change to View report
 
-Wait for generation to finish. **View report** appears only after publication succeeds. If report storage was temporarily unavailable during startup/redeploy, HPVC now retries storage initialization automatically every 30 seconds; a Generate report click also queues one request and asks the bounded retry path to re-initialize storage. If a previously-ready mount disappears later, a failed report file write or atomic publication invalidates the cached ready state so the same recovery path can re-probe it instead of remaining falsely marked ready. If publication still does not complete, check the persistent notification and Node-RED error log.
+Wait for generation to finish. **View report** appears only after publication succeeds. If report storage was temporarily unavailable during startup/redeploy, HPVC now retries storage initialization automatically every 60 seconds; a Generate report click also queues one request and asks the bounded retry path to re-initialize storage. If a previously-ready mount disappears later, a failed report file write or atomic publication invalidates the cached ready state so the same recovery path can re-probe it instead of remaining falsely marked ready. If publication still does not complete, check the persistent notification and Node-RED error log.
 
 ### The report time did not change
 
@@ -311,6 +311,21 @@ This is a safe refusal. The second detached process does not alter HPVC update h
 If rollback recovery cannot restore `hpvc_enabled`, HPVC keeps the update marked in progress and retains the saved resume intention. Press **Update HPVC** again after the Home Assistant service issue is resolved; the retry stays recovery-only and continues the same transaction.
 
 
+### Maintenance waits even though the readback still shows 100%
+
+HPVC intentionally rejects stale Action/service readback during Smart Update, flow removal, and full uninstall. A cached 100% value is not enough: restore communication so `sensor.hpvc_source_freshness` and the inverter readback are current, then retry.
+
+If Maintenance starts while an inverter is asleep during Night Restore, HPVC can proceed without fresh nighttime readback only when the current Night Restore episode previously confirmed all configured inverter limits at full output. Otherwise the existing 180-second safe wait/cancel behavior applies.
+
+For Night Restore Maintenance proof, Action/service inverters require a valid fresh numeric readback. Command-cache and startup-full assumptions are never accepted as full-output verification. Number-entity inverters may use their live numeric limit state.
+
+A Night Restore Maintenance confirmation is invalidated immediately if any independently verifiable configured inverter is later observed below its full-limit tolerance, even when another inverter is offline. A new confirmation is created only after every configured inverter is independently confirmed full again. The proof is also bound to the complete effective Action/service adapter configuration, including payload/target/value-field and pre/post actions.
+
+
+### Pre-install recovery keeps retrying
+
+If Smart Update stops before installing anything and restoring the saved HPVC enabled state temporarily fails, HPVC keeps a verified `pre-install-no-changes` terminal record. Recovery republishes that saved enabled/disabled intent without requiring the Node-RED Admin API and keeps the activation gate Off. Once publication succeeds, a later update click can start normally.
+
 ### Update available is not detected
 
 Press **Check for updates** and read the Maintenance status and **Last checked** timestamp. HPVC queries the latest public GitHub release; Internet/DNS/GitHub API failures are reported in `input_text.hpvc_update_status`. A successful process exit is ignored rather than being reported as a failure. The automatic check also runs at Node-RED startup and every six hours. When notifications are enabled, a newly detected newer release creates one persistent **HPVC update available** notification; repeated checks of the same release do not create it again. If the installed HPVC version is newer than GitHub's latest published release, Maintenance reports that state explicitly and does not show the update button.
@@ -350,7 +365,7 @@ Smart Update detected one or more HPVC-owned entities that are newly defined by 
 
 Restart Home Assistant. HPVC keeps the update activation pending and rechecks automatically after Home Assistant returns. The recheck is driven by durable transaction/readiness metadata and verifies the release tag, commit and transaction ID; it does not depend on human-readable status text. A transaction-bound activation lease prevents the automatic probe from overlapping a live Quick Reload attempt. If a process stops while the durable phase is `checking`, that phase becomes retryable only after its lease is stale. When all newly introduced package entities exist, HPVC restores the saved enabled/disabled helper while the update-activation gate is still on, verifies preparation, records durable activation completion, and reconciles final reload/status cleanup idempotently. Stale or duplicate results are ignored. If the restart does not resolve readiness, inspect `/config/packages/hpvc_config.yaml` and Home Assistant configuration errors; do not repeatedly press Quick Reload.
 
-This mechanism is automatic for future HPVC-owned helpers and template sensor/binary-sensor entities defined by `hpvc_config.yaml`; adding them does not require maintaining a separate updater dependency list or scanning arbitrary Node-RED references. Verified rollback also removes pending readiness metadata so an aborted update cannot leave stale activation requirements behind.
+This mechanism is automatic for future HPVC-owned helpers and template entities across all template domains defined by `hpvc_config.yaml`; adding them does not require maintaining a separate updater dependency list or scanning arbitrary Node-RED references. Verified rollback also removes pending readiness metadata so an aborted update cannot leave stale activation requirements behind.
 
 ## Manual upgrade / Node-RED flow removal
 
@@ -426,4 +441,7 @@ HPVC protects the handoff with a 45-second verification lease. While the externa
 
 HPVC checks communication freshness as well as numeric state. Power/inverter observations use `sensor.hpvc_source_freshness`, a Home Assistant template sensor that refreshes every 30 seconds and reads HA-core `last_reported` timestamps directly. Node-RED rejects the data if that snapshot itself stops updating, and it deliberately never uses `last_updated` as a heartbeat for constant valid values. Market/all-in price sensors have a longer scheduled-data window. Unknown freshness fails safe until Home Assistant supplies a valid report timestamp.
 
+
 [← README](../README.md) · [Installation](01-installation.md) · [Configuration](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
+
+

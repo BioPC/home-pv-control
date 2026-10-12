@@ -4,6 +4,16 @@
 
 ### Smart Update readiness
 
+- Terminal pre-install/no-change recovery no longer depends on Node-RED Admin API discovery: failed HA publication remains retryable, preserves the saved master state, and never arms activation when nothing was installed.
+- Night Restore Maintenance proof now clears on any independently verified partial inverter even during degraded multi-inverter telemetry, and can be re-minted only after every configured inverter is confirmed full again.
+- Night Restore proof signatures now cover the complete effective Action/service adapter configuration, including payload, target, value field, pre/post actions, steps and limits.
+- Smart Update now treats `Update not started` as a terminal reconciled state, so fixing a preflight prerequisite allows the next click to start a fresh ordinary update instead of looping in recovery-only mode.
+- Final GitHub-readiness cleanup fixes Troubleshooting section placement, removes stale template-domain wording, and adds repository/workflow/link validation.
+- Tightened Night Restore Maintenance proof: Action/service inverters now require fresh numeric readback; command-cache and startup-full assumptions can no longer authorize Smart Update, flow removal, or uninstall.
+- Night Restore now retains current-configuration full-output proof for Maintenance, so Smart Update, Remove HPVC flows, and Full Uninstall can proceed after an already-restored inverter goes to sleep; fresh partial limits, configuration changes, or Night Restore ending invalidate the proof.
+- Pre-install prerequisite/API failures now use an explicit no-change recovery path: no activation gate is armed when nothing was installed, saved master intent is preserved, and launched/prepared no-change recovery does not depend on the Node-RED Admin API.
+- Smart Update activation inventory now discovers HPVC template platforms generically through explicit `default_entity_id` values instead of hard-coding only sensor/binary-sensor domains.
+- GitHub release checks now have bounded request/response/overall deadlines plus a matching Exec timeout.
 - Activation completion is now durable, serialized, and retryable: restart recovery uses transaction metadata instead of status prose, an exclusive transaction-bound activation lease prevents overlapping Quick Reload/recovery attempts, abandoned `checking` attempts are recoverable after the lease becomes stale, readiness metadata survives until final helper reconciliation, and stale results cannot undo a newer completed activation.
 - Activation lease acquisition is race-hardened: a lock directory is claimed atomically, a just-created/unreadable owner record is treated as busy until filesystem age proves staleness, stale-lock reclamation is quarantined, heartbeat renewal verifies ownership, and delayed failure output is side-effect free so an older attempt cannot re-arm a transaction finalized by a newer attempt.
 - Pending update activation now acts as an explicit runtime control gate. The saved master enable state can be restored while the gate remains on, but normal PV/HBC control resumes only after preparation is acknowledged and final activation cleanup is reconciled.
@@ -13,8 +23,22 @@
 - Hardened release validation so template ownership discovery is generic across every HPVC template domain and both shipped YAML files are parsed with duplicate-key rejection; future template platforms therefore cannot bypass uninstall parity merely by using a new domain.
 - Fixed the desktop Maintenance layout so **Check for updates**, **Remove HPVC flows**, and **Uninstall HPVC** share one explicit three-column action row with single-row tiles, preventing the manual/uninstall buttons from stretching to double height when the Updates column has additional actions. The release validator now enforces this structure.
 
+### Issue #9 — shared Node-RED runtime load
+
+- Active price-zone limiting now always bypasses the stable-input limiter, preserving the full 10-second control cadence while idle/unrestricted operation can skip heavier evaluations.
+- Kept the PV-control wake interval at **10 seconds**; active PV limiting is not slowed.
+- Retained the HBC-inspired stable-input fast path so unchanged cycles exit before the heavier engine/output/diagnostic pipeline.
+- Moved periodic runtime-history persistence off the control cadence: the journal now checks/publishes every **60 seconds**, while safety-critical negative-price override changes still trigger immediate persistence.
+- Reduced periodic report-storage recovery polling from 30 to **60 seconds**; once storage is ready the path remains a bounded no-op.
+- Existing inverter writes remain change-based (plus configured Action/service heartbeat refreshes), avoiding repeated identical commands.
+- Together with the v1.5.5 **Enable Insights** switch, optional analytics/report workload can be removed without affecting core PV control or Daily Control Accuracy.
+
 ### Fixed
 
+- Full uninstall now explicitly resets **Enable Insights** to its shipped Off default before helper removal, preventing Home Assistant RestoreEntity state from re-enabling optional analytics after a later fresh install.
+- Support-report Accuracy now publishes and consumes the headline together with its factor/RMS/sample diagnostics as one coherent snapshot, preventing mixed-age headline/factor combinations.
+- Maintenance now warns **Maintenance verification unavailable** before destructive actions when an Action/service inverter lacks a valid numeric readback; normal control can still operate without readback, but automatic maintenance will not claim full-output verification.
+- Dashboard numeric `grid_options.columns` values are release-validated against the supported 1–12 range; remaining Maintenance cards now use full-section width 12.
 - Full uninstall ownership now includes the maintenance inverter warning and both HPVC-owned automation unique IDs so registry cleanup does not leave those entries behind.
 - Added a 60-second automatic fallback for the support-report Ready state. Local report viewing still resets **View report** immediately through the existing `local_only: true` webhook, while trusted remote access paths such as Tailscale now return to **Generate report** without exposing the reset webhook remotely.
 - Added a conditional Maintenance warning when one or more configured PV inverters are unavailable or invalid. It explains that Smart Update, Remove HPVC flows, and Uninstall HPVC can wait up to 180 seconds and then cancel safely.
@@ -67,7 +91,7 @@ v1.5.4 strengthens PV restore verification, per-inverter fault isolation, Extern
 - Smart Update and the recovery probe now verify the installed `node-red-contrib-home-assistant-websocket` version through Node-RED `GET /nodes` instead of inferring it from flow JSON.
 - Smart Update now uses Node-RED API v2 revision checks, verified transactional recovery/rollback, response reconciliation, and preservation of unrelated concurrent Node-RED changes.
 - Release tags are resolved to immutable Git commits before managed files are downloaded, removing the tag-movement/TOCTOU window while retaining the existing GitHub trust model.
-- Package and dashboard YAML now require the complete `yaml` 2.x parser, duplicate-key rejection, real structure/version validation, post-write revalidation, and Home Assistant configuration validation before Node-RED deployment.
+- Package and dashboard YAML use a complete parser with duplicate-key rejection, real structure/version validation, post-write revalidation, and Home Assistant configuration validation before Node-RED deployment. Smart Update now falls back to Node-RED 5's bundled `js-yaml` when optional `yaml` 2.x is unavailable, and parser preflight runs before a new update transaction is created.
 - Detached updater ownership is atomically published only after complete ownership metadata is prepared; established or uncertain owners are never reclaimed as empty locks.
 - Stale-lock reclamation is serialized by a separate recovery-owner guard so concurrent retries cannot both reclaim the same dead updater lock.
 - A detached updater process that cannot acquire ownership exits without changing HPVC helpers, status, resume intent, transaction metadata, or the shared updater result file.
@@ -80,6 +104,9 @@ v1.5.4 strengthens PV restore verification, per-inverter fault isolation, Extern
 
 ### Diagnostics, performance and reports
 
+- Added **Enable Insights** (default Off). Turning it Off hides the 10-Insights dashboard section and report controls and bypasses optional Insight generation/history, report-related activity history, periodic report-storage recovery work, and bounded performance aggregation. Core PV control, Daily Control Accuracy, HBC coordination, safety, notifications, update/recovery, and essential persistence remain active.
+- Insights recovery candidates are cleared while Insights is disabled and no longer force full control evaluations, preventing optional diagnostics from defeating the issue #9 idle-load optimization.
+- Enabling Insights records one informational Insight: **Insights enabled — diagnostic collection resumed.**
 - Aligned Daily Control Accuracy journal preparation and restore on the shared schema/revision contract, including `headlineAttributionRevision`.
 - Expanded bounded runtime profiling for cooldown gates, battery-capacity learning, HBC charge priority, final-target calculation, transition logging, inverter service-call preparation, and Insights/diagnostics without retaining per-cycle history.
 - Increased the runtime evaluation stale-lock watchdog from 12 seconds to 30 seconds to reduce overlap risk during unusually slow Home Assistant/inverter operations.
@@ -92,6 +119,7 @@ v1.5.4 strengthens PV restore verification, per-inverter fault isolation, Extern
 
 ### Maintenance, cleanup and validation
 
+- Smart Update, flow removal, and full uninstall now reject stale/cached Action/service readback and require the same freshness snapshot contract used by runtime inverter control before destructive maintenance can proceed.
 - Full-uninstall registry cleanup now includes the HPVC source-freshness sensor and the External Release heartbeat/lease helpers while retaining exact ownership matching.
 - Release validation now derives the complete HPVC-owned entity/unique-ID inventory from `hpvc_config.yaml` and requires exact parity with the explicit full-uninstall allowlists, failing on both missing future ownership and stale/extra delete permissions. Runtime uninstall remains explicit and does not use wildcard deletion.
 - Release validation covered control safety, External Release, updater transactions/recovery, YAML/templates, PV allocation, safe-shutdown boundaries, lock ownership, and terminal publication.

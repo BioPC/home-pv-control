@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from urllib.parse import unquote
 
 import yaml
 
@@ -109,6 +110,26 @@ else:
 
 if not re.search(rf"^## v{re.escape(VERSION)}\s+[—-]\s+\d{{4}}-\d{{2}}-\d{{2}}\s*$", changelog_text, re.M):
     fail(f"CHANGELOG.md is missing a dated v{VERSION} section.")
+
+# Keep the GitHub-visible release intro clean: release date first, then prose/sections.
+release_lines = release_notes_text.splitlines()
+first_nonempty_after_title = next((line for line in release_lines[1:] if line.strip()), "")
+if not first_nonempty_after_title.startswith("**Release date:**"):
+    fail("RELEASE_NOTES.md must place the release date immediately after the title, before bullets or sections.")
+
+if "### Runtime and maintenance fixes" in release_notes_text:
+    fail("Runtime/maintenance release notes must not be nested under Upgrade.")
+
+# Current CHANGELOG section must begin with a subheading rather than loose bullets.
+current_change = re.search(rf"^## v{re.escape(VERSION)}[^\n]*\n(?P<body>.*?)(?=^## v\d|\Z)", changelog_text, re.M | re.S)
+if current_change:
+    body_lines = [line for line in current_change.group("body").splitlines() if line.strip()]
+    if body_lines and not body_lines[0].startswith("### "):
+        fail(f"CHANGELOG.md v{VERSION} must start with a subsection heading, not a loose bullet or paragraph.")
+    bullets = [line.strip() for line in body_lines if line.lstrip().startswith("- ")]
+    duplicates = sorted({b for b in bullets if bullets.count(b) > 1})
+    if duplicates:
+        fail(f"CHANGELOG.md v{VERSION} contains duplicate bullet(s): " + "; ".join(duplicates[:3]))
 
 for label, text, pattern in [
     ("README.md", readme_text, rf"releases/v{re.escape(VERSION)}/release\.md"),
@@ -282,6 +303,8 @@ def walk_mappings(value):
         for child in value:
             yield from walk_mappings(child)
 
+# The Maintenance section intentionally uses the proven desktop widths shipped by HPVC.
+# Validate that exact structure so future edits do not recreate the compressed live layout.
 maintenance_rows = []
 for candidate in walk_mappings(dashboard):
     if candidate.get("type") != "grid" or candidate.get("columns") != 3:
@@ -326,7 +349,7 @@ else:
             fail(f"Desktop Maintenance tile {expected_entity} must use grid_options.rows: 1.")
     grid_columns = maintenance.get("grid_options", {}).get("columns") if isinstance(maintenance.get("grid_options"), dict) else None
     if grid_columns != 27:
-        fail(f"Desktop Maintenance action grid must span 27 columns; got {grid_columns!r}.")
+        fail(f"Desktop Maintenance action grid must use the proven desktop width 27; got {grid_columns!r}.")
     if not any("Desktop Maintenance" in message for message in errors):
         ok("Desktop Maintenance top action buttons are aligned as direct single-row peers.")
 
@@ -494,8 +517,11 @@ phase_guard_node = ids.get("hpvcrecoveryphaseguard155")
 pending_guard_node = ids.get("hpvcpendingreloadguard155")
 update_eval_node = ids.get("e5bf3761b93e4564")
 uninstall_selector = ids.get("f70ac93a57286f3e")
+uninstall_defaults = ids.get("2cf211e5923758ad")
+accuracy_publish_node = ids.get("411af491012c6308")
+report_accuracy_node = ids.get("9bda2984728ce979")
 
-if not all([readiness_node, phase_check_node, phase_guard_node, pending_guard_node, update_eval_node, uninstall_selector]):
+if not all([readiness_node, phase_check_node, phase_guard_node, pending_guard_node, update_eval_node, uninstall_selector, uninstall_defaults, accuracy_publish_node, report_accuracy_node]):
     fail("Smart Update recovery/uninstall validation nodes are incomplete.")
 else:
     readiness_source = str(readiness_node.get("command", ""))
@@ -503,6 +529,34 @@ else:
     pending_source = str(pending_guard_node.get("func", ""))
     update_source = str(update_eval_node.get("func", ""))
     uninstall_source = str(uninstall_selector.get("func", ""))
+
+    parser_source = normal_script or ""
+    parser_required = [
+        "require.resolve('yaml'",
+        "require.resolve('js-yaml'",
+        "Node-RED 5 (js-yaml)",
+        "strictYamlParser();",
+    ]
+    missing_parser = [fragment for fragment in parser_required if fragment not in parser_source]
+    if missing_parser:
+        fail("Smart Updater must have a no-extra-install Node-RED 5 YAML parser fallback and preflight: " + ", ".join(missing_parser))
+    parser_preflight = parser_source.find("strictYamlParser();")
+    tx_launch = parser_source.find("tx={schema:1,state:'launched'")
+    if parser_preflight < 0 or tx_launch < 0 or parser_preflight > tx_launch:
+        fail("YAML parser preflight must run before a fresh update transaction is created.")
+
+    updater_hardening_required = [
+        "for(const [domain,rawEntries] of Object.entries(block))",
+        "function isPreInstallNoChange(tx)",
+        "async function reconcilePreInstallNoChange(tx,dir,detail)",
+        "pre-install prerequisite/API",
+        "input_boolean.hpvc_update_reload_required",
+    ]
+    missing_updater_hardening = [fragment for fragment in updater_hardening_required if fragment not in parser_source]
+    if missing_updater_hardening:
+        fail("Smart Updater is missing pre-install/domain-generic hardening: " + ", ".join(missing_updater_hardening))
+    if "for(const domain of ['sensor','binary_sensor'])" in parser_source:
+        fail("Smart Updater activation inventory is still hard-coded to sensor/binary_sensor template domains.")
 
     if "phase:'awaiting_quick_reload'" not in (normal_script or ""):
         fail("Smart Updater readiness metadata must start in awaiting_quick_reload phase.")
@@ -593,6 +647,170 @@ else:
                 f"({len(package_entities)} entity IDs, {len(package_unique_ids)} unique IDs)."
             )
 
+    # Full uninstall must reset the opt-in Insights helper to the shipped default
+    # before deleting helpers, preventing RestoreEntity state from re-enabling it
+    # on a later fresh install.
+    uninstall_defaults_source = str(uninstall_defaults.get("func", ""))
+    turn_off_match = re.search(r"add\('input_boolean\.turn_off',\s*(\[.*?\])\);", uninstall_defaults_source, re.S)
+    if not turn_off_match or '"input_boolean.hpvc_insights_enabled"' not in turn_off_match.group(1):
+        fail("Full uninstall fresh-install reset must explicitly turn input_boolean.hpvc_insights_enabled off.")
+    else:
+        ok("Full uninstall resets Enable Insights to the shipped Off default.")
+
+    # Support-report Accuracy must be one coherent publication snapshot. The
+    # diagnostics payload carries the headline (ta) together with factors, and
+    # the report consumes that same payload instead of independently-aged helpers.
+    accuracy_publish_source = str(accuracy_publish_node.get("func", ""))
+    report_accuracy_source = str(report_accuracy_node.get("func", ""))
+    accuracy_required = [
+        "ta: dailyTargetAccuracy",
+        "ta: accuracyDiagnostics.ta",
+    ]
+    missing_accuracy = [fragment for fragment in accuracy_required if fragment not in accuracy_publish_source]
+    if missing_accuracy:
+        fail("Accuracy diagnostics must preserve the headline in full/reduced report snapshots: " + ", ".join(missing_accuracy))
+    if "const targetAccuracy = finite(factors?.ta)" not in report_accuracy_source:
+        fail("Support report must source headline Accuracy from the same diagnostics snapshot as its factors.")
+    if "num('sensor.hpvc_daily_target_accuracy', null)" in report_accuracy_source and "!accuracySnapshotHasData" not in report_accuracy_source:
+        fail("Support report may only fall back to sensor.hpvc_daily_target_accuracy when the diagnostics snapshot is entirely empty.")
+    if not missing_accuracy and "const targetAccuracy = finite(factors?.ta)" in report_accuracy_source:
+        ok("Support-report Accuracy headline and factors use one coherent diagnostics snapshot.")
+
+    # Automatic Maintenance verification for Action/service adapters requires
+    # real numeric readback; the preview warning must flag that before a user
+    # starts Smart Update / flow removal / full uninstall.
+    package_text = read_text(PACKAGE_PATH)
+    maintenance_block = re.search(
+        r"- name: HPVC Maintenance Inverter Warning(?P<body>.*?)(?=\n  - name: HPVC HBC Available)",
+        package_text,
+        re.S,
+    )
+    if not maintenance_block:
+        fail("Could not inspect HPVC Maintenance Inverter Warning template.")
+    else:
+        maintenance_source = maintenance_block.group("body")
+        required_maintenance = [
+            "readback not in bad",
+            "and is_number(states(readback))",
+            "verification_unavailable_inverters:",
+        ]
+        missing_maintenance = [fragment for fragment in required_maintenance if fragment not in maintenance_source]
+        if missing_maintenance:
+            fail("Maintenance warning does not fully preview Action/service readback verification requirements: " + ", ".join(missing_maintenance))
+        else:
+            warning_title = 'title="Maintenance verification unavailable"'
+            warning_body = "An inverter is unavailable or cannot be verified at full output."
+            warning_night = "If Night Restore already confirmed full output"
+            warning_cancel = "and cancel."
+            if (
+                dashboard_text.count(warning_title) != 2
+                or dashboard_text.count(warning_body) != 2
+                or dashboard_text.count(warning_night) != 2
+                or dashboard_text.count(warning_cancel) < 2
+            ):
+                fail("Desktop and mobile Maintenance warnings must use the same Night Restore verification wording.")
+            else:
+                ok("Desktop and mobile Maintenance warnings use the same Night Restore verification wording.")
+
+    # Destructive maintenance must apply the runtime freshness contract to
+    # Action/service readback, not just accept a cached numeric state.
+    maintenance_watcher_ids = ["eb9674e0d58dc6d1", "6e1516a98c6391ee", "b6d450b56fb931b3"]
+    maintenance_freshness_required = [
+        "sensor.hpvc_source_freshness",
+        "ha_template_last_reported_snapshot",
+        "pv${slot}_last_reported_ms",
+        "Math.max(0, nowMs - observedMs) > 180000",
+        "numericState(liveEntity, slot, method === 'Action/service')",
+    ]
+    missing_watchers = []
+    for watcher_id in maintenance_watcher_ids:
+        watcher = ids.get(watcher_id)
+        source = str(watcher.get("func", "")) if watcher else ""
+        if not source or any(fragment not in source for fragment in maintenance_freshness_required):
+            missing_watchers.append(watcher_id)
+    if missing_watchers:
+        fail("Destructive maintenance watchers do not enforce fresh Action/service readback: " + ", ".join(missing_watchers))
+    else:
+        ok("All destructive Maintenance paths require fresh Action-service readback.")
+
+    night_restore_maintenance_required = [
+        "homePvControlNightRestoreFullConfirmation",
+        "configuredInverterUnavailableBlocks",
+        "disableRestoreBlocks",
+    ]
+    missing_night_restore = []
+    for watcher_id in maintenance_watcher_ids:
+        watcher = ids.get(watcher_id)
+        source = str(watcher.get("func", "")) if watcher else ""
+        if any(fragment not in source for fragment in night_restore_maintenance_required):
+            missing_night_restore.append(watcher_id)
+    safety_gate_source = str(ids.get("bf031913c0a1facd", {}).get("func", ""))
+    if (
+        "homePvControlNightRestoreFullConfirmation" not in safety_gate_source
+        or "nightRestoreMaintenanceSignature" not in safety_gate_source
+        or "configuredNightInverters.every(inv => nightInverterAtFull(inv, nightFullTolerance))" not in safety_gate_source
+        or "nightRestoreFreshPartialObserved" not in safety_gate_source
+        or "configuredNightInverters.some(inv => nightInverterVerificationState(inv, nightFullTolerance) === 'partial')" not in safety_gate_source
+        or "source !== 'readback'" not in safety_gate_source
+        or "readbackValid || source !== 'readback'" not in safety_gate_source
+        or "command-cache/startup assumptions" not in safety_gate_source
+        or "fixedDataRaw" not in safety_gate_source
+        or "targetDataRaw" not in safety_gate_source
+        or "valueField" not in safety_gate_source
+        or "preActionsRaw" not in safety_gate_source
+        or "postActionsRaw" not in safety_gate_source
+    ):
+        fail("Night Restore does not retain independently verified per-inverter full-output proof for Maintenance.")
+    elif missing_night_restore:
+        fail("Destructive Maintenance paths do not consume Night Restore full-output proof: " + ", ".join(missing_night_restore))
+    else:
+        complete_signature_fields = ["valueField", "fixedDataRaw", "targetDataRaw", "preActionsRaw", "postActionsRaw", "actionStep", "refreshSeconds", "minimum"]
+        incomplete_signature_watchers = []
+        for watcher_id in maintenance_watcher_ids:
+            source = str(ids.get(watcher_id, {}).get("func", ""))
+            if any(field not in source for field in complete_signature_fields):
+                incomplete_signature_watchers.append(watcher_id)
+        if incomplete_signature_watchers:
+            fail("Maintenance proof signature does not cover complete adapter configuration in: " + ", ".join(incomplete_signature_watchers))
+        else:
+            ok("Night Restore confirmed-full proof is contradiction-safe and bound to complete adapter configuration.")
+
+    update_guard_source = str(ids.get("247ad595e80b90f3", {}).get("func", ""))
+    if "Update not started" not in update_guard_source:
+        fail("Smart Update guard does not recognize successful pre-install stop status for fresh retry.")
+    else:
+        ok("Smart Update guard clears terminal pre-install reconciliation state for a fresh retry.")
+
+    updater_source_text = str(ids.get("04dd6468527f5aad", {}).get("command", ""))
+    recovery_pos = updater_source_text.find("if(recoveryOnly)")
+    terminal_pos = updater_source_text.find("if(terminal)", recovery_pos)
+    nochange_pos = updater_source_text.find("rollbackKind==='pre-install-no-changes'", terminal_pos)
+    discover_pos = updater_source_text.find("api=await discoverNr();", terminal_pos)
+    if (
+        recovery_pos < 0
+        or terminal_pos < 0
+        or nochange_pos < 0
+        or discover_pos < 0
+        or nochange_pos > discover_pos
+        or "verifyRolledBackTransaction(null,tx,recoveryDir,configPath,dashPath)" not in updater_source_text
+        or "Pre-install no-change rollback cannot have deploymentAttempted=true" not in updater_source_text
+    ):
+        fail("Terminal pre-install/no-change recovery still depends on Node-RED Admin API or lacks no-change verification.")
+    else:
+        ok("Terminal pre-install/no-change recovery republishes intent before Admin API discovery and keeps activation unnecessary.")
+
+    github_release_node = ids.get("3e6dda88c874e566")
+    github_release_source = str(github_release_node.get("command", "")) if github_release_node else ""
+    github_timeout_required = [
+        "GitHub API overall timeout after 15 s",
+        "GitHub API request timeout after 10 s",
+        "GitHub API response timeout after 10 s",
+    ]
+    if not github_release_node or any(fragment not in github_release_source for fragment in github_timeout_required) or str(github_release_node.get("timer", "")) != "20":
+        fail("GitHub release lookup must have bounded request/response/overall deadlines and a 20-second Exec limit.")
+    else:
+        ok("GitHub release lookup is bounded by internal and Exec timeouts.")
+
 # 5c) Multi-inverter degraded configuration policy must isolate slot-local faults.
 validation_node = ids.get("5c38544d8b43e7a8")
 if not validation_node:
@@ -620,6 +838,120 @@ for doc_path in [README, ROOT / "docs" / "01-installation.md", CHANGELOG]:
 if not any("22.9.0" in message for message in errors):
     if "Node-RED 5.x requires Node.js 22.9.0 or newer" in readme_text and "Node-RED 5.x requires Node.js 22.9.0 or newer" in read_text(ROOT / "docs" / "01-installation.md"):
         ok("Node-RED 5 minimum runtime is documented as Node.js 22.9.0+.")
+
+# 5e) CI coverage for v1.5.5 runtime regressions and user-visible documentation.
+workflow_text = read_text(ROOT / ".github" / "workflows" / "validate-release.yml")
+if "scripts/test_control_runtime_load.py" not in workflow_text:
+    fail("GitHub Actions does not run scripts/test_control_runtime_load.py.")
+else:
+    ok("GitHub Actions runs the issue #9 runtime-load regression test.")
+
+installation_text = read_text(ROOT / "docs" / "01-installation.md")
+how_it_works_text = read_text(ROOT / "docs" / "03-how-it-works.md")
+troubleshooting_text = read_text(ROOT / "docs" / "04-troubleshooting.md")
+if "180 seconds" not in installation_text or "Night Restore" not in installation_text:
+    fail("Installation docs are missing the Maintenance inverter-warning / 180-second safe-cancel behavior.")
+elif "60 seconds" not in how_it_works_text or "View report" not in how_it_works_text or "60 seconds" not in troubleshooting_text:
+    fail("Docs are missing the 60-second View report → Generate report fallback behavior.")
+else:
+    ok("Maintenance inverter warning and report Ready-state fallback are documented.")
+
+footer_placement_checks = [
+    (ROOT / "docs" / "01-installation.md", "Nighttime Maintenance can use a full-output confirmation", "## Next steps"),
+    (ROOT / "docs" / "03-how-it-works.md", "### Maintenance readback freshness", "## Next steps"),
+    (ROOT / "docs" / "04-troubleshooting.md", "### Maintenance waits even though the readback still shows 100%", "[← README]"),
+]
+misplaced = []
+for path, section_marker, footer_marker in footer_placement_checks:
+    doc = path.read_text(encoding="utf-8")
+    section_pos = doc.find(section_marker)
+    footer_pos = doc.rfind(footer_marker) if path.name == "04-troubleshooting.md" else doc.find(footer_marker)
+    if section_pos < 0 or footer_pos < 0 or section_pos > footer_pos:
+        misplaced.append(path.name)
+if misplaced:
+    fail("Night Restore Maintenance documentation is misplaced after footer/navigation in: " + ", ".join(misplaced))
+else:
+    ok("Night Restore Maintenance documentation is placed before footer/navigation.")
+
+
+# 5f) GitHub repository readiness.
+workflow_path = ROOT / ".github" / "workflows" / "validate-release.yml"
+required_repo_files = [
+    ROOT / "README.md",
+    ROOT / "LICENSE",
+    ROOT / ".gitignore",
+    workflow_path,
+]
+missing_repo_files = [str(path.relative_to(ROOT)) for path in required_repo_files if not path.is_file()]
+if missing_repo_files:
+    fail("GitHub-ready repository files are missing: " + ", ".join(missing_repo_files))
+else:
+    workflow_text = read_text(workflow_path)
+    required_workflow_fragments = [
+        "actions/checkout@v4",
+        "actions/setup-python@v5",
+        "actions/setup-node@v4",
+        "python scripts/validate_release.py",
+        "python scripts/test_activation_recovery.py",
+        "python scripts/test_insights_mode.py",
+        "python scripts/test_control_runtime_load.py",
+        "permissions:",
+        "contents: read",
+    ]
+    missing_workflow = [fragment for fragment in required_workflow_fragments if fragment not in workflow_text]
+    if missing_workflow:
+        fail("GitHub Actions workflow is incomplete: " + ", ".join(missing_workflow))
+    else:
+        ok("GitHub Actions workflow and core repository files are present.")
+
+# Validate repository-local Markdown links and images.
+bad_links = []
+md_target_re = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+for md_path in ROOT.rglob("*.md"):
+    text = read_text(md_path)
+    for match in md_target_re.finditer(text):
+        raw_target = match.group(1).strip()
+        if raw_target.startswith("<") and raw_target.endswith(">"):
+            raw_target = raw_target[1:-1]
+        raw_target = raw_target.split(" \"", 1)[0].split(" '", 1)[0].strip()
+        if raw_target.startswith(("http://", "https://", "mailto:", "#")):
+            continue
+        path_part = unquote(raw_target.split("#", 1)[0])
+        if not path_part:
+            continue
+        target = (md_path.parent / path_part).resolve()
+        try:
+            target.relative_to(ROOT.resolve())
+        except ValueError:
+            bad_links.append(f"{md_path.relative_to(ROOT)} -> {raw_target} (outside repository)")
+            continue
+        if not target.exists():
+            bad_links.append(f"{md_path.relative_to(ROOT)} -> {raw_target}")
+if bad_links:
+    fail("Broken local Markdown links/images: " + "; ".join(bad_links[:10]))
+else:
+    ok("Local Markdown links and images resolve inside the repository.")
+
+# Troubleshooting follows the same GitHub rendering structure as the other docs.
+troubleshooting_text = read_text(ROOT / "docs" / "04-troubleshooting.md")
+nonblank_lines = [line for line in troubleshooting_text.splitlines() if line.strip()]
+first_nonblank = nonblank_lines[0] if nonblank_lines else ""
+title_match = re.search(r"(?m)^# Troubleshooting\s*$", troubleshooting_text)
+smart_update_match = re.search(r"(?m)^## Smart Update troubleshooting\s*$", troubleshooting_text)
+maintenance_match = re.search(r"(?m)^### Maintenance waits even though the readback still shows 100%\s*$", troubleshooting_text)
+bottom_nav_pos = troubleshooting_text.rfind("[← README]")
+if (
+    not first_nonblank.startswith("[← README]")
+    or title_match is None
+    or smart_update_match is None
+    or maintenance_match is None
+    or bottom_nav_pos <= maintenance_match.start()
+    or not (title_match.start() < smart_update_match.start() < maintenance_match.start())
+):
+    fail("Troubleshooting document structure is invalid for GitHub rendering.")
+else:
+    ok("Troubleshooting document structure is GitHub-ready.")
+
 
 # 6) Guard release-note date consistency.
 def release_date(text: str) -> str | None:

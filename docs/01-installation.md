@@ -165,13 +165,11 @@ If the managed dashboard file was not present, HPVC reports that the custom/past
 The Smart Updater is designed for the Home Assistant OS/Supervised Node-RED add-on environment, because it needs the Home Assistant config mount, `SUPERVISOR_TOKEN`, Supervisor API access, and Node-RED Admin API/ingress access. Other Node-RED/Home Assistant deployment types, and installations using a custom `hpvc_config.yaml` package path, should use the manual upgrade path.
 
 
-
 ### Smart Update recovery and rollback
 
 Smart Update uses Node-RED API v2 revision checks and deploys modified flows. Concurrent deployments are refused rather than overwritten. Rollback restores only HPVC tabs against a fresh revision, preserving intervening unrelated changes. A lost response is reconciled by reading the active HPVC flows. File and flow rollback must be verified before automatic resume.
 
 Private transaction metadata and original/intended files are kept in `/config/hpvc-data/update-recovery/`. If an update is interrupted or rollback cannot be verified, HPVC remains disabled and the backups remain available. Retrying Smart Update first attempts recovery of an unfinished transaction; after verified recovery, retry again to perform a fresh update. If the detached updater terminates after safe shutdown has authorized launch but before flow replacement, a later button press uses a recovery-only path. Repeated clicks while safe shutdown is still restoring/confirming PV or HBC state are ignored and cannot reach the installer. Recovery-only mode cannot start a fresh installation when no interrupted transaction exists. The launch guard reconciles terminal HA status with its local latch, and a filesystem process lock prevents a second updater writer from starting while another updater process is still active. If HPVC files/flows were changed outside the transaction, recovery refuses to overwrite them. Inspect the notification and backups before making a manual repair.
-
 
 
 ### Quick Reload package-entity readiness
@@ -184,7 +182,7 @@ The readiness inventory is stored only in `/config/hpvc-data/update-recovery/rel
 
 ### Smart Update trust model
 
-Smart Update retrieves the release tag from the GitHub Releases API, resolves that tag through the GitHub Git API to an immutable 40-character commit SHA, and downloads `hpvc_config.yaml`, `hpvc_flow.json`, and `hpvc_dashboard.yaml` over HTTPS from `raw.githubusercontent.com/BioPC/home-pv-control/<commit>/`. This removes the tag-movement/TOCTOU window between release discovery and the managed-file downloads. HPVC strictly parses both YAML files with duplicate-key rejection, validates required structure and actual package/dashboard version fields, validates the Node-RED JSON/tab labels and Home Assistant websocket dependency, then re-parses the exact staged files and calls Home Assistant's own configuration check before Node-RED deployment. A failed Home Assistant configuration check enters the same verified rollback path and the new Node-RED flow is not deployed. Smart Update requires the bundled Node-RED `yaml` 2.x parser and refuses to proceed if that complete parser cannot be resolved; it does not downgrade to marker-only or regex YAML checks. A private filesystem process lock also prevents overlapping detached updater writers. The updater still does **not** use an independently trusted cryptographic signature, so authenticity ultimately relies on the integrity of the `BioPC/home-pv-control` GitHub repository and GitHub HTTPS/API delivery. If that trust model is not acceptable for an installation, use the manual upgrade path and verify the downloaded release files independently before installing them.
+Smart Update retrieves the release tag from the GitHub Releases API, resolves that tag through the GitHub Git API to an immutable 40-character commit SHA, and downloads `hpvc_config.yaml`, `hpvc_flow.json`, and `hpvc_dashboard.yaml` over HTTPS from `raw.githubusercontent.com/BioPC/home-pv-control/<commit>/`. This removes the tag-movement/TOCTOU window between release discovery and the managed-file downloads. HPVC strictly parses both YAML files with duplicate-key rejection, validates required structure and actual package/dashboard version fields, validates the Node-RED JSON/tab labels and Home Assistant websocket dependency, then re-parses the exact staged files and calls Home Assistant's own configuration check before Node-RED deployment. A failed Home Assistant configuration check enters the same verified rollback path and the new Node-RED flow is not deployed. Smart Update uses a complete YAML parser without requiring an extra user-installed module: it prefers `yaml` 2.x when available and otherwise uses Node-RED 5's bundled `js-yaml` parser. Parser availability is checked before a new update transaction is created, so a parser prerequisite failure cannot disable HPVC or enter recovery. It does not downgrade to marker-only or regex YAML checks. A private filesystem process lock also prevents overlapping detached updater writers. The updater still does **not** use an independently trusted cryptographic signature, so authenticity ultimately relies on the integrity of the `BioPC/home-pv-control` GitHub repository and GitHub HTTPS/API delivery. If that trust model is not acceptable for an installation, use the manual upgrade path and verify the downloaded release files independently before installing them.
 
 Smart Update does **not** automatically change Node-RED palette dependencies. If the downloaded HPVC flow requires a newer `node-red-contrib-home-assistant-websocket` version than the installed Node-RED module reports, the update stops before file/flow replacement and tells you to update the Home Assistant Node-RED integration manually first.
 
@@ -197,6 +195,23 @@ If download, validation, file replacement or flow deployment fails, HPVC leaves 
 Smart Update replaces `/config/hpvc_dashboard.yaml` only when that managed file already exists. Pasted/custom dashboards remain manual and are not overwritten automatically.
 
 After a successful Smart Update, use **Quick Reload Home Assistant** when prompted. HPVC uses Home Assistant reload services where possible; a full restart is only required when the release or local configuration requires it.
+
+
+### Maintenance inverter warning
+
+When one or more configured PV inverters are unavailable or invalid, the Maintenance section shows an **Inverter unavailable** warning before destructive maintenance actions. An **Action/service** adapter without a valid numeric readback is also warned in advance as **Maintenance verification unavailable**, because automatic maintenance cannot prove that it returned to full output. Smart Update, **Remove HPVC flows**, and **Uninstall HPVC** still use the verified safe-shutdown path: HPVC waits up to **180 seconds** for every configured inverter to be restored and verified at full output. If that cannot be confirmed, the maintenance action cancels safely instead of continuing with an uncertain inverter state.
+
+Action/service maintenance verification also requires fresh readback from the shared HPVC source-freshness snapshot. A cached numeric full-limit value is not accepted after telemetry becomes stale.
+
+Nighttime Maintenance can use a full-output confirmation from the current Night Restore episode if the inverter later goes to sleep. A fresh partial limit, an inverter-configuration change, or Night Restore ending invalidates that proof; without valid proof the normal 180-second safe wait/cancel remains.
+
+For Night Restore Maintenance proof, Action/service inverters require a valid fresh numeric readback. Command-cache and startup-full assumptions are never accepted as full-output verification. Number-entity inverters may use their live numeric limit state.
+
+A Night Restore Maintenance confirmation is invalidated immediately if any independently verifiable configured inverter is later observed below its full-limit tolerance, even when another inverter is offline. A new confirmation is created only after every configured inverter is independently confirmed full again. The proof is also bound to the complete effective Action/service adapter configuration, including payload/target/value-field and pre/post actions.
+
+### Report Ready-state fallback
+
+After a report is generated, the dashboard shows **View report**. Opening it locally clears that Ready state immediately through the local-only reset webhook. For trusted remote access paths that cannot call the local-only webhook, HPVC automatically returns the tile to **Generate report** after **60 seconds**. The generated report file remains available until a newer report replaces it.
 
 ## Manual upgrade
 
@@ -277,4 +292,7 @@ If you installed `hpvc_config.yaml` anywhere other than `/config/packages/hpvc_c
 - [Understand the control sequence](03-how-it-works.md)
 - [Diagnose problems](04-troubleshooting.md)
 
+
 [← README](../README.md) · [Installation](01-installation.md) · [Configuration](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
+
+

@@ -58,7 +58,7 @@ For **Number entity** control, the integration must expose a writable Home Assis
 
 For **Action/service** control, the integration must expose a stable Home Assistant action/service schema that HPVC can call with a dynamic Watt or Percent value. Optional pre/post actions can enable control modes, select modes or trigger a command. Optional command refresh can provide a heartbeat.
 
-A numeric readback entity is strongly recommended for normal control. For **Action/service** adapters it is required for automatic **Smart Update** and **Full uninstall**, because those maintenance workflows must verify the live inverter limit at full before replacing or removing HPVC configuration. Without readback, normal control can still use command-state tracking, but automatic maintenance stops safely rather than assuming physical restoration.
+A numeric readback entity is strongly recommended for normal control. For **Action/service** adapters it is required for automatic **Smart Update**, **Remove HPVC flows**, and **Full uninstall**, because those maintenance workflows must verify the live inverter limit at full before replacing or removing HPVC configuration. Without usable numeric readback, normal control can still use command-state tracking, but the Maintenance dashboard warns **Maintenance verification unavailable** and automatic maintenance stops safely rather than assuming physical restoration.
 
 A site/grid **export limit** is not automatically equivalent to an inverter active-power limit. Use it only when the integration semantics match HPVC's intended production-ceiling control.
 

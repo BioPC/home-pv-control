@@ -92,6 +92,7 @@ These values are safe starting points, not universal recommendations. Review the
 |---|---:|
 | Home PV Control Enabled | Off until setup is complete |
 | Notifications | On |
+| Enable Insights | Off |
 | HBC integration / Charge Priority | Off |
 | Force charge at negative price | On by default; effective only when HBC integration is enabled |
 | Number of PV Inverters | 1 |
@@ -111,6 +112,11 @@ These values are safe starting points, not universal recommendations. Review the
 Night Restore enters after 120 continuous seconds at or below the configured threshold. It exits only after valid PV remains above `max(25 W, threshold + 15 W)` for 30 seconds. See [How it works](03-how-it-works.md#restore-and-recovery) for restart and offline-telemetry behavior.
 
 HPVC uses HBC's own strategy selector rather than separate HPVC strategy helpers. **Enable HBC** is the master permission. If it is turned off during an active negative-price override, HPVC performs only the confirmed restore sequence and then stops HBC writes. PV-minimum protection at negative prices remains independent, so HBC-disabled operation stays safe and PV-only.
+
+
+### Enable Insights
+
+`input_boolean.hpvc_insights_enabled` controls optional analytics and reporting work. It defaults to **Off**. When turned **Off**, HPVC hides the 10-Insights dashboard section and report controls and stops optional Insight/history/report background processing and non-essential diagnostic aggregation. Daily Control Accuracy and all core PV-control, HBC, safety, notification, update/recovery, and essential persistence paths continue to run.
 
 ## Restore defaults
 
@@ -204,7 +210,7 @@ Example shape:
 ```
 
 
-> **Maintenance safety:** Action/service adapters may run normal HPVC control without a readback, but automatic **Smart Update** and **Full uninstall** require a valid numeric readback so HPVC can prove that the inverter has returned to its configured full limit before replacing or removing its configuration. If no readback is configured, those maintenance workflows stop safely and report the affected inverter instead of continuing destructively.
+> **Maintenance safety:** Action/service adapters may run normal HPVC control without a readback, but automatic **Smart Update**, **Remove HPVC flows**, and **Full uninstall** require a valid numeric readback so HPVC can prove that the inverter has returned to its configured full limit before replacing or removing its configuration. The Maintenance dashboard now flags this before the action as **Maintenance verification unavailable**. If no usable readback is configured, those maintenance workflows stop safely and report the affected inverter instead of continuing destructively.
 
 The optional readback entity must report the applied limit in the **same unit selected by Limit unit**. If an integration reports command output in a different unit, normalize it with a template sensor or leave readback empty; otherwise HPVC verification would compare incompatible units. Pre-actions, the main action and post-actions are executed sequentially and stop on the first failed Home Assistant action. HPVC does not insert an inter-step delay; if an integration requires a timed pause, wrap that device-specific sequence in a Home Assistant script and call the script from the adapter. Advanced JSON helpers are Home Assistant `input_text` states and therefore have a 255-character limit; use a script for larger payloads or sequences.
 
