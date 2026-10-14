@@ -2,7 +2,7 @@
 
 # HPVC documentation
 
-These guides document **Home PV Control v1.5.5**.
+These guides document **Home PV Control v1.5.6**.
 
 ## What do you want to do?
 
@@ -33,8 +33,8 @@ These guides document **Home PV Control v1.5.5**.
 
 ## Release information
 
-- [v1.5.5 release notes](../RELEASE_NOTES.md)
+- [v1.5.6 release notes](../RELEASE_NOTES.md)
 - [Full changelog](../CHANGELOG.md)
-- [v1.5.5 release document](../releases/v1.5.5/release.md)
+- [v1.5.6 release document](../releases/v1.5.6/release.md)
 
 Smart Update and normal manual upgrades preserve existing HPVC helper values and saved data. Use the [full-uninstall procedure](01-installation.md#full-uninstall) only when you intend to remove HPVC completely and reset it for a clean reinstall.

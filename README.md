@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="releases/v1.5.5/release.md"><img src="https://img.shields.io/badge/release-v1.5.5-blue" alt="Release v1.5.5"></a>
+  <a href="releases/v1.5.6/release.md"><img src="https://img.shields.io/badge/release-v1.5.6-blue" alt="Release v1.5.6"></a>
   <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant ready"></a>
   <a href="https://nodered.org/"><img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED flow"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="GPL-3.0-or-later"></a>
@@ -223,7 +223,7 @@ See [How HPVC works → Accuracy and factor attribution](docs/03-how-it-works.md
 
 ## Screenshots
 
-The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.5.5 YAML and Node-RED flow are authoritative.
+The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.5.6 YAML and Node-RED flow are authoritative.
 
 ### Settings
 
@@ -255,11 +255,11 @@ Smart Update preserves HPVC configuration, helper values and saved data, validat
 
 For the authoritative update lifecycle, rollback/recovery behavior, trust model and manual upgrade procedure, see [Installation → Smart update from v1.5.3 onward](docs/01-installation.md#smart-update-from-v153-onward).
 
-### v1.5.5 upgrade notes
+### v1.5.6 upgrade notes
 
-v1.5.5 separates configuration-path existence from live PV availability. Mistyped or non-existent Solar/PV control entities now surface as configuration/input errors even during Night Restore, while an existing but sleeping/unavailable PV path remains tolerated at night and one healthy inverter can still carry degraded daytime control.
+v1.5.6 fixes a Smart Update recovery edge case where an already-completed transaction could remain stuck on **Update activation pending** because Home Assistant or Node-RED retained stale update latches. Finalized transactions now reconcile that stale state idempotently while genuine unfinished updates and the user-authorized Quick Reload boundary remain protected.
 
-See the [v1.5.5 release notes](releases/v1.5.5/release.md) for the full release summary.
+See the [v1.5.6 release notes](releases/v1.5.6/release.md) for the full release summary.
 
 ## Uninstalling
 
@@ -276,7 +276,7 @@ See [Installation → Full uninstall](docs/01-installation.md#full-uninstall) fo
 - [Inverter compatibility](docs/05-inverter-compatibility.md)
 - [Documentation index](docs/README.md)
 - [Changelog](CHANGELOG.md)
-- [v1.5.5 release notes](releases/v1.5.5/release.md)
+- [v1.5.6 release notes](releases/v1.5.6/release.md)
 
 For Home Battery Control itself, see the [HBC documentation](https://docs.homebatterycontrol.com/).
 
@@ -326,7 +326,7 @@ docs/
 releases/
   v1.0.0/
   ...
-  v1.5.5/
+  v1.5.6/
 ```
 
 ## Support the project

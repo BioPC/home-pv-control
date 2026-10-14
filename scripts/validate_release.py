@@ -526,6 +526,7 @@ if not all([readiness_node, phase_check_node, phase_guard_node, pending_guard_no
 else:
     readiness_source = str(readiness_node.get("command", ""))
     phase_source = str(phase_check_node.get("command", ""))
+    phase_guard_source = str(phase_guard_node.get("func", ""))
     pending_source = str(pending_guard_node.get("func", ""))
     update_source = str(update_eval_node.get("func", ""))
     uninstall_source = str(uninstall_selector.get("func", ""))
@@ -574,6 +575,33 @@ else:
         fail("Pending activation retry guard must not depend on mutable update-status prose.")
     if "states['input_boolean.hpvc_update_reload_required']" in pending_source:
         fail("Pending activation retry guard must not require reload_required; durable transaction metadata is authoritative.")
+    stale_reconcile_fragments = [
+        "value.reason==='already-finalized'",
+        "input_boolean.hpvc_update_reload_required",
+        "input_boolean.hpvc_update_in_progress",
+        "flow.get('hpvc_update_in_progress')===true",
+    ]
+    if not all(fragment in phase_guard_source for fragment in stale_reconcile_fragments):
+        fail("Finalized activation recovery must reconcile stale HA/Node-RED update latches.")
+    orphan_source = str(ids.get("hpvcorphanreconcile156", {}).get("command", ""))
+    orphan_finish_source = str(ids.get("hpvcorphanfinish156", {}).get("func", ""))
+    orphan_required = [
+        "value.reason==='transaction-missing'",
+        "managed-v1.5.6-package-not-verified",
+        "updater.lock",
+        "updater.reclaim.lock",
+        "input_boolean.hpvc_update_in_progress",
+        "input_boolean.hpvc_update_reload_required",
+        "orphan reconciliation verification failed",
+    ]
+    if not all(fragment in (phase_guard_source + orphan_source) for fragment in orphan_required):
+        fail("Missing-transaction orphan activation recovery must be conservative and verified.")
+    progress_clear = orphan_source.find("if(progress==='on')await service('input_boolean','turn_off',{entity_id:'input_boolean.hpvc_update_in_progress'})")
+    reload_clear = orphan_source.find("if(reload==='on')await service('input_boolean','turn_off',{entity_id:'input_boolean.hpvc_update_reload_required'})")
+    if progress_clear < 0 or reload_clear < 0 or progress_clear > reload_clear:
+        fail("Orphan activation recovery must clear update_in_progress before the runtime reload_required gate.")
+    if not all(fragment in orphan_finish_source for fragment in ["flow.set('hpvc_update_in_progress',false)","flow.set('hpvc_update_started_at',0)","flow.set('hpvc_update_recovery_probe_at',0)","flow.set('hpvc_update_phase','')"]):
+        fail("Successful orphan activation recovery must clear Node-RED-local Smart Update latches.")
     readiness_required = [
         "fs.mkdirSync(lockFile,{mode:0o700})",
         "uninitialized locks as live",
@@ -590,6 +618,12 @@ else:
         "Activation finalization acknowledgement failed",
         "currentTx.activationFinalized===true",
         "currentTx.activationComplete===true",
+        "beganFinalized=tx.activationFinalized===true",
+        "if(tx.activationComplete===true||tx.activationFinalized===true)",
+        "tx.activationComplete!==true&&tx.activationFinalized!==true",
+        "entity_id:'input_boolean.hpvc_update_in_progress'",
+        "hpvc_update_in_progress expected off",
+        "currentTx.activationFinalized===true&&!beganFinalized",
     ]
     missing_readiness = [fragment for fragment in readiness_required if fragment not in readiness_source]
     if missing_readiness:
@@ -602,6 +636,14 @@ else:
     finish_source = str(ids.get("2eb9a6910674ac6d", {}).get("func", ""))
     if "result.busy===true||result.ignore===true" not in finish_source or "Never publish from a delayed result here" not in finish_source:
         fail("Activation finish handler must ignore duplicate/stale attempts and keep delayed failure results side-effect free.")
+    local_cleanup_fragments = [
+        "flow.set('hpvc_update_in_progress',false)",
+        "flow.set('hpvc_update_started_at',0)",
+        "flow.set('hpvc_update_recovery_probe_at',0)",
+        "flow.set('hpvc_update_phase','')",
+    ]
+    if not all(fragment in finish_source for fragment in local_cleanup_fragments):
+        fail("Successful activation finalization must clear Node-RED-local Smart Update latches.")
     delayed_marker = finish_source.find("Never publish from a delayed result here")
     delayed_tail = finish_source[delayed_marker:] if delayed_marker >= 0 else finish_source
     if "action(" in delayed_tail or "notify(" in delayed_tail or "persistent_notification.create" in delayed_tail:
@@ -839,7 +881,7 @@ if not any("22.9.0" in message for message in errors):
     if "Node-RED 5.x requires Node.js 22.9.0 or newer" in readme_text and "Node-RED 5.x requires Node.js 22.9.0 or newer" in read_text(ROOT / "docs" / "01-installation.md"):
         ok("Node-RED 5 minimum runtime is documented as Node.js 22.9.0+.")
 
-# 5e) CI coverage for v1.5.5 runtime regressions and user-visible documentation.
+# 5e) CI coverage for v1.5.6 runtime regressions and user-visible documentation.
 workflow_text = read_text(ROOT / ".github" / "workflows" / "validate-release.yml")
 if "scripts/test_control_runtime_load.py" not in workflow_text:
     fail("GitHub Actions does not run scripts/test_control_runtime_load.py.")

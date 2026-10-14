@@ -93,8 +93,8 @@ def phase_case(tx: dict, spec: dict | None = None, lock: dict | None = None) -> 
 
 def test_phase_recovery() -> None:
     now = int(time.time() * 1000)
-    tx = {"state": "complete", "tag": "v1.5.5", "commit": "abc", "transactionId": "t1", "activationComplete": False}
-    base = {"schema": 4, "tag": "v1.5.5", "commit": "abc", "transactionId": "t1", "phase": "awaiting_quick_reload"}
+    tx = {"state": "complete", "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "activationComplete": False}
+    base = {"schema": 4, "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "phase": "awaiting_quick_reload"}
     assert phase_case(tx, base)["run"] is False, "awaiting_quick_reload must remain user-authorized only"
     assert phase_case(tx, {**base, "phase": "checking"})["run"] is True, "abandoned checking must recover"
     fresh = {"transactionId": "t1", "startedAt": now, "heartbeatAt": now}
@@ -107,6 +107,77 @@ def test_phase_recovery() -> None:
     assert done["run"] is False and done.get("reason") == "already-finalized", "finalized activation must stay idempotent"
 
 
+
+
+def test_finalized_activation_reconciles_stale_latches() -> None:
+    """A durable finalized transaction must repair stale HA/Node-RED update latches."""
+    guard = str(BY_ID["hpvcrecoveryphaseguard155"].get("func", ""))
+    payload = json.dumps({"run": False, "reason": "already-finalized"})
+
+    clean_states = {
+        "input_boolean.hpvc_update_reload_required": {"state": "off"},
+        "input_boolean.hpvc_update_in_progress": {"state": "off"},
+    }
+    clean = run_function_node(guard, {"payload": payload}, {"homeassistant.homeAssistant.states": clean_states}, {"hpvc_update_in_progress": False})
+    assert clean["out"] == [None, None], "clean finalized transaction must remain a no-op"
+
+    stale_reload = dict(clean_states)
+    stale_reload["input_boolean.hpvc_update_reload_required"] = {"state": "on"}
+    reload_result = run_function_node(guard, {"payload": payload}, {"homeassistant.homeAssistant.states": stale_reload}, {"hpvc_update_in_progress": False})
+    assert isinstance(reload_result["out"], list) and reload_result["out"][0] is not None and reload_result["out"][1] is None, "stale reload_required must rerun idempotent finalization"
+
+    stale_helper = dict(clean_states)
+    stale_helper["input_boolean.hpvc_update_in_progress"] = {"state": "on"}
+    helper_result = run_function_node(guard, {"payload": payload}, {"homeassistant.homeAssistant.states": stale_helper}, {"hpvc_update_in_progress": False})
+    assert isinstance(helper_result["out"], list) and helper_result["out"][0] is not None and helper_result["out"][1] is None, "stale HA update_in_progress must rerun idempotent finalization"
+
+    local_result = run_function_node(guard, {"payload": payload}, {"homeassistant.homeAssistant.states": clean_states}, {"hpvc_update_in_progress": True})
+    assert isinstance(local_result["out"], list) and local_result["out"][0] is not None and local_result["out"][1] is None, "stale Node-RED update latch must rerun idempotent finalization"
+
+    # The early periodic guard must no longer trust a stale HA in-progress helper.
+    pending_guard = str(BY_ID["hpvcpendingreloadguard155"].get("func", ""))
+    pending = run_function_node(
+        pending_guard,
+        {},
+        {"homeassistant.homeAssistant.states": {"input_boolean.hpvc_update_in_progress": {"state": "on"}}},
+        {},
+    )
+    assert pending["out"] is not None, "durable transaction classifier must see through a stale HA in-progress helper"
+
+    # Genuine unfinished transactions are still rejected by durable transaction state.
+    unfinished = phase_case({"state": "installing", "tag": "v1.5.6", "commit": "abc", "transactionId": "t1"})
+    assert unfinished["run"] is False and unfinished.get("reason") == "transaction-not-complete", "live/incomplete update must never be reconciled as finalized"
+
+    finish_source = str(BY_ID["2eb9a6910674ac6d"].get("func", ""))
+    finish = run_function_node(
+        finish_source,
+        {"payload": json.dumps({"ok": True, "activationComplete": True, "activationFinalized": True})},
+        {},
+        {
+            "hpvc_update_in_progress": True,
+            "hpvc_update_started_at": 12345,
+            "hpvc_update_recovery_probe_at": 67890,
+            "hpvc_update_phase": "detached",
+        },
+    )
+    flows = finish["flows"]
+    assert flows.get("hpvc_update_in_progress") is False
+    assert flows.get("hpvc_update_started_at") == 0
+    assert flows.get("hpvc_update_recovery_probe_at") == 0
+    assert flows.get("hpvc_update_phase") == "", "successful finalization must clear Node-RED-local update state"
+
+    readiness = heredoc("hpvcreloadreadiness155")
+    required = [
+        "beganFinalized=tx.activationFinalized===true",
+        "if(tx.activationComplete===true||tx.activationFinalized===true)",
+        "tx.activationComplete!==true&&tx.activationFinalized!==true",
+        "entity_id:'input_boolean.hpvc_update_in_progress'",
+        "hpvc_update_in_progress expected off",
+        "currentTx.activationFinalized===true&&!beganFinalized",
+    ]
+    missing = [fragment for fragment in required if fragment not in readiness]
+    assert not missing, f"finalized reconciliation runner is missing invariants: {missing}"
+
 def finish_case(payload: dict) -> dict:
     func = str(BY_ID["2eb9a6910674ac6d"].get("func", ""))
     wrapper = f"""
@@ -118,6 +189,116 @@ const out=run(msg); console.log(JSON.stringify({{out,statuses}}));
     return run_node(wrapper)
 
 
+
+def orphan_reconcile_case(*, reload_state="on", progress_state="off", package_version="1.5.6", transaction=None, updater_lock=False, fail_service=None) -> dict:
+    """Run the shipped orphan reconciler with a temporary config and mocked HA API."""
+    source = heredoc("hpvcorphanreconcile156")
+    with tempfile.TemporaryDirectory() as td:
+        cfg = Path(td)
+        recovery = cfg / "hpvc-data" / "update-recovery"
+        recovery.mkdir(parents=True)
+        packages = cfg / "packages"
+        packages.mkdir()
+        (packages / "hpvc_config.yaml").write_text(
+            f'template:\n  - sensor:\n      - unique_id: hpvc_installed_version\n        state: "{package_version}"\n',
+            encoding="utf-8",
+        )
+        if transaction is not None:
+            (recovery / "transaction.json").write_text(json.dumps(transaction), encoding="utf-8")
+        if updater_lock:
+            (recovery / "updater.lock").write_text(json.dumps({"txid": "stale", "pid": 999999}), encoding="utf-8")
+        patched, count = re.subn(
+            r"function baseDir\(\)\{.*?\}\nfunction apiRequest",
+            f"function baseDir(){{return {json.dumps(cfg.as_posix())};}}\nfunction apiRequest",
+            source, count=1, flags=re.S,
+        )
+        if count != 1:
+            raise AssertionError("Could not patch orphan reconciler baseDir")
+        initial_states = [
+            {"entity_id": "input_boolean.hpvc_update_reload_required", "state": reload_state},
+            {"entity_id": "input_boolean.hpvc_update_in_progress", "state": progress_state},
+        ]
+        mock = (
+            "const __states=" + json.dumps(initial_states) + ";const __calls=[];\n"
+            "function apiRequest(method,apiPath,body){\n"
+            "  if(method==='GET'&&apiPath==='/core/api/states')return Promise.resolve(__states.map(x=>({...x})));\n"
+            "  if(method==='POST'&&apiPath.startsWith('/core/api/services/')){\n"
+            "    __calls.push({method,apiPath,body});\n"
+            "    const entity=String(body?.entity_id||'');\n"
+            + "    if(" + json.dumps(fail_service) + "&&entity===" + json.dumps(fail_service) + ")return Promise.reject(new Error('synthetic HA failure'));\n"
+            "    if(apiPath.endsWith('/input_boolean/turn_off')){const row=__states.find(x=>x.entity_id===entity);if(row)row.state='off';}\n"
+            "    return Promise.resolve([]);\n"
+            "  }\n"
+            "  return Promise.resolve(null);\n"
+            "}\n"
+        )
+        patched, count = re.subn(
+            r"function apiRequest\(method,apiPath,body\)\{.*?\}\nasync function requestStates",
+            mock + "async function requestStates", patched, count=1, flags=re.S,
+        )
+        if count != 1:
+            raise AssertionError("Could not patch orphan reconciler HA API")
+        patched = patched.replace(
+            "process.stdout.write(JSON.stringify({ok:true,orphanReconciled:true,alreadyClean:false}));",
+            "process.stdout.write(JSON.stringify({ok:true,orphanReconciled:true,alreadyClean:false,calls:__calls}));",
+        ).replace(
+            "process.stdout.write(JSON.stringify({ok:true,orphanReconciled:true,alreadyClean:true}));",
+            "process.stdout.write(JSON.stringify({ok:true,orphanReconciled:true,alreadyClean:true,calls:__calls}));",
+        ).replace(
+            "process.stdout.write(JSON.stringify({ok:false,orphanReconciled:false,error:String(e.message||e)}));",
+            "process.stdout.write(JSON.stringify({ok:false,orphanReconciled:false,error:String(e.message||e),calls:__calls}));",
+        )
+        return run_node(patched)
+
+
+def test_orphaned_activation_without_transaction() -> None:
+    guard = str(BY_ID["hpvcrecoveryphaseguard155"].get("func", ""))
+    payload = json.dumps({"run": False, "reason": "transaction-missing"})
+    stale_states = {
+        "input_boolean.hpvc_update_reload_required": {"state": "on"},
+        "input_boolean.hpvc_update_in_progress": {"state": "on"},
+    }
+    candidate = run_function_node(
+        guard, {"payload": payload},
+        {"homeassistant.homeAssistant.states": stale_states, "homePvControlUninstallShutdownActive": False},
+        {"hpvc_update_in_progress": True, "hpvc_update_phase": ""},
+    )
+    assert isinstance(candidate["out"], list) and candidate["out"][0] is None and candidate["out"][1] is not None, "missing transaction + stale latches must route only to orphan reconciliation"
+    active_phase = run_function_node(
+        guard, {"payload": payload},
+        {"homeassistant.homeAssistant.states": stale_states, "homePvControlUninstallShutdownActive": False},
+        {"hpvc_update_in_progress": True, "hpvc_update_phase": "shutdown"},
+    )
+    assert active_phase["out"] == [None, None], "ordinary safe-shutdown phase must never be auto-cleared as orphaned"
+    repaired = orphan_reconcile_case(reload_state="on", progress_state="on")
+    assert repaired["ok"] is True and repaired["orphanReconciled"] is True
+    calls = repaired.get("calls", [])
+    boolean_calls = [c for c in calls if "/input_boolean/turn_off" in c.get("apiPath", "")]
+    assert [c["body"]["entity_id"] for c in boolean_calls] == [
+        "input_boolean.hpvc_update_in_progress",
+        "input_boolean.hpvc_update_reload_required",
+    ], "orphan cleanup must clear runtime gate last"
+    present = orphan_reconcile_case(transaction={"state": "complete"})
+    assert present.get("ignore") is True and present.get("reason") == "transaction-present", "any durable transaction must refuse no-transaction orphan cleanup"
+    locked = orphan_reconcile_case(updater_lock=True)
+    assert locked.get("ignore") is True and locked.get("reason") == "lock-present", "ambiguous updater lock must refuse orphan cleanup"
+    wrong_package = orphan_reconcile_case(package_version="1.5.5")
+    assert wrong_package.get("ignore") is True and wrong_package.get("reason") == "managed-v1.5.6-package-not-verified", "orphan cleanup requires the managed v1.5.6 package marker"
+    failed = orphan_reconcile_case(reload_state="on", progress_state="on", fail_service="input_boolean.hpvc_update_reload_required")
+    assert failed["ok"] is False, "HA failure must remain retryable"
+    failed_calls = failed.get("calls", [])
+    assert any(c.get("body", {}).get("entity_id") == "input_boolean.hpvc_update_in_progress" for c in failed_calls)
+    assert any(c.get("body", {}).get("entity_id") == "input_boolean.hpvc_update_reload_required" for c in failed_calls)
+    finish = str(BY_ID["hpvcorphanfinish156"].get("func", ""))
+    finished = run_function_node(
+        finish, {"payload": json.dumps({"ok": True, "orphanReconciled": True})}, {},
+        {"hpvc_update_in_progress": True, "hpvc_update_started_at": 1, "hpvc_update_recovery_probe_at": 2, "hpvc_update_phase": "detached"},
+    )
+    assert finished["flows"].get("hpvc_update_in_progress") is False
+    assert finished["flows"].get("hpvc_update_started_at") == 0
+    assert finished["flows"].get("hpvc_update_recovery_probe_at") == 0
+    assert finished["flows"].get("hpvc_update_phase") == ""
+
 def test_finish_stale_results() -> None:
     busy = finish_case({"ok": False, "busy": True, "ignore": True})
     assert busy["out"] == [None, None], "busy duplicate must not publish helper changes"
@@ -128,6 +309,67 @@ def test_finish_stale_results() -> None:
     encoded = json.dumps(failure)
     assert "input_boolean.turn_on" not in encoded and "hpvc_update_reload_required" not in encoded, "stale failure output must not re-arm activation gate"
 
+
+
+def finalized_readiness_case(tx: dict, fail_entity: str | None = None) -> dict:
+    """Run the embedded finalizer with mocked HA states and no readiness file."""
+    source = heredoc("hpvcreloadreadiness155")
+    with tempfile.TemporaryDirectory() as td:
+        cfg = Path(td)
+        recovery = cfg / "hpvc-data" / "update-recovery"
+        recovery.mkdir(parents=True)
+        (recovery / "transaction.json").write_text(json.dumps(tx), encoding="utf-8")
+        patched, count = re.subn(
+            r"function baseDir\(\)\{.*?\}\nfunction apiRequest",
+            f"function baseDir(){{return {json.dumps(cfg.as_posix())};}}\nfunction apiRequest",
+            source,
+            count=1,
+            flags=re.S,
+        )
+        if count != 1:
+            raise AssertionError("Could not patch readiness baseDir for finalized reconciliation")
+        states = {
+            "input_boolean.hpvc_update_resume_enabled": {"entity_id": "input_boolean.hpvc_update_resume_enabled", "state": "on"},
+            "input_boolean.hpvc_update_in_progress": {"entity_id": "input_boolean.hpvc_update_in_progress", "state": "on"},
+            "input_boolean.hpvc_update_reload_required": {"entity_id": "input_boolean.hpvc_update_reload_required", "state": "on"},
+            "input_boolean.hpvc_enabled": {"entity_id": "input_boolean.hpvc_enabled", "state": "off"},
+            "input_text.hpvc_update_status": {"entity_id": "input_text.hpvc_update_status", "state": "Update activation pending"},
+        }
+        mock = f"""const MOCK_STATES={json.dumps(states)};
+function apiRequest(method,apiPath,body){{
+ if(method==='GET'&&apiPath==='/core/api/states')return Promise.resolve(Object.values(MOCK_STATES));
+ if(method==='POST'&&apiPath.startsWith('/core/api/services/')){{
+  const parts=apiPath.split('/');const domain=parts[4],serviceName=parts[5];const eid=body&&body.entity_id?String(body.entity_id):'';
+  if({json.dumps(fail_entity)}&&eid==={json.dumps(fail_entity)})return Promise.reject(new Error('synthetic service failure'));
+  if(eid){{
+   if(!MOCK_STATES[eid])MOCK_STATES[eid]={{entity_id:eid,state:'unknown'}};
+   if(domain==='input_boolean'&&(serviceName==='turn_on'||serviceName==='turn_off'))MOCK_STATES[eid].state=serviceName==='turn_on'?'on':'off';
+   if(domain==='input_text'&&serviceName==='set_value')MOCK_STATES[eid].state=String(body.value||'');
+  }}
+  return Promise.resolve(null);
+ }}
+ return Promise.resolve(null);
+}}
+async function requestStates"""
+        patched, count = re.subn(r"function apiRequest\(method,apiPath,body\)\{.*?\}\nasync function requestStates", mock, patched, count=1, flags=re.S)
+        if count != 1:
+            raise AssertionError("Could not patch readiness API for finalized reconciliation")
+        return run_node(patched)
+
+
+def test_finalized_readiness_runner_reconciles_without_transient_metadata() -> None:
+    base = {"state": "complete", "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "resumeEnabled": True}
+    normal = finalized_readiness_case({**base, "activationComplete": True, "activationFinalized": True})
+    assert normal.get("ok") is True and normal.get("alreadyComplete") is True, "finalized transaction must repair stale helpers without readiness metadata"
+
+    implied_complete = finalized_readiness_case({**base, "activationFinalized": True})
+    assert implied_complete.get("ok") is True and implied_complete.get("activationComplete") is True, "activationFinalized must be sufficient durable proof for idempotent cleanup"
+
+    failure = finalized_readiness_case(
+        {**base, "activationComplete": True, "activationFinalized": True},
+        fail_entity="input_boolean.hpvc_update_reload_required",
+    )
+    assert failure.get("ok") is False and "synthetic service failure" in str(failure.get("error", "")), "new cleanup failure must remain retryable, not be hidden as stale success"
 
 def patch_readiness_for_lock_test(source: str, directory: Path) -> str:
     patched, count = re.subn(
@@ -152,8 +394,8 @@ def test_exclusive_activation_lease() -> None:
         cfg = Path(td)
         recovery = cfg / "hpvc-data" / "update-recovery"
         recovery.mkdir(parents=True)
-        tx = {"state": "complete", "tag": "v1.5.5", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "activationComplete": False}
-        spec = {"schema": 4, "tag": "v1.5.5", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "phase": "awaiting_quick_reload", "entities": ["input_boolean.hpvc_test"]}
+        tx = {"state": "complete", "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "activationComplete": False}
+        spec = {"schema": 4, "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "phase": "awaiting_quick_reload", "entities": ["input_boolean.hpvc_test"]}
         (recovery / "transaction.json").write_text(json.dumps(tx), encoding="utf-8")
         (recovery / "reload-readiness.json").write_text(json.dumps(spec), encoding="utf-8")
         patched = patch_readiness_for_lock_test(source, cfg)
@@ -178,8 +420,8 @@ def test_create_before_write_boundary() -> None:
         cfg = Path(td)
         recovery = cfg / "hpvc-data" / "update-recovery"
         recovery.mkdir(parents=True)
-        tx = {"state": "complete", "tag": "v1.5.5", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "activationComplete": False}
-        spec = {"schema": 4, "tag": "v1.5.5", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "phase": "awaiting_quick_reload", "entities": ["input_boolean.hpvc_test"]}
+        tx = {"state": "complete", "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "activationComplete": False}
+        spec = {"schema": 4, "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "phase": "awaiting_quick_reload", "entities": ["input_boolean.hpvc_test"]}
         (recovery / "transaction.json").write_text(json.dumps(tx), encoding="utf-8")
         (recovery / "reload-readiness.json").write_text(json.dumps(spec), encoding="utf-8")
         (recovery / "activation.lock").mkdir()  # interleave: mkdir completed, owner.json not yet written
@@ -679,6 +921,12 @@ def test_github_release_lookup_has_deadline() -> None:
 def main() -> int:
     test_phase_recovery()
     print("PASS activation phase interruption/recovery")
+    test_finalized_activation_reconciles_stale_latches()
+    print("PASS finalized activation reconciles stale HA/Node-RED latches")
+    test_finalized_readiness_runner_reconciles_without_transient_metadata()
+    print("PASS finalized readiness cleanup works without transient metadata")
+    test_orphaned_activation_without_transaction()
+    print("PASS orphaned activation without transaction reconciles safely")
     test_finish_stale_results()
     print("PASS stale/finalization result handling")
     test_exclusive_activation_lease()

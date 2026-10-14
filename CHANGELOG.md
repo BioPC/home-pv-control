@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.5.6 — 2026-10-14
+
+### Smart Update activation recovery
+
+- Fixed a v1.5.5 recovery deadlock where a completed transaction could remain stuck on **Update activation pending** when Home Assistant restored `hpvc_update_reload_required` or `hpvc_update_in_progress` stale, or Node-RED retained its local update latch.
+- Finalized transactions now rerun the existing idempotent activation finalizer only when stale activation/update state still needs reconciliation; durable finalization is sufficient even when transient readiness metadata or the redundant activation-complete flag is missing.
+- Durable transaction state is authoritative for recovery classification; a stale HA `hpvc_update_in_progress` helper no longer blocks a safe finalized-state repair.
+- Successful activation finalization now explicitly clears and verifies both HA update booleans and clears the Node-RED-local update latch, timestamps, recovery-probe marker and phase.
+- A reconciliation attempt that starts from an already-finalized transaction keeps new HA publication/verification failures retryable instead of misclassifying them as stale success.
+- The `awaiting_quick_reload` user boundary and protection for genuine incomplete/live transactions remain unchanged.
+- Added conservative orphan reconciliation for the remaining `transaction.json`-missing case: v1.5.6 clears stale update gates only when no local destructive/update phase is active, no updater/reclaim/fresh activation lock exists, and the managed package independently verifies as v1.5.6. The runtime gate is cleared last and HA state is re-verified.
+
+### Validation
+
+- Added regression coverage for stale reload-required, stale HA update-in-progress and stale Node-RED update-latch states after durable finalization.
+- Added negative coverage proving unfinished transactions cannot be reconciled as finalized.
+- Added regression coverage for missing-transaction orphan cleanup, including active-update-phase, transaction-present, updater-lock, wrong-package and Home Assistant service-failure refusal cases.
+- Release validation now enforces finalized-state repair and Node-RED-local latch cleanup.
+
 ## v1.5.5 — 2026-10-11
 
 ### Smart Update readiness

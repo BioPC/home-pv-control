@@ -1132,7 +1132,7 @@ template:
     default_entity_id: sensor.hpvc_installed_version
     unique_id: hpvc_installed_version
     icon: mdi:tag
-    state: "1.5.5"
+    state: "1.5.6"
   # Explicit default_entity_id is intentional for this renamed v1.3.0 sensor so
   # fresh installs use the documented entity ID; all HPVC template entities use
   # explicit default_entity_id values so Smart Update can verify activation deterministically.
