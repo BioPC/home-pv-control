@@ -930,9 +930,9 @@ if missing_repo_files:
 else:
     workflow_text = read_text(workflow_path)
     required_workflow_fragments = [
-        "actions/checkout@v4",
-        "actions/setup-python@v5",
-        "actions/setup-node@v4",
+        "actions/checkout@v7",
+        "actions/setup-python@v7",
+        "actions/setup-node@v7",
         "python scripts/validate_release.py",
         "python scripts/test_activation_recovery.py",
         "python scripts/test_insights_mode.py",
