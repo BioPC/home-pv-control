@@ -1,4 +1,4 @@
-# HPVC 2.0 pure policy/allocation — 2.0.0-dev.3
+# HPVC 2.0 HBC and runtime memory — 2.0.0-dev.4
 
 This development build extends the accepted dev.1 foundation with read-only controller discovery, immutable command-plan representation, independent evidence interpretation, recovery classification and fleet diagnostics. Native inverter and HBC writes do not exist. The physical-write authorization sensor is always Off, including after enable, configuration edits, import, restart and reload.
 
@@ -16,7 +16,7 @@ The new configuration domains preserve the approved object names. The integratio
 
 ## Storage contracts
 
-Three private files are created under HA `.storage/`, prefixed `hpvc_<config-entry-id>`:
+Five private files are created under HA `.storage/`, prefixed `hpvc_<config-entry-id>`:
 
 - `_configuration.json`: schema 1 envelope, `configuration` kind; PlantConfiguration and bounded ImportTransaction records. Import and initial configuration commit together.
 - `_history.json`: schema 1 envelope, `history` kind; current-day history payload boundaries, accuracy eligibility schema 11 / attribution revision 22. Runtime history collection and legacy journal import are deferred.
@@ -27,6 +27,9 @@ Each envelope contains kind, schema version, revision, payload and SHA-256 paylo
 Commits serialize under an async lock, validate before writing, fsync a same-directory temporary file, atomically replace the destination and sync the parent directory on POSIX. Windows testing covers file fsync and replacement; it does not prove universal power-loss durability. A commit failure poisons the store until a validated reload. Cancellation drains outstanding filesystem work before returning.
 
 Execution transitions are data representation only: there is no service executor. Armed/in-flight work becomes unknown after continuity loss; restore obligations survive removal from active configuration. Unknown execution blocks conflicting armed work. Referenced proof cannot be evicted to satisfy evidence retention. Evidence is capped at 128; terminal operation retention is bounded. Command-cache/startup assumptions cannot be verified evidence.
+
+- `_policy.json`: `policy_memory` envelope; accepted policy/HBC memory, generation, boot clock and consumed probe-event identities.
+- `_accepted_commands.json`: `accepted_commands` envelope; execution-owned simulated events only. Runtime policy evaluation never creates accepted commands. Missing companion files and corruption fail closed.
 
 ## Lifecycle and scheduling
 
@@ -59,7 +62,7 @@ The safety suite rejects actuator service access and HTTP/MQTT actuator transpor
 
 ## Next stage
 
-The pure policy/allocation pipeline is implemented and differentially tested in dev.3; see docs/policy-stage3.md. Before dispatcher work, complete the HBC Charge Priority derivation substage and execution/ownership lifecycle tests behind the still-closed write gate. Do not enable actuation, fence legacy, remove old assets or perform production cutover without a separately scoped stage.
+The dev.4 raw HBC evaluator, durable memory adapter, authoritative execution snapshot and fake lifecycle acceptance are documented in docs/hbc-stage4.md. Live dispatcher implementation remains a separately scoped later stage. Do not enable actuation, fence legacy, remove old assets or perform production cutover without a separately scoped stage.
 
 ## API references checked
 

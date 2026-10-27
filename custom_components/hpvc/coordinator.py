@@ -11,11 +11,9 @@ from .const import (
     MAIN_INTERVAL,
     STARTUP_DELAY,
     FORCED_FULL_INTERVAL,
-    FOUNDATION_WRITE_BLOCK,
 )
 from .codec import SchemaError
 from .control.models import PlantSnapshot, Observation, Quality
-from .execution.models import ExecutionSnapshot, OperationState, ObligationState
 
 from .inverter.manager import InverterManager
 from .inverter.hoymiles import async_read_status, parse_status
@@ -220,6 +218,7 @@ class HpvcCoordinator:
         states_snapshot_reader=None,
         registry_reader=None,
         http_session_factory=None,
+        policy_runtime=None,
     ):
         self.config_store = config_store
         self.history_store = history_store
@@ -246,6 +245,8 @@ class HpvcCoordinator:
         self.readonly_faults = ()
         self.verification_results = ()
         self.registry_refreshed_at_utc = None
+        self.policy_runtime = policy_runtime
+        self.policy_proposal = None
 
     @property
     def configuration(self):
@@ -266,7 +267,15 @@ class HpvcCoordinator:
 
     @property
     def recovery_required(self):
-        return bool(self.storage_fault or self.ledger.recovery_required)
+        return bool(
+            self.storage_fault
+            or self.ledger.recovery_required
+            or (self.policy_runtime and self.policy_runtime.fault)
+            or (
+                self.policy_proposal
+                and self.policy_proposal.hbc.override.recovery_required
+            )
+        )
 
     @property
     def required_inputs_ready(self):
@@ -478,8 +487,51 @@ class HpvcCoordinator:
         return False
 
     async def evaluate(self, snapshot):
-        # Foundation publishes observations only: no policy engine, commands or dispatch.
         self.snapshot = snapshot
+        if self.policy_runtime:
+            from .control.decisions import PolicySnapshot
+            from .control.engine import controllers_from_fleet
+            from .hbc.state import Clock
+            from .policy_runtime import capture_entities
+
+            by_role = {value.source: value for value in snapshot.observations}
+            unknown = lambda role: by_role.get(role, Observation(role))
+            now = time.time()
+            clock = Clock(
+                now, time.monotonic(), self.policy_runtime.accepted.hbc.boot_id
+            )
+            sun = self.state_reader("sun.sun")
+            config = self.configuration
+            policy = PolicySnapshot(
+                snapshot.snapshot_id,
+                now,
+                unknown("grid_power_sensor"),
+                unknown("pv_power_sensor"),
+                unknown("market_price_sensor"),
+                unknown("all_in_price_sensor"),
+                controllers_from_fleet(self.manager.current),
+                config.settings,
+                enabled=config.enabled_intent,
+                external_release=config.external_release_request,
+                sun_below_horizon=bool(sun and sun.state == "below_horizon"),
+                rebalance_pending=bool(self.manager.current.rebalance_uids),
+                negative_price_hbc_charge=config.negative_price_hbc_charge,
+            )
+            try:
+                self.policy_proposal = await self.policy_runtime.evaluate_readonly(
+                    policy,
+                    capture_entities(self.state_reader),
+                    clock,
+                    views=tuple(row.view for row in self.manager.current.effective),
+                    permission=config.control_hbc_strategy,
+                    negative_charge_permission=config.negative_price_hbc_charge,
+                )
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                self.storage_fault = "policy_memory_or_execution_snapshot_failed"
+                raise
+        # Proposed memory is durable; no plan is accepted or dispatched here.
         self.publish()
 
     async def async_set_configuration(self, configuration):
@@ -516,22 +568,13 @@ class HpvcCoordinator:
 
 
 def execution_snapshot(ledger):
-    return ExecutionSnapshot(
-        tuple(
-            item.operation_id
-            for item in ledger.current.operations
-            if item.state
-            not in (
-                OperationState.VERIFIED,
-                OperationState.RETIRED,
-                OperationState.SUPERSEDED,
-            )
-        ),
-        tuple(
-            item.obligation_id
-            for item in ledger.current.restore_obligations
-            if item.state != ObligationState.VERIFIED
-        ),
-        ledger.recovery_required,
-        FOUNDATION_WRITE_BLOCK,
+    from .execution.snapshot import build_execution_snapshot
+    from .execution.facts import ExecutionFacts
+    from .hbc.state import Clock
+
+    return build_execution_snapshot(
+        ledger.current,
+        (),
+        Clock(time.time(), time.monotonic(), "snapshot-only"),
+        ExecutionFacts(ledger.current.plant_uid),
     )

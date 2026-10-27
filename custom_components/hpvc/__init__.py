@@ -187,6 +187,17 @@ async def async_setup_entry(hass, entry):
 
             return async_get_clientsession(hass)
 
+        import time
+        import uuid
+        from .policy_runtime import PolicyRuntimeAdapter
+        from .hbc.state import Clock
+
+        policy_runtime = PolicyRuntimeAdapter(prefix, plant_uid, ledger)
+        await policy_runtime.load(
+            Clock(time.time(), time.monotonic(), uuid.uuid4().hex)
+        )
+        owner.add_cleanup(policy_runtime.close)
+
         coordinator = HpvcCoordinator(
             config_store,
             history_store,
@@ -197,6 +208,7 @@ async def async_setup_entry(hass, entry):
             states_snapshot_reader=readonly_states,
             registry_reader=registry_snapshot,
             http_session_factory=http_session_factory,
+            policy_runtime=policy_runtime,
         )
         entry.runtime_data = coordinator
         registry[entry.entry_id] = coordinator

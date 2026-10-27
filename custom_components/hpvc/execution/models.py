@@ -295,6 +295,10 @@ class ExecutionSnapshot(Record):
     pending_action: str | None = None
     pending_since_utc: float | None = None
     write_lock_reason: str = ""
+    ownership_state: str = "unassessed"
+    accepted_event_id: str | None = None
+    accepted_controller_uids: tuple[str, ...] = ()
+    authorization_block_reasons: tuple[str, ...] = ("physical_writes_hard_off",)
 
     @property
     def physical_writes_authorized(self) -> bool:
