@@ -3,7 +3,7 @@
 from .model import Stage
 
 APPROVED_FINGERPRINT = (
-    "f9d15c2057a8e570b6d2823574f6abb5720ed0fdbc5d39d16c3f07e7a41dd555"
+    "23e70cb864ae386b2ffe202a86bd7683be49402679b6cf94cda12c6dc6af479d"
 )
 
 

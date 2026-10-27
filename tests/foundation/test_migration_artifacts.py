@@ -296,6 +296,7 @@ class ArtifactTests(unittest.IsolatedAsyncioTestCase):
         now = f.clock()
         raw = {k: None for k in REQUIRED}
         raw.update(
+            homePvControlAdapterRuntimeOwner="b",
             homePvControlAdapterRequests={},
             homePvControlAdapterScheduler={"busy": None, "queue": []},
             homePvControlDisableRestoreState={"active": False},
@@ -327,3 +328,44 @@ class ArtifactTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(b.quiescent)
         self.assertTrue(b.command_capability)
         self.assertFalse(b.auto_resume_blocked)
+
+    async def test_registry_restore_of_old_backup_invalidates_completed_journal(self):
+        m = await self.migrator()
+        await m.apply(self.plan(), self.f.engine.current)
+        self.registry.rows = {r.entity_id: r for r in self.rows}
+        with self.assertRaises(SchemaError):
+            await m.apply(self.plan(), self.f.engine.current)
+
+    async def test_interrupted_history_result_commit_reconciles_written_payload(self):
+        f = self.f
+        history = replace(
+            f.history, local_date="2026-10-27", insights_json='[{"retained":true}]'
+        )
+        export = {"source_version": "1.6.0", "history": history.to_dict()}
+        original = f.finalizer.store.commit
+
+        async def fail(value, revision):
+            if value.completed:
+                raise OSError("after history write")
+            await original(value, revision)
+
+        with patch.object(f.finalizer.store, "commit", side_effect=fail):
+            with self.assertRaises(OSError):
+                await f.finalizer.commit(
+                    f.cs,
+                    f.config,
+                    f.tx,
+                    f.hs,
+                    f.history,
+                    today="2026-10-27",
+                    export=export,
+                )
+        f.config = await f.cs.load()
+        f.history = await f.hs.load()
+        await f.finalizer.load()
+        revision = f.hs.revision
+        _, _, got = await f.finalizer.commit(
+            f.cs, f.config, f.tx, f.hs, f.history, today="2026-10-27", export=export
+        )
+        self.assertEqual(got, history)
+        self.assertEqual(f.hs.revision, revision)

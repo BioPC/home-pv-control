@@ -1,6 +1,6 @@
 """Validate v2 development identity separately from preserved v1.6 release records."""
 from pathlib import Path
-import ast,json,re
+import ast,json
 ROOT=Path(__file__).resolve().parents[1]
 meta=json.loads((ROOT/'DEVELOPMENT.json').read_text(encoding='utf-8'))
 manifest=json.loads((ROOT/'custom_components/hpvc/manifest.json').read_text(encoding='utf-8'))

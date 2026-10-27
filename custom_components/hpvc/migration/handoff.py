@@ -161,6 +161,7 @@ class HandoffEngine:
                     or not n.independently_verified
                     or n.value_w != binding.full_w
                     or n.confirmed.utc < n.last_possible_issue_utc
+                    or n.confirmed.utc > now.utc
                     or now.age(n.current_night_observed) is None
                     or now.age(n.current_night_observed) > 15
                     or n.current_night_observed.utc < after
@@ -312,7 +313,9 @@ class HandoffEngine:
                         )
                     value = replace(
                         h,
-                        stage=Stage.DISABLED if finish_disabled or h.stage==Stage.DISABLED else Stage.READY,
+                        stage=Stage.DISABLED
+                        if finish_disabled or h.stage == Stage.DISABLED
+                        else Stage.READY,
                         native_owner_ready=True,
                         reason="",
                         history=(*h.history[-127:], Stage.READY.value),

@@ -277,13 +277,37 @@ for stage in (
     setattr(MigrationTests, "test_restart_" + stage.value, restart)
 
 
-for name,(field,value) in FAULTS.items():
-    async def blocked_restart(self,field=field,value=value):
-        f=self.f
+for name, (field, value) in FAULTS.items():
+
+    async def blocked_restart(self, field=field, value=value):
+        f = self.f
         await f.until(Stage.RECONCILING)
-        setattr(f,field,value)
+        setattr(f, field, value)
         await f.step()
         await f.restart()
         self.assertFalse(f.engine.current.native_owner_ready)
-        self.assertEqual((await f.step()).stage,Stage.BLOCKED)
-    setattr(MigrationTests,'test_restart_with_'+name,blocked_restart)
+        self.assertEqual((await f.step()).stage, Stage.BLOCKED)
+
+    setattr(MigrationTests, "test_restart_with_" + name, blocked_restart)
+
+
+async def ready_disabled(self):
+    f = self.f
+    await f.until(Stage.READY)
+    f.at += 2
+    value = await f.engine.advance(
+        f.inventory(),
+        f.clock(),
+        bindings=f.current_bindings,
+        configuration_fingerprint=f.config_hash,
+        proofs=f.proofs(),
+        finish_disabled=True,
+    )
+    self.assertEqual(value.stage, Stage.DISABLED)
+    self.assertTrue(value.native_owner_ready)
+    self.assertFalse(value.production_transport_authorized)
+    await f.restart()
+    self.assertFalse(f.engine.current.native_owner_ready)
+
+
+MigrationTests.test_ready_disabled_still_requires_post_restart_proof = ready_disabled

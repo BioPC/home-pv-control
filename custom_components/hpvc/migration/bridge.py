@@ -45,6 +45,8 @@ def decode_context_export(
         or export.get("complete") is not True
     ):
         raise SchemaError("Incomplete/version-mismatched migration bridge")
+    if export.get("foreignHpvcCandidates"):
+        raise SchemaError("Unrecognized HPVC-like flows require recovery")
     raw = export.get("raw")
     if not isinstance(raw, dict) or not all(k in raw for k in REQUIRED):
         raise SchemaError("Missing dispatcher context is unknown, never empty")
@@ -76,6 +78,29 @@ def decode_context_export(
         or raw["homePvControlAdapterResync"]
         or raw["homePvControlRuntimeEvaluationLock"]
     )
+    if raw["homePvControlAdapterRuntimeOwner"] != export["runtimeBoot"]:
+        raise SchemaError("Legacy dispatcher runtime owner is not bound")
+    if night_evidence:
+        night = export.get("night") or {}
+        confirmation = raw["homePvControlNightRestoreFullConfirmation"]
+        if (
+            night.get("active") is not True
+            or not isinstance(confirmation, dict)
+            or night.get("confirmation") != confirmation
+            or confirmation.get("confirmed") is not True
+            or confirmation.get("fullTotal")
+            != sum(b.full_w for b in controller_bindings)
+            or any(
+                n.reference != confirmation.get("signature")
+                or n.confirmed.utc * 1000 != confirmation.get("confirmedAt")
+                or n.current_night_observed != observed
+                or not n.independently_verified
+                for n in night_evidence
+            )
+        ):
+            raise SchemaError(
+                "Night Restore receipt is not the source-confirmed current fleet proof"
+            )
     token = ""
     fenced = False
     if fence_receipt:

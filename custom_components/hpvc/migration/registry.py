@@ -112,9 +112,11 @@ class RegistryMigrator:
         if not self.current.moves:
             await self._save(moves=tuple(moves))
         for i, m in enumerate(self.current.moves):
-            if i < self.current.applied:
-                continue
             expected = replace(m.identity, entity_id=m.destination)
+            if i < self.current.applied:
+                if self._identity(m.destination) != expected:
+                    raise SchemaError("Registry backup/restart lost a completed move")
+                continue
             if (
                 self.current.in_progress == i
                 and self._identity(m.destination) == expected
