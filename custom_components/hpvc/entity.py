@@ -227,11 +227,32 @@ class HpvcEntity(Entity):
             ):
                 raise SchemaError("Invalid action")
         if self.setting.slot:
-            if self.coordinator.ledger.recovery_required:
+            if self.coordinator.ledger.recovery_required and not (
+                self.setting.field == "control_enabled" and value is False
+            ):
                 raise SchemaError(
                     "Resolve retained obligations before changing controller configuration"
                 )
             controller = self._controller()
+            effective = self.coordinator.manager.current.by_slot(self.setting.slot)
+            if (
+                effective
+                and self.setting.field == "full_limit_w"
+                and effective.view.operating_range.max_power_locked
+            ):
+                raise SchemaError(
+                    "Full power is locked to trusted OpenDTU API/cache rating"
+                )
+            if (
+                effective
+                and effective.view.configuration.identity.adapter.value == "enphase"
+                and self.setting.field in ("full_limit_w", "low_limit_w")
+            ):
+                controller = replace(
+                    controller,
+                    auto_identity=effective.uid,
+                    auto_managed=effective.origin == "auto",
+                )
             if self.setting.field == "method":
                 value = ControlMethod(value)
             if self.setting.field == "unit":

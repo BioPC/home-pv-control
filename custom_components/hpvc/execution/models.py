@@ -121,6 +121,8 @@ class CommandBatch(Record):
     sequence_fingerprint: str
     targets: tuple[RepresentedTarget, ...] = ()
     steps: tuple[CommandStep, ...] = ()
+    requested_plant_target_w: float | None = None
+    requires_readiness: bool = False
 
 
 @dataclass(frozen=True)

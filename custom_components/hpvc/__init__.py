@@ -27,6 +27,10 @@ async def async_setup_entry(hass, entry):
         StorageError,
     )
     from .legacy import detect_legacy, persist_preview
+    from .execution.recovery import reconcile_restart
+    from .inverter.base import EntityRecord, RegistryEntity, RegistryDevice
+    from .storage import canonical
+    from homeassistant.helpers import entity_registry as er, device_registry as dr
     from .config_flow import capture_legacy
 
     registry = hass.data.setdefault(DOMAIN, {})
@@ -93,9 +97,106 @@ async def async_setup_entry(hass, entry):
         elif history.plant_uid != plant_uid:
             raise StorageError("History belongs to another plant")
         # Restore uncertainty durably before starting any listeners or runtime workers.
-        await ledger.reconcile_restart()
+        await reconcile_restart(ledger)
+
+        def registry_snapshot():
+            entities = tuple(
+                RegistryEntity(
+                    item.entity_id,
+                    str(item.id),
+                    str(item.device_id or ""),
+                    str(item.platform or ""),
+                    str(item.config_entry_id or ""),
+                    str(item.unique_id or ""),
+                    str(item.original_name or ""),
+                    str(item.translation_key or ""),
+                    str(getattr(item, "original_entity_id", "") or ""),
+                    item.disabled_by is not None,
+                )
+                for item in er.async_get(hass).entities.values()
+            )
+            devices = tuple(
+                RegistryDevice(
+                    str(item.id),
+                    str(item.manufacturer or ""),
+                    str(item.model or ""),
+                    str(getattr(item, "model_id", "") or ""),
+                    str(item.name_by_user or item.name or ""),
+                    str(item.configuration_url or ""),
+                    canonical(sorted(item.identifiers)),
+                )
+                for item in dr.async_get(hass).devices.values()
+            )
+            return entities, devices
+
+        def readonly_states(include_discovery=False):
+            watched = set(coordinator.manager.watched_entities())
+            for config in coordinator.configuration.controllers:
+                watched.update(
+                    filter(None, (config.limit_number, config.readback_entity))
+                )
+            for candidate in coordinator.manager.candidates:
+                watched.update(
+                    filter(
+                        None,
+                        (
+                            candidate.limit_entity,
+                            candidate.enable_entity,
+                            candidate.mode_entity,
+                        ),
+                    )
+                )
+            source = (
+                hass.states.async_all()
+                if include_discovery
+                else [hass.states.get(key) for key in sorted(watched)]
+            )
+            result = []
+            for item in source:
+                if item is None:
+                    continue
+                if (
+                    include_discovery
+                    and item.entity_id.split(".", 1)[0]
+                    not in ("number", "switch", "select")
+                    and item.entity_id not in watched
+                ):
+                    continue
+                attributes = {
+                    key: value
+                    for key, value in item.attributes.items()
+                    if key in ("min", "max", "step", "unit_of_measurement", "options")
+                }
+                stamp = getattr(item, "last_reported", None)
+                try:
+                    encoded = canonical(attributes)
+                except (TypeError, ValueError):
+                    encoded = "{}"
+                result.append(
+                    EntityRecord(
+                        item.entity_id,
+                        item.state,
+                        stamp.timestamp() if stamp is not None else None,
+                        encoded,
+                    )
+                )
+            return tuple(result)
+
+        def http_session_factory():
+            from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+            return async_get_clientsession(hass)
+
         coordinator = HpvcCoordinator(
-            config_store, history_store, ledger, state, owner, hass.states.get
+            config_store,
+            history_store,
+            ledger,
+            state,
+            owner,
+            hass.states.get,
+            states_snapshot_reader=readonly_states,
+            registry_reader=registry_snapshot,
+            http_session_factory=http_session_factory,
         )
         entry.runtime_data = coordinator
         registry[entry.entry_id] = coordinator
@@ -121,6 +222,9 @@ async def async_setup_entry(hass, entry):
                         if getattr(config, key)
                     }
                 )
+            )
+            entities = tuple(
+                sorted(set(entities) | set(coordinator.manager.watched_entities()))
             )
             if entities == watched[0]:
                 return

@@ -24,6 +24,14 @@ def install():
     helpers = module("homeassistant.helpers")
     core = module("homeassistant.core")
     core.callback = lambda function: function
+    for name, attribute in (
+        ("entity_registry", "entities"),
+        ("device_registry", "devices"),
+    ):
+        registry = module("homeassistant.helpers." + name)
+        registry.async_get = lambda hass, attribute=attribute: types.SimpleNamespace(
+            **{attribute: {}}
+        )
     entity = module("homeassistant.helpers.entity")
 
     class Entity:

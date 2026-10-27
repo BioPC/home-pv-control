@@ -251,17 +251,41 @@ class SafetySourceTests(unittest.TestCase):
                             ),
                             str(path),
                         )
-        for name in (
-            "dispatcher.py",
-            "generic_number.py",
-            "generic_action.py",
-            "hoymiles.py",
-            "enphase.py",
-        ):
-            self.assertFalse(
-                any(base.rglob(name)),
-                name + " must not install an actuator in foundation",
+        self.assertFalse(
+            any(base.rglob("dispatcher.py")), "No service dispatcher in read-only phase"
+        )
+        # Concrete adapters may construct immutable plans, but have no execution methods.
+        forbidden_methods = {
+            "execute",
+            "async_execute",
+            "dispatch",
+            "async_dispatch",
+            "write_limit",
+            "async_write_limit",
+        }
+        for path in (base / "inverter").glob("*.py"):
+            for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    self.assertNotIn(node.name, forbidden_methods, str(path))
+        http = ast.parse((base / "inverter/hoymiles.py").read_text(encoding="utf-8"))
+        gets = [
+            node
+            for node in ast.walk(http)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "session"
+        ]
+        self.assertEqual(len(gets), 1)
+        self.assertEqual(gets[0].func.attr, "get")
+        self.assertTrue(
+            any(
+                keyword.arg == "allow_redirects"
+                and isinstance(keyword.value, ast.Constant)
+                and keyword.value.value is False
+                for keyword in gets[0].keywords
             )
+        )
 
     def test_manifest_has_no_runtime_dependencies(self):
         data = json.loads(Path("custom_components/hpvc/manifest.json").read_text())
