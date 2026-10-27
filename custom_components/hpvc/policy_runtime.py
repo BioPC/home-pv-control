@@ -5,7 +5,7 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from .codec import Record, SchemaError
 from .storage import StorageError, VersionedStore
-from .control.decisions import PolicyMemory, PolicyResult
+from .control.decisions import PolicyMemory, PolicyResult, PolicyController
 from .control.engine import evaluate as evaluate_policy
 from .control.night_restore import after_restart as restart_policy
 from .hbc.state import (
@@ -54,6 +54,7 @@ class EvaluationProposal(Record):
     applied_probe_event_ids: tuple[str, ...]
     source_digest: str
     cooldown_seconds: float = 30.0
+    controller_provenance: tuple[PolicyController, ...] = ()
 
 
 def align_policy(memory, last_clock, clock):
@@ -143,6 +144,19 @@ class PolicyRuntimeAdapter:
             ):
                 raise SchemaError(
                     "Accepted command differs from represented controller plan"
+                )
+            provenance = {c.uid: c for c in proposal.controller_provenance}
+            if len({c.controller_uid for c in event.controllers}) != len(
+                event.controllers
+            ) or any(
+                c.controller_uid not in provenance
+                or c.before_w != provenance[c.controller_uid].current_w
+                or c.configuration_signature
+                != provenance[c.controller_uid].configuration_signature
+                for c in event.controllers
+            ):
+                raise SchemaError(
+                    "Accepted controller before-value/configuration provenance mismatch"
                 )
             duration = proposal.cooldown_seconds if event.action != "none" else 0.0
             if event.cooldown_seconds != duration:
@@ -364,6 +378,7 @@ class PolicyRuntimeAdapter:
             applied,
             digest,
             policy.settings.cooldown_seconds,
+            policy.controllers,
         )
 
     async def accept_proposal(self, proposal, *, durable=True):

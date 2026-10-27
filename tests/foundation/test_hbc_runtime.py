@@ -163,3 +163,41 @@ class HbcContinuityTests(unittest.TestCase):
         result = evaluate_override(snap, entities)
         self.assertEqual(result.memory.fault_published, c)
         self.assertIn("fault_on", [a.step for a in result.actions])
+
+    def test_fault_notification_acceptance_does_not_delay_select_retry(self):
+        from custom_components.hpvc.hbc.state import (
+            OverrideMemory,
+            AcceptedOverrideStep,
+        )
+        from custom_components.hpvc.hbc.override import evaluate_override
+
+        row = next(
+            row
+            for seq in FIXTURE["sequences"]
+            for row in seq["cycles"]
+            if row["expected"]["override_previous_strategy"] is not None
+            and row["input"]["all_in"] <= 0
+        )
+        _, snap = HbcDriver("retry").step(row)
+        c = snap.clock
+        memory = replace(
+            snap.memory,
+            override=OverrideMemory(
+                phase="entering_strategy",
+                phase_since=c,
+                capture_token="capture",
+                previous_strategy="Self Consumption",
+                previous_goal="adaptive",
+            ),
+        )
+        snap = replace(
+            snap,
+            memory=memory,
+            durable_capture_token="capture",
+            accepted_override_events=(
+                AcceptedOverrideStep("fault_notification", c, "capture"),
+            ),
+        )
+        result = evaluate_override(snap, {e.entity_id: e for e in snap.entities})
+        self.assertIn("enter_strategy", [a.step for a in result.actions])
+        self.assertIsNone(result.memory.last_retry)

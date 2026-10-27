@@ -115,6 +115,8 @@ def evaluate_override(snapshot, entities):
             event
             for event in snapshot.accepted_override_events
             if event.capture_token == memory.capture_token
+            and event.step
+            in ("enter_strategy", "enter_goal", "restore_goal", "restore_strategy")
         ]
         last = events[-1] if events else None
         age = clock.age(last.accepted) if last else None

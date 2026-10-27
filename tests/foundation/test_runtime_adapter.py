@@ -228,6 +228,14 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
                     controllers=(replace(event.controllers[0], target_w=123),),
                 )
             )
+        with self.assertRaises(SchemaError):
+            await self.adapter.event_recorder.record_simulated_acceptance(
+                replace(
+                    event,
+                    event_id="wrong-before",
+                    controllers=(replace(event.controllers[0], before_w=1),),
+                )
+            )
         self.assertEqual(self.execution(31).cooldown_until_utc, 0)
 
     async def test_policy_to_independent_verification_settling_next_evaluation(self):
