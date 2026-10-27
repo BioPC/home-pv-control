@@ -17,7 +17,7 @@ function owned(nodes){return nodes.filter(n=>TABS.includes(n.id)||TABS.includes(
 function foreignHpvc(nodes){return nodes.filter(n=>!TABS.includes(n.id)&&!TABS.includes(n.z)&&!DEPENDENCIES.includes(n.id)&&(/homePvControl/.test(n.func||'')||/hpvc/i.test((n.name||'')+' '+(n.label||'')))).map(n=>n.id);}
 function fingerprint(nodes){return crypto.createHash('sha256').update(canonical(owned(nodes).map(n=>{const v={...n};if(v.type==='tab')delete v.disabled;return v;}).sort((a,b)=>a.id.localeCompare(b.id)))).digest('hex');}
 function inspect({nodes,get,completeInventory=false,runtimeBoot,transactionId,challenge,now,getFlow}){
- const raw=Object.fromEntries(KEYS.map(k=>[k,get(k)]));
+ const raw=structuredClone(Object.fromEntries(KEYS.map(k=>[k,get(k)])));
  // Undefined context can mean a cold restart that lost outstanding obligations.
  // Never replace it with an empty scheduler or an assumed-restored HBC state.
  const foreign=foreignHpvc(nodes);
