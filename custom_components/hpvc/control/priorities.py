@@ -190,7 +190,16 @@ def arbitrate(snapshot, f):
             and not ex.unresolved_obligation_ids
             and not ex.recovery_required
         )
-        release_full = bool(controllers) and len(full) == len(controllers) and clear
+        release_full = (
+            bool(controllers)
+            and len(full) == len(controllers)
+            and clear
+            and abs(
+                sum(c.current_w for c in controllers)
+                - sum(c.full_w for c in controllers)
+            )
+            <= max(1, s.pv_adjust_deadband)
+        )
         degraded = (
             f.release_age >= 90
             and bool(unavailable)

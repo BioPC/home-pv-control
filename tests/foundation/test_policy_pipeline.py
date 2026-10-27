@@ -2,6 +2,7 @@
 
 import ast
 from dataclasses import replace, FrozenInstanceError
+import gzip
 import hashlib, json
 from pathlib import Path
 import unittest
@@ -163,7 +164,11 @@ class PolicySafetyTests(unittest.TestCase):
 
     def test_original_flow_digest_matches_oracle(self):
         self.assertEqual(
-            hashlib.sha256((ROOT / "node-red/hpvc_flow.json").read_bytes()).hexdigest(),
+            hashlib.sha256(
+                gzip.decompress(
+                    (ROOT / "tests/fixtures/policy-v1.6-runtime.json.gz").read_bytes()
+                )
+            ).hexdigest(),
             FIXTURE["source_flow_sha256"],
         )
 
@@ -304,6 +309,18 @@ class PolicySafetyTests(unittest.TestCase):
                 replace(snap, negative_price_hbc_charge=False)
             ).intent.hbc_negative_override_requested
         )
+
+    def test_hbc_restoration_lock_does_not_request_new_negative_override(self):
+        snap = replace(
+            self.snapshot,
+            execution=ExecutionSnapshot(hbc_restore_pending=True),
+            hbc=HbcPolicyInput(
+                available=True, control_enabled=True, override_entities_present=True
+            ),
+        )
+        result = evaluate(snap)
+        self.assertEqual(result.intent.action, Action.MINIMUM)
+        self.assertFalse(result.intent.hbc_negative_override_requested)
 
     def test_no_sun_only_night_entry(self):
         result = transition(

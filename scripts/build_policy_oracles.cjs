@@ -1,7 +1,7 @@
 // Test-only oracle: execute ORIGINAL shipped Function nodes against fake HA/context.
 // Stops before Record Requested Inverter Writes. No services, network or hardware.
 const fs=require('fs'),path=require('path'),crypto=require('crypto');
-const {Runtime,by,ctx}=require('./control_test_runtime.cjs');
+const {Runtime,by,ctx}=require('../tests/policy_oracle_runtime.cjs');
 const root=path.resolve(__dirname,'..');
 const cases=[];
 const controller=(kw={})=>Object.assign({full:3000,minimum:0,current:3000,unit:'Watts',step:1,available:true,participating:true},kw);
@@ -47,6 +47,9 @@ add('hbc-fallback',{hbc:{suppress:false,operational:true,fallback:true}});
 add('hbc-release',{grid:0,pv:1500,controllers:[controller({current:1500})],hbc:{increase:true,target:1800,operational:true}});
 add('hbc-external-response',{external_release:true,hbc:{response:true},controllers:[controller({current:1500})]});
 add('hbc-negative',{all_in:0,hbc:{suppress:true,operational:true}});
+for(const gap of [24,25,26])add('disable-deadband-'+gap,{enabled:false,controllers:[controller({current:3000-gap})]});
+add('external-aggregate-full-gap',{external_release:true,controllers:[controller({current:2980}),controller({current:2980})]});
+add('external-individual-full-gap',{external_release:true,controllers:[controller({current:2980})]});
 let seed=20261027;const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/2**32;};
 for(let i=0;i<120;i++){const n=1+Math.floor(rand()*4);const cs=Array.from({length:n},()=>{let full=[1000,2000,3000][Math.floor(rand()*3)];return controller({full,current:Math.floor(rand()*full),minimum:0});});add('seeded-'+i,{controllers:cs,grid:Math.floor(rand()*3000)-1800,pv:Math.floor(rand()*cs.reduce((x,c)=>x+c.full,0)),market:[-.01,0,.01,.03][Math.floor(rand()*4)],all_in:rand()<.1?0:.1,cooldown_remaining:rand()<.2?20:0});}
 function run(s){
@@ -76,7 +79,7 @@ function run(s){
  const final=stages['34beacbe564351d4']||h;const allocation=stages['7ca764bbb9c3bedd']||h;
  return {input:s,expected:{action:h.pvAction,status:h.status,reason:h.reason,halted:!!h.halted,requested:final.targetTotal,allocated:allocation.targetTotal,calculated:final.calculatedTargetTotal??null,targets:(allocation.targets||[]).map(t=>({uid:String(t.entity).replace(/^pv(\d+)$/,(_,n)=>'number.inv'+n),target:t.target,frozen:!!t.skippedInFlight})),represented:(h.targets||[]).map(t=>({uid:String(t.entity).replace(/^pv(\d+)$/,(_,n)=>'number.inv'+n),target:t.target,native:t.write_value_percent??t.write_value_watts})),price_mode:!!h.priceLimitingActive,remembered_price_mode:priceFlow.get('homePvControlPriceLimitingActive')??null,cooldown_active:!!h.cooldownActiveNow,cooldown_until:r.global.get('homePvControlCooldownUntilMs')||0,night_active:!!h.nightRestoreActive,night_pending:!!h.nightRestorePending,night_entry_since:flow.get('homePvControlNightRestoreSince')||0,night_recovery_since:flow.get('homePvControlNightRestoreRecoverySince')||0,rebalance_applied:!!h.inverterRebalanceApplied,rebalance_confirmed:!!h.inverterRebalanceConfirmed}};
 }
-const flow=fs.readFileSync(path.join(root,'node-red/hpvc_flow.json'));
+const flow=require('zlib').gunzipSync(fs.readFileSync(path.join(root,'tests/fixtures/policy-v1.6-runtime.json.gz')));
 const output={source_flow_sha256:crypto.createHash('sha256').update(flow).digest('hex'),source:'Original v1.6 Runtime.cycle through Detect Meaningful Inverter Target Changes, no dispatch. HBC scenarios inject resolved upstream HBC interface only.',scenarios:cases.map(run)};
 const target=path.join(root,'tests/fixtures/policy-v1.6-oracles.json');fs.writeFileSync(target,JSON.stringify(output)+'\n');console.log(JSON.stringify({scenarios:cases.length,path:target,source_sha256:output.source_flow_sha256}));
 

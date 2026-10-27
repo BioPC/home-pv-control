@@ -100,6 +100,16 @@ def allocate(
     def outcome(values, applied=False, confirmed=False):
         if any(v == minimum[i] or v == maximum[i] for i, v in enumerate(values)):
             reasons.append("saturation")
+        reasons.extend(
+            "hard_minimum:" + c.uid
+            for c, value, low in zip(rows, values, minimum)
+            if value == low
+        )
+        reasons.extend(
+            "saturation:" + c.uid
+            for c, value, high in zip(rows, values, maximum)
+            if value == high
+        )
         allocated = watts(sum(values))
         shortfall = (
             ";".join(dict.fromkeys(reasons))

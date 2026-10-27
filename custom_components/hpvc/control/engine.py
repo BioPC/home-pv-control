@@ -110,7 +110,8 @@ def evaluate(
         not snapshot.enabled
         and not snapshot.automatic_safety_pause
         and (
-            any_below
+            full - current > max(1, s.pv_adjust_deadband)
+            or any(not c.available for c in configured)
             or ex.hbc_restore_pending
             or ex.pending_verification
             or ex.unresolved_obligation_ids
@@ -301,7 +302,8 @@ def evaluate(
         external_release_degraded_candidate=arbitration.release_degraded_candidate,
         hbc_negative_override_requested=bool(
             snapshot.enabled
-            and wants_min
+            and allin_ok
+            and snapshot.all_in.value <= 0
             and snapshot.hbc.override_entities_present
             and snapshot.hbc.control_enabled
             and snapshot.negative_price_hbc_charge
