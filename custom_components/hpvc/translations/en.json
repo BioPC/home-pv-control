@@ -1,0 +1,44 @@
+{
+  "title": "Home PV Control",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Home PV Control native foundation",
+        "description": "Read-only foundation: native inverter and HBC writes are disabled. Legacy detection: {legacy_state}. Import validation: {import_errors}. Existing Node-RED is left untouched.",
+        "data": {
+          "import_legacy": "Preview legacy configuration import",
+          "inverter_count": "Configured inverter count (0-10)",
+          "market_price_sensor": "Market/export price entity",
+          "all_in_price_sensor": "All-in price entity",
+          "grid_power_sensor": "Grid power entity",
+          "pv_power_sensor": "PV power entity"
+        }
+      },
+      "legacy_preview": {
+        "title": "Review legacy import",
+        "description": "Import {controller_count} controller slots into native storage. This does not stop Node-RED, complete handoff, or enable physical writes. User-owned external references have not been inspected.",
+        "data": {
+          "confirm": "Confirm configuration import only"
+        }
+      }
+    },
+    "error": {
+      "invalid_legacy": "Legacy values are missing or malformed; review the listed validation errors.",
+      "invalid_configuration": "Invalid configuration, entity reference, or non-integer count.",
+      "legacy_changed": "Legacy configuration changed; restart setup to capture a consistent preview."
+    },
+    "abort": {
+      "already_configured": "Home PV Control already has a configuration entry."
+    }
+  },
+  "issues": {
+    "foundation_read_only": {
+      "title": "HPVC foundation: physical writes disabled",
+      "description": "This development foundation has no inverter or HBC actuator implementation. Enable intent and imported configuration cannot authorize physical writes. Legacy Node-RED remains untouched."
+    },
+    "recovery_required": {
+      "title": "HPVC storage or import requires recovery",
+      "description": "Native startup was blocked because persisted configuration or recovery data could not be validated. Preserve the existing files and resolve the error before retrying. No actuator writes are available."
+    }
+  }
+}

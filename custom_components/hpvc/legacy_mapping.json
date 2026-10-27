@@ -1,0 +1,1166 @@
+{
+  "schema_version": 1,
+  "source_version": "1.6.0",
+  "mappings": [
+    {
+      "source": "input_boolean.hpvc_pv1_control_disabled",
+      "destination": "switch.hpvc_pv1_control",
+      "disposition": "inverted"
+    },
+    {
+      "source": "input_boolean.hpvc_pv2_control_disabled",
+      "destination": "switch.hpvc_pv2_control",
+      "disposition": "inverted"
+    },
+    {
+      "source": "input_boolean.hpvc_pv3_control_disabled",
+      "destination": "switch.hpvc_pv3_control",
+      "disposition": "inverted"
+    },
+    {
+      "source": "input_boolean.hpvc_pv4_control_disabled",
+      "destination": "switch.hpvc_pv4_control",
+      "disposition": "inverted"
+    },
+    {
+      "source": "input_boolean.hpvc_pv5_control_disabled",
+      "destination": "switch.hpvc_pv5_control",
+      "disposition": "inverted"
+    },
+    {
+      "source": "input_boolean.hpvc_pv6_control_disabled",
+      "destination": "switch.hpvc_pv6_control",
+      "disposition": "inverted"
+    },
+    {
+      "source": "input_boolean.hpvc_pv7_control_disabled",
+      "destination": "switch.hpvc_pv7_control",
+      "disposition": "inverted"
+    },
+    {
+      "source": "input_boolean.hpvc_pv8_control_disabled",
+      "destination": "switch.hpvc_pv8_control",
+      "disposition": "inverted"
+    },
+    {
+      "source": "input_boolean.hpvc_pv9_control_disabled",
+      "destination": "switch.hpvc_pv9_control",
+      "disposition": "inverted"
+    },
+    {
+      "source": "input_boolean.hpvc_pv10_control_disabled",
+      "destination": "switch.hpvc_pv10_control",
+      "disposition": "inverted"
+    },
+    {
+      "source": "input_boolean.hpvc_pv1_auto_managed",
+      "destination": "binary_sensor.hpvc_pv1_auto_managed",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_pv2_auto_managed",
+      "destination": "binary_sensor.hpvc_pv2_auto_managed",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_pv3_auto_managed",
+      "destination": "binary_sensor.hpvc_pv3_auto_managed",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_pv4_auto_managed",
+      "destination": "binary_sensor.hpvc_pv4_auto_managed",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_pv5_auto_managed",
+      "destination": "binary_sensor.hpvc_pv5_auto_managed",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_pv6_auto_managed",
+      "destination": "binary_sensor.hpvc_pv6_auto_managed",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_pv7_auto_managed",
+      "destination": "binary_sensor.hpvc_pv7_auto_managed",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_pv8_auto_managed",
+      "destination": "binary_sensor.hpvc_pv8_auto_managed",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_pv9_auto_managed",
+      "destination": "binary_sensor.hpvc_pv9_auto_managed",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_pv10_auto_managed",
+      "destination": "binary_sensor.hpvc_pv10_auto_managed",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_enabled",
+      "destination": "switch.hpvc_enabled",
+      "disposition": "intent"
+    },
+    {
+      "source": "input_boolean.hpvc_external_release_request",
+      "destination": "switch.hpvc_external_release_request",
+      "disposition": "intent"
+    },
+    {
+      "source": "input_boolean.hpvc_external_release_lease_valid",
+      "destination": "binary_sensor.hpvc_external_release_lease_valid",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_insights_enabled",
+      "destination": "switch.hpvc_insights_enabled",
+      "disposition": "intent"
+    },
+    {
+      "source": "input_boolean.hpvc_notifications",
+      "destination": "switch.hpvc_notifications",
+      "disposition": "intent"
+    },
+    {
+      "source": "input_boolean.hpvc_control_hbc_strategy",
+      "destination": "switch.hpvc_control_hbc_strategy",
+      "disposition": "intent"
+    },
+    {
+      "source": "input_boolean.hpvc_negative_price_hbc_charge",
+      "destination": "switch.hpvc_negative_price_hbc_charge",
+      "disposition": "intent"
+    },
+    {
+      "source": "input_boolean.hpvc_negative_price_hbc_charge_default_applied",
+      "destination": null,
+      "disposition": "retired_internal"
+    },
+    {
+      "source": "input_boolean.hpvc_defaults_applied",
+      "destination": "binary_sensor.hpvc_defaults_applied",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_onboarding_complete",
+      "destination": "binary_sensor.hpvc_onboarding_complete",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_auto_resume_pending",
+      "destination": "binary_sensor.hpvc_auto_resume_pending",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_report_ready",
+      "destination": "binary_sensor.hpvc_report_ready",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_report_generating",
+      "destination": "binary_sensor.hpvc_report_generating",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_negative_override_fault",
+      "destination": "binary_sensor.hpvc_negative_override_fault",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_boolean.hpvc_update_available",
+      "destination": null,
+      "disposition": "retired_internal"
+    },
+    {
+      "source": "input_boolean.hpvc_update_in_progress",
+      "destination": null,
+      "disposition": "retired_internal"
+    },
+    {
+      "source": "input_boolean.hpvc_update_reload_required",
+      "destination": null,
+      "disposition": "retired_internal"
+    },
+    {
+      "source": "input_boolean.hpvc_update_dashboard_manual",
+      "destination": null,
+      "disposition": "retired_internal"
+    },
+    {
+      "source": "input_boolean.hpvc_update_resume_enabled",
+      "destination": null,
+      "disposition": "retired_internal"
+    },
+    {
+      "source": "input_text.hpvc_market_price_sensor",
+      "destination": "text.hpvc_market_price_sensor",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_all_in_price_sensor",
+      "destination": "text.hpvc_all_in_price_sensor",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_grid_power_sensor",
+      "destination": "text.hpvc_grid_power_sensor",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv_power_sensor",
+      "destination": "text.hpvc_pv_power_sensor",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_status",
+      "destination": "sensor.hpvc_status",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_pv1_auto_identity",
+      "destination": "sensor.hpvc_pv1_auto_identity",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_pv2_auto_identity",
+      "destination": "sensor.hpvc_pv2_auto_identity",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_pv3_auto_identity",
+      "destination": "sensor.hpvc_pv3_auto_identity",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_pv4_auto_identity",
+      "destination": "sensor.hpvc_pv4_auto_identity",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_pv5_auto_identity",
+      "destination": "sensor.hpvc_pv5_auto_identity",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_pv6_auto_identity",
+      "destination": "sensor.hpvc_pv6_auto_identity",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_pv7_auto_identity",
+      "destination": "sensor.hpvc_pv7_auto_identity",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_pv8_auto_identity",
+      "destination": "sensor.hpvc_pv8_auto_identity",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_pv9_auto_identity",
+      "destination": "sensor.hpvc_pv9_auto_identity",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_pv10_auto_identity",
+      "destination": "sensor.hpvc_pv10_auto_identity",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_latest_version",
+      "destination": null,
+      "disposition": "retired"
+    },
+    {
+      "source": "input_text.hpvc_update_status",
+      "destination": null,
+      "disposition": "retired"
+    },
+    {
+      "source": "input_text.hpvc_last_update_check",
+      "destination": null,
+      "disposition": "retired"
+    },
+    {
+      "source": "input_text.hpvc_node_red_flows_status",
+      "destination": null,
+      "disposition": "retired"
+    },
+    {
+      "source": "input_text.hpvc_reason",
+      "destination": "sensor.hpvc_reason",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_last_action",
+      "destination": "sensor.hpvc_last_action",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_last_targets_json",
+      "destination": "sensor.hpvc_last_targets_json",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_accuracy_diagnostics_json",
+      "destination": "sensor.hpvc_accuracy_diagnostics_json",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_insight_1",
+      "destination": "sensor.hpvc_insight_1",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_insight_2",
+      "destination": "sensor.hpvc_insight_2",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_insight_3",
+      "destination": "sensor.hpvc_insight_3",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_insight_4",
+      "destination": "sensor.hpvc_insight_4",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_insight_5",
+      "destination": "sensor.hpvc_insight_5",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_insight_6",
+      "destination": "sensor.hpvc_insight_6",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_insight_7",
+      "destination": "sensor.hpvc_insight_7",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_insight_8",
+      "destination": "sensor.hpvc_insight_8",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_insight_9",
+      "destination": "sensor.hpvc_insight_9",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_insight_10",
+      "destination": "sensor.hpvc_insight_10",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_text.hpvc_pv1_limit_number",
+      "destination": "text.hpvc_pv1_limit_number",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv2_limit_number",
+      "destination": "text.hpvc_pv2_limit_number",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv3_limit_number",
+      "destination": "text.hpvc_pv3_limit_number",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv4_limit_number",
+      "destination": "text.hpvc_pv4_limit_number",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv5_limit_number",
+      "destination": "text.hpvc_pv5_limit_number",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv6_limit_number",
+      "destination": "text.hpvc_pv6_limit_number",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv7_limit_number",
+      "destination": "text.hpvc_pv7_limit_number",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv8_limit_number",
+      "destination": "text.hpvc_pv8_limit_number",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv9_limit_number",
+      "destination": "text.hpvc_pv9_limit_number",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv10_limit_number",
+      "destination": "text.hpvc_pv10_limit_number",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv1_action",
+      "destination": "text.hpvc_pv1_action",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv1_value_field",
+      "destination": "text.hpvc_pv1_value_field",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv1_fixed_data_json",
+      "destination": "text.hpvc_pv1_fixed_data_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv1_pre_actions_json",
+      "destination": "text.hpvc_pv1_pre_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv1_post_actions_json",
+      "destination": "text.hpvc_pv1_post_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv1_readback_entity",
+      "destination": "text.hpvc_pv1_readback_entity",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv2_action",
+      "destination": "text.hpvc_pv2_action",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv2_value_field",
+      "destination": "text.hpvc_pv2_value_field",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv2_fixed_data_json",
+      "destination": "text.hpvc_pv2_fixed_data_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv2_pre_actions_json",
+      "destination": "text.hpvc_pv2_pre_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv2_post_actions_json",
+      "destination": "text.hpvc_pv2_post_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv2_readback_entity",
+      "destination": "text.hpvc_pv2_readback_entity",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv3_action",
+      "destination": "text.hpvc_pv3_action",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv3_value_field",
+      "destination": "text.hpvc_pv3_value_field",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv3_fixed_data_json",
+      "destination": "text.hpvc_pv3_fixed_data_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv3_pre_actions_json",
+      "destination": "text.hpvc_pv3_pre_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv3_post_actions_json",
+      "destination": "text.hpvc_pv3_post_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv3_readback_entity",
+      "destination": "text.hpvc_pv3_readback_entity",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv4_action",
+      "destination": "text.hpvc_pv4_action",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv4_value_field",
+      "destination": "text.hpvc_pv4_value_field",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv4_fixed_data_json",
+      "destination": "text.hpvc_pv4_fixed_data_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv4_pre_actions_json",
+      "destination": "text.hpvc_pv4_pre_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv4_post_actions_json",
+      "destination": "text.hpvc_pv4_post_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv4_readback_entity",
+      "destination": "text.hpvc_pv4_readback_entity",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv5_action",
+      "destination": "text.hpvc_pv5_action",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv5_value_field",
+      "destination": "text.hpvc_pv5_value_field",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv5_fixed_data_json",
+      "destination": "text.hpvc_pv5_fixed_data_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv5_pre_actions_json",
+      "destination": "text.hpvc_pv5_pre_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv5_post_actions_json",
+      "destination": "text.hpvc_pv5_post_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv5_readback_entity",
+      "destination": "text.hpvc_pv5_readback_entity",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv6_action",
+      "destination": "text.hpvc_pv6_action",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv6_value_field",
+      "destination": "text.hpvc_pv6_value_field",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv6_fixed_data_json",
+      "destination": "text.hpvc_pv6_fixed_data_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv6_pre_actions_json",
+      "destination": "text.hpvc_pv6_pre_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv6_post_actions_json",
+      "destination": "text.hpvc_pv6_post_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv6_readback_entity",
+      "destination": "text.hpvc_pv6_readback_entity",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv7_action",
+      "destination": "text.hpvc_pv7_action",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv7_value_field",
+      "destination": "text.hpvc_pv7_value_field",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv7_fixed_data_json",
+      "destination": "text.hpvc_pv7_fixed_data_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv7_pre_actions_json",
+      "destination": "text.hpvc_pv7_pre_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv7_post_actions_json",
+      "destination": "text.hpvc_pv7_post_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv7_readback_entity",
+      "destination": "text.hpvc_pv7_readback_entity",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv8_action",
+      "destination": "text.hpvc_pv8_action",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv8_value_field",
+      "destination": "text.hpvc_pv8_value_field",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv8_fixed_data_json",
+      "destination": "text.hpvc_pv8_fixed_data_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv8_pre_actions_json",
+      "destination": "text.hpvc_pv8_pre_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv8_post_actions_json",
+      "destination": "text.hpvc_pv8_post_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv8_readback_entity",
+      "destination": "text.hpvc_pv8_readback_entity",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv9_action",
+      "destination": "text.hpvc_pv9_action",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv9_value_field",
+      "destination": "text.hpvc_pv9_value_field",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv9_fixed_data_json",
+      "destination": "text.hpvc_pv9_fixed_data_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv9_pre_actions_json",
+      "destination": "text.hpvc_pv9_pre_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv9_post_actions_json",
+      "destination": "text.hpvc_pv9_post_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv9_readback_entity",
+      "destination": "text.hpvc_pv9_readback_entity",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv10_action",
+      "destination": "text.hpvc_pv10_action",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv10_value_field",
+      "destination": "text.hpvc_pv10_value_field",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv10_fixed_data_json",
+      "destination": "text.hpvc_pv10_fixed_data_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv10_pre_actions_json",
+      "destination": "text.hpvc_pv10_pre_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv10_post_actions_json",
+      "destination": "text.hpvc_pv10_post_actions_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv10_readback_entity",
+      "destination": "text.hpvc_pv10_readback_entity",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv1_target_json",
+      "destination": "text.hpvc_pv1_target_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv2_target_json",
+      "destination": "text.hpvc_pv2_target_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv3_target_json",
+      "destination": "text.hpvc_pv3_target_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv4_target_json",
+      "destination": "text.hpvc_pv4_target_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv5_target_json",
+      "destination": "text.hpvc_pv5_target_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv6_target_json",
+      "destination": "text.hpvc_pv6_target_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv7_target_json",
+      "destination": "text.hpvc_pv7_target_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv8_target_json",
+      "destination": "text.hpvc_pv8_target_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv9_target_json",
+      "destination": "text.hpvc_pv9_target_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_text.hpvc_pv10_target_json",
+      "destination": "text.hpvc_pv10_target_json",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_selected_inverter",
+      "destination": "select.hpvc_selected_inverter",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv1_control_method",
+      "destination": "select.hpvc_pv1_control_method",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv2_control_method",
+      "destination": "select.hpvc_pv2_control_method",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv3_control_method",
+      "destination": "select.hpvc_pv3_control_method",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv4_control_method",
+      "destination": "select.hpvc_pv4_control_method",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv5_control_method",
+      "destination": "select.hpvc_pv5_control_method",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv6_control_method",
+      "destination": "select.hpvc_pv6_control_method",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv7_control_method",
+      "destination": "select.hpvc_pv7_control_method",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv8_control_method",
+      "destination": "select.hpvc_pv8_control_method",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv9_control_method",
+      "destination": "select.hpvc_pv9_control_method",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv10_control_method",
+      "destination": "select.hpvc_pv10_control_method",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv1_limit_unit",
+      "destination": "select.hpvc_pv1_limit_unit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv2_limit_unit",
+      "destination": "select.hpvc_pv2_limit_unit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv3_limit_unit",
+      "destination": "select.hpvc_pv3_limit_unit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv4_limit_unit",
+      "destination": "select.hpvc_pv4_limit_unit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv5_limit_unit",
+      "destination": "select.hpvc_pv5_limit_unit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv6_limit_unit",
+      "destination": "select.hpvc_pv6_limit_unit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv7_limit_unit",
+      "destination": "select.hpvc_pv7_limit_unit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv8_limit_unit",
+      "destination": "select.hpvc_pv8_limit_unit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv9_limit_unit",
+      "destination": "select.hpvc_pv9_limit_unit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_select.hpvc_pv10_limit_unit",
+      "destination": "select.hpvc_pv10_limit_unit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_engine_heartbeat_epoch",
+      "destination": "sensor.hpvc_engine_heartbeat_epoch",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_number.hpvc_external_release_verified_epoch",
+      "destination": "sensor.hpvc_external_release_verified_epoch",
+      "disposition": "read_only"
+    },
+    {
+      "source": "input_number.hpvc_inverter_count",
+      "destination": "number.hpvc_inverter_count",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv1_full_limit",
+      "destination": "number.hpvc_pv1_full_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv1_low_limit",
+      "destination": "number.hpvc_pv1_low_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv2_full_limit",
+      "destination": "number.hpvc_pv2_full_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv2_low_limit",
+      "destination": "number.hpvc_pv2_low_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv3_full_limit",
+      "destination": "number.hpvc_pv3_full_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv3_low_limit",
+      "destination": "number.hpvc_pv3_low_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv4_full_limit",
+      "destination": "number.hpvc_pv4_full_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv4_low_limit",
+      "destination": "number.hpvc_pv4_low_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv5_full_limit",
+      "destination": "number.hpvc_pv5_full_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv5_low_limit",
+      "destination": "number.hpvc_pv5_low_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv6_full_limit",
+      "destination": "number.hpvc_pv6_full_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv6_low_limit",
+      "destination": "number.hpvc_pv6_low_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv7_full_limit",
+      "destination": "number.hpvc_pv7_full_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv7_low_limit",
+      "destination": "number.hpvc_pv7_low_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv8_full_limit",
+      "destination": "number.hpvc_pv8_full_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv8_low_limit",
+      "destination": "number.hpvc_pv8_low_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv9_full_limit",
+      "destination": "number.hpvc_pv9_full_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv9_low_limit",
+      "destination": "number.hpvc_pv9_low_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv10_full_limit",
+      "destination": "number.hpvc_pv10_full_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv10_low_limit",
+      "destination": "number.hpvc_pv10_low_limit",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv_limiting_price",
+      "destination": "number.hpvc_pv_limiting_price",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_battery_price_hysteresis",
+      "destination": "number.hpvc_battery_price_hysteresis",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_export_start_threshold",
+      "destination": "number.hpvc_export_start_threshold",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_export_stop_threshold",
+      "destination": "number.hpvc_export_stop_threshold",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_import_restore_threshold",
+      "destination": "number.hpvc_import_restore_threshold",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv_min_power_for_control",
+      "destination": "number.hpvc_pv_min_power_for_control",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv_night_restore_power",
+      "destination": "number.hpvc_pv_night_restore_power",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_cooldown_seconds",
+      "destination": "number.hpvc_cooldown_seconds",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv_adjust_deadband",
+      "destination": "number.hpvc_pv_adjust_deadband",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv1_action_step",
+      "destination": "number.hpvc_pv1_action_step",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv1_refresh_seconds",
+      "destination": "number.hpvc_pv1_refresh_seconds",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv2_action_step",
+      "destination": "number.hpvc_pv2_action_step",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv2_refresh_seconds",
+      "destination": "number.hpvc_pv2_refresh_seconds",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv3_action_step",
+      "destination": "number.hpvc_pv3_action_step",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv3_refresh_seconds",
+      "destination": "number.hpvc_pv3_refresh_seconds",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv4_action_step",
+      "destination": "number.hpvc_pv4_action_step",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv4_refresh_seconds",
+      "destination": "number.hpvc_pv4_refresh_seconds",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv5_action_step",
+      "destination": "number.hpvc_pv5_action_step",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv5_refresh_seconds",
+      "destination": "number.hpvc_pv5_refresh_seconds",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv6_action_step",
+      "destination": "number.hpvc_pv6_action_step",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv6_refresh_seconds",
+      "destination": "number.hpvc_pv6_refresh_seconds",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv7_action_step",
+      "destination": "number.hpvc_pv7_action_step",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv7_refresh_seconds",
+      "destination": "number.hpvc_pv7_refresh_seconds",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv8_action_step",
+      "destination": "number.hpvc_pv8_action_step",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv8_refresh_seconds",
+      "destination": "number.hpvc_pv8_refresh_seconds",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv9_action_step",
+      "destination": "number.hpvc_pv9_action_step",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv9_refresh_seconds",
+      "destination": "number.hpvc_pv9_refresh_seconds",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv10_action_step",
+      "destination": "number.hpvc_pv10_action_step",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_number.hpvc_pv10_refresh_seconds",
+      "destination": "number.hpvc_pv10_refresh_seconds",
+      "disposition": "configuration"
+    },
+    {
+      "source": "input_button.hpvc_defaults_restored_event",
+      "destination": "sensor.hpvc_defaults_restored_event",
+      "disposition": "completion_event"
+    },
+    {
+      "source": "input_button.hpvc_export_report",
+      "destination": "button.hpvc_export_report",
+      "disposition": "future_action"
+    },
+    {
+      "source": "input_button.hpvc_uninstall",
+      "destination": "button.hpvc_prepare_maintenance",
+      "disposition": "future_action"
+    },
+    {
+      "source": "input_button.hpvc_remove_flows",
+      "destination": null,
+      "disposition": "retired"
+    },
+    {
+      "source": "input_button.hpvc_check_update",
+      "destination": null,
+      "disposition": "retired"
+    },
+    {
+      "source": "input_button.hpvc_update",
+      "destination": null,
+      "disposition": "retired"
+    },
+    {
+      "source": "input_button.hpvc_quick_reload",
+      "destination": null,
+      "disposition": "retired"
+    }
+  ]
+}
