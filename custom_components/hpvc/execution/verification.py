@@ -82,6 +82,19 @@ def verify_operation(
             VerificationStatus.UNAVAILABLE,
             "Not independent physical evidence",
         )
+    accepted_kinds = (
+        (EvidenceKind.ENPHASE,)
+        if operation.adapter_kind in ("enphase", "enphase_dpel")
+        else (EvidenceKind.HA, EvidenceKind.OPENDTU)
+        if operation.adapter_kind in ("hoymiles", "opendtu_absolute")
+        else (EvidenceKind.HA,)
+    )
+    if candidate.kind not in accepted_kinds:
+        return result(
+            VerificationOutcome.IDENTITY_MISMATCH,
+            VerificationStatus.UNKNOWN,
+            "Evidence source does not match the controller adapter",
+        )
     identity = (
         candidate.operation_id == operation.operation_id
         and candidate.controller_uid == operation.controller_uid
@@ -196,13 +209,14 @@ def verify_operation(
                 "Readback unavailable or non-numeric",
             )
         if candidate.unit == LimitUnit.PERCENT:
-            if full_power_w <= 0 or not 0 <= observed <= 100:
+            full = finite(full_power_w)
+            if full is None or full <= 0 or not 0 <= observed <= 100:
                 return result(
                     VerificationOutcome.UNKNOWN,
                     VerificationStatus.PENDING,
                     "Invalid percentage readback",
                 )
-            observed = observed / 100 * full_power_w
+            observed = observed / 100 * full
     if abs(observed - target) > tolerance:
         return result(
             VerificationOutcome.VALUE_MISMATCH,

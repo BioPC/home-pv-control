@@ -147,6 +147,10 @@ async def test_real_opendtu_registry_get_only_rating_and_worker_cleanup(hass):
         view = runtime.manager.current.effective[0].view
         assert view.operating_range.full_w == 1200
         assert view.operating_range.max_power_locked
+        assert (
+            hass.states.get("sensor.hpvc_pv1_auto_identity").state
+            == view.configuration.identity.uid
+        )
         assert hass.states.get("binary_sensor.hpvc_pv1_max_power_locked").state == "on"
         assert calls == [
             ("http://opendtu.local/api/limit/status", {"allow_redirects": False})

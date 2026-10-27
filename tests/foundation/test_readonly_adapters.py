@@ -813,6 +813,14 @@ class EvidenceTests(unittest.TestCase):
             self.verdict(evidence(native_value=None)), VerificationOutcome.UNKNOWN
         )
 
+    def test_evidence_source_cannot_cross_adapter_kind(self):
+        self.assertEqual(
+            self.verdict(
+                evidence(kind=EvidenceKind.ENPHASE, enabled=True, production_mode=True)
+            ),
+            VerificationOutcome.IDENTITY_MISMATCH,
+        )
+
     def test_no_dispatch_identity_is_unknown(self):
         self.assertEqual(
             self.verdict(evidence(dispatch_id=None), op(dispatch_id=None)),

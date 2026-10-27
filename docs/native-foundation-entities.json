@@ -1,0 +1,1412 @@
+[
+  {
+    "entity_id": "switch.hpvc_enabled",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_external_release_request",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_insights_enabled",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_notifications",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_control_hbc_strategy",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_negative_price_hbc_charge",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_pv1_control",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_pv2_control",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_pv3_control",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_pv4_control",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_pv5_control",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_pv6_control",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_pv7_control",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_pv8_control",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_pv9_control",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "switch.hpvc_pv10_control",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_inverter_count",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv_limiting_price",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_battery_price_hysteresis",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_export_start_threshold",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_export_stop_threshold",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_import_restore_threshold",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv_min_power_for_control",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv_night_restore_power",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_cooldown_seconds",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv_adjust_deadband",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv1_full_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv1_low_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv1_action_step",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv1_refresh_seconds",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv2_full_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv2_low_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv2_action_step",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv2_refresh_seconds",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv3_full_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv3_low_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv3_action_step",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv3_refresh_seconds",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv4_full_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv4_low_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv4_action_step",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv4_refresh_seconds",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv5_full_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv5_low_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv5_action_step",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv5_refresh_seconds",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv6_full_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv6_low_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv6_action_step",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv6_refresh_seconds",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv7_full_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv7_low_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv7_action_step",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv7_refresh_seconds",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv8_full_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv8_low_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv8_action_step",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv8_refresh_seconds",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv9_full_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv9_low_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv9_action_step",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv9_refresh_seconds",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv10_full_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv10_low_limit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv10_action_step",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_pv10_refresh_seconds",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_selected_inverter",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv1_control_method",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv1_limit_unit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv2_control_method",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv2_limit_unit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv3_control_method",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv3_limit_unit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv4_control_method",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv4_limit_unit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv5_control_method",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv5_limit_unit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv6_control_method",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv6_limit_unit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv7_control_method",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv7_limit_unit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv8_control_method",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv8_limit_unit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv9_control_method",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv9_limit_unit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv10_control_method",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "select.hpvc_pv10_limit_unit",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_market_price_sensor",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_all_in_price_sensor",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_grid_power_sensor",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv_power_sensor",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv1_limit_number",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv1_action",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv1_value_field",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv1_fixed_data_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv1_target_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv1_pre_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv1_post_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv1_readback_entity",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv2_limit_number",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv2_action",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv2_value_field",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv2_fixed_data_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv2_target_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv2_pre_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv2_post_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv2_readback_entity",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv3_limit_number",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv3_action",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv3_value_field",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv3_fixed_data_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv3_target_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv3_pre_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv3_post_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv3_readback_entity",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv4_limit_number",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv4_action",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv4_value_field",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv4_fixed_data_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv4_target_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv4_pre_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv4_post_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv4_readback_entity",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv5_limit_number",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv5_action",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv5_value_field",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv5_fixed_data_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv5_target_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv5_pre_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv5_post_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv5_readback_entity",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv6_limit_number",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv6_action",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv6_value_field",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv6_fixed_data_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv6_target_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv6_pre_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv6_post_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv6_readback_entity",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv7_limit_number",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv7_action",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv7_value_field",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv7_fixed_data_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv7_target_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv7_pre_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv7_post_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv7_readback_entity",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv8_limit_number",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv8_action",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv8_value_field",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv8_fixed_data_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv8_target_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv8_pre_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv8_post_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv8_readback_entity",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv9_limit_number",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv9_action",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv9_value_field",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv9_fixed_data_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv9_target_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv9_pre_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv9_post_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv9_readback_entity",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv10_limit_number",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv10_action",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv10_value_field",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv10_fixed_data_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv10_target_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv10_pre_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv10_post_actions_json",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "text.hpvc_pv10_readback_entity",
+    "role": "native_configuration_or_intent",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "number.hpvc_inverters",
+    "role": "validated_configuration_count_facade",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_migration_state",
+    "role": "read_only_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_installed_version",
+    "role": "read_only_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_status",
+    "role": "read_only_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_reason",
+    "role": "read_only_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_effective_inverter_runtime",
+    "role": "read_only_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_inverter_limit_validation",
+    "role": "read_only_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_inverter_limit_entity_display",
+    "role": "read_only_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_enphase_registry",
+    "role": "read_only_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_physical_writes_authorized",
+    "role": "read_only_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_recovery_required",
+    "role": "read_only_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_required_inputs_ready",
+    "role": "read_only_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv1_actual_limit",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv1_auto_identity",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv1_auto_detected",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv1_limit_range_invalid",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv1_max_power_locked",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv1_participating",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv1_available",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv1_writable_capable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv1_independently_verifiable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv2_actual_limit",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv2_auto_identity",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv2_auto_detected",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv2_limit_range_invalid",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv2_max_power_locked",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv2_participating",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv2_available",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv2_writable_capable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv2_independently_verifiable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv3_actual_limit",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv3_auto_identity",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv3_auto_detected",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv3_limit_range_invalid",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv3_max_power_locked",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv3_participating",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv3_available",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv3_writable_capable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv3_independently_verifiable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv4_actual_limit",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv4_auto_identity",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv4_auto_detected",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv4_limit_range_invalid",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv4_max_power_locked",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv4_participating",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv4_available",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv4_writable_capable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv4_independently_verifiable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv5_actual_limit",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv5_auto_identity",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv5_auto_detected",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv5_limit_range_invalid",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv5_max_power_locked",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv5_participating",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv5_available",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv5_writable_capable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv5_independently_verifiable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv6_actual_limit",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv6_auto_identity",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv6_auto_detected",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv6_limit_range_invalid",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv6_max_power_locked",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv6_participating",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv6_available",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv6_writable_capable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv6_independently_verifiable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv7_actual_limit",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv7_auto_identity",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv7_auto_detected",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv7_limit_range_invalid",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv7_max_power_locked",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv7_participating",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv7_available",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv7_writable_capable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv7_independently_verifiable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv8_actual_limit",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv8_auto_identity",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv8_auto_detected",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv8_limit_range_invalid",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv8_max_power_locked",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv8_participating",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv8_available",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv8_writable_capable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv8_independently_verifiable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv9_actual_limit",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv9_auto_identity",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv9_auto_detected",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv9_limit_range_invalid",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv9_max_power_locked",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv9_participating",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv9_available",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv9_writable_capable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv9_independently_verifiable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv10_actual_limit",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "sensor.hpvc_pv10_auto_identity",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv10_auto_detected",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv10_limit_range_invalid",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv10_max_power_locked",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv10_participating",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv10_available",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv10_writable_capable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_pv10_independently_verifiable",
+    "role": "read_only_controller_diagnostic",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_show_inverter_slot_2",
+    "role": "read_only_visibility",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_show_inverter_slot_3",
+    "role": "read_only_visibility",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_show_inverter_slot_4",
+    "role": "read_only_visibility",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_show_inverter_slot_5",
+    "role": "read_only_visibility",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_show_inverter_slot_6",
+    "role": "read_only_visibility",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_show_inverter_slot_7",
+    "role": "read_only_visibility",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_show_inverter_slot_8",
+    "role": "read_only_visibility",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_show_inverter_slot_9",
+    "role": "read_only_visibility",
+    "physical_effect": "none"
+  },
+  {
+    "entity_id": "binary_sensor.hpvc_show_inverter_slot_10",
+    "role": "read_only_visibility",
+    "physical_effect": "none"
+  }
+]

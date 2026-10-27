@@ -15,7 +15,7 @@ KEYS = (
     "inverter_limit_entity_display",
     "enphase_registry",
 )
-SLOT_KEYS = ("actual_limit",)
+SLOT_KEYS = ("actual_limit", "auto_identity")
 
 
 def slot_count(runtime):
@@ -95,13 +95,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 HpvcSensor(
                     entry.runtime_data,
                     Setting(
-                        f"pv{slot}_actual_limit",
+                        f"pv{slot}_{key}",
                         "sensor",
                         slot=slot,
-                        field="actual_limit",
+                        field=key,
                     ),
                 )
                 for slot in range(1, 11)
+                for key in SLOT_KEYS
             ),
         ]
     )
@@ -109,10 +110,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class HpvcSensor(HpvcEntity, SensorEntity):
     @property
+    def native_unit_of_measurement(self):
+        return "W" if self.setting.field == "actual_limit" else None
+
+    @property
     def native_value(self):
         key = self.setting.key
         if self.setting.slot:
             row = self.coordinator.manager.current.by_slot(self.setting.slot)
+            if self.setting.field == "auto_identity":
+                return row.uid if row and row.view.candidate is not None else None
             return (
                 row.view.observation.limit.value
                 if row and row.view.observation.limit.quality == Quality.VALID
@@ -196,6 +203,7 @@ class HpvcSensor(HpvcEntity, SensorEntity):
                 "replacement_pairs": [list(pair) for pair in fleet.replacement_pairs],
                 "rebalance_uids": list(fleet.rebalance_uids),
                 "faults": list(fleet.faults),
+                "readonly_worker_faults": list(runtime.readonly_faults),
                 "physical_writes_authorized": False,
                 "verification_results": [
                     {

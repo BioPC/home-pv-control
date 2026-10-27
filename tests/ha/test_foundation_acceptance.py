@@ -49,8 +49,8 @@ async def test_all_native_unique_ids_stable_across_reload(hass):
         (item.domain, item.unique_id): item.entity_id
         for item in er.async_entries_for_config_entry(registry, entry.entry_id)
     }
-    assert len(before) == 272
-    assert len(set(before.values())) == 272
+    assert len(before) == 282
+    assert len(set(before.values())) == 282
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     after = {
