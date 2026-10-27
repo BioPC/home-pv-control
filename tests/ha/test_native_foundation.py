@@ -73,7 +73,7 @@ async def test_real_reload_and_no_owned_work(hass):
     assert old.owner.closed and not old.owner.tasks and not old.listeners
     assert entry.runtime_data is not old
     assert entry.runtime_data.configuration.enabled_intent
-    assert getattr(entry, "runtime_data", None) is None.physical_writes_authorized
+    assert entry.runtime_data.physical_writes_authorized is False
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert getattr(entry, "runtime_data", None) is None
 
@@ -121,7 +121,7 @@ async def test_real_legacy_import_preview_is_not_handoff(hass):
     entry = result["result"]
     assert entry.runtime_data.migration_state == "handoff_pending"
     assert hass.states.get("input_boolean.hpvc_enabled").state == "on"
-    assert getattr(entry, "runtime_data", None) is None.physical_writes_authorized
+    assert entry.runtime_data.physical_writes_authorized is False
     assert await hass.config_entries.async_unload(entry.entry_id)
 
 
@@ -156,7 +156,7 @@ async def test_real_native_entity_setters_do_not_target_inverters(hass):
         )
         await hass.async_block_till_done()
     assert len(calls) == 3
-    assert getattr(entry, "runtime_data", None) is None.physical_writes_authorized
+    assert entry.runtime_data.physical_writes_authorized is False
     assert await hass.config_entries.async_unload(entry.entry_id)
 
 
