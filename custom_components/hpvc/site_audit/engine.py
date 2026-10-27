@@ -539,6 +539,24 @@ def audit_site(raw, *, now):
             "Exact current v1.6 flow/dependency identity is not proven",
             "Complete current Node-RED flow export inspected by the pinned scanner",
         )
+    helper_holds = {
+        name: legacy_values.get(name)
+        for name in (
+            "input_boolean.hpvc_update_in_progress",
+            "input_boolean.hpvc_update_reload_required",
+            "input_boolean.hpvc_auto_resume_pending",
+            "input_boolean.hpvc_negative_override_fault",
+        )
+    }
+    for name, value in helper_holds.items():
+        if value == "on":
+            issue(
+                "BLOCKED",
+                "legacy_helper_hold",
+                "Observed legacy hold/fault helper is On even if another source reports quiet",
+                "Fresh reconciled helper and runtime/recovery evidence; do not clear the helper from audit mode",
+                name,
+            )
     runtime = legacy.get("runtime", {})
     if (
         runtime.get("reachable") is not True
@@ -794,6 +812,19 @@ def audit_site(raw, *, now):
             runtime=runtime,
             bridge=bridge,
             master_enable=legacy_values.get("input_boolean.hpvc_enabled"),
+            helper_presence=sorted(
+                name
+                for name in states
+                if name.startswith(
+                    (
+                        "input_boolean.hpvc_",
+                        "input_number.hpvc_",
+                        "input_text.hpvc_",
+                        "input_select.hpvc_",
+                    )
+                )
+            ),
+            helper_indicators=helper_holds,
         ),
         expected_controllers=expected,
         controllers=inventory,

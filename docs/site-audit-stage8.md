@@ -82,7 +82,7 @@ The context wrapper has an explicit capture timestamp and runtime reachability/o
 - `homePvControlUninstallShutdownActive`, `homePvControlUninstallShutdownStartedAt`, `homePvControlUninstallShutdownLastEvaluationAt`, `homePvControlUninstallShutdownCompletedAt`
 - `homePvControlAdapterRuntimeOwner`, `homePvControlAdapterConfigSignatures`, `homePvControlNightRestoreFullConfirmation`
 
-`flow_context` may contain the existing `homePvControlNightRestoreActive` observation. `hbc_originals` must be an actually retained HPVC strategy/goal pair, not an invented value copied from current state. Scheduler/request/restore shapes and runtime owner are checked. An absent, cold or unreadable context remains incomplete. Do not deploy a new bridge to clear this unknown in dev.8. The report distinguishes user-reported legacy v1.6/native-not-installed facts from observed metadata.
+`flow_context` may contain the existing `homePvControlNightRestoreActive` observation. `hbc_originals` must be an actually retained HPVC strategy/goal pair, not an invented value copied from current state. Scheduler/request/restore shapes and runtime owner are checked. An absent, cold or unreadable context remains incomplete. Do not deploy a new bridge to clear this unknown in dev.8. The report distinguishes user-reported legacy v1.6/native-not-installed facts from observed metadata. Known update-in-progress, reload-required, auto-resume-pending or negative-override-fault helpers observed On block readiness even if a separate runtime export claims to be quiet. The audit never clears these helpers.
 
 ## Freshness and review
 

@@ -463,3 +463,26 @@ class PackageOwnershipTests(unittest.TestCase):
                 for e in r["entity_registry"]
             )
         )
+
+
+class IndependentHelperHoldTests(unittest.TestCase):
+    def test_quiet_runtime_cannot_override_observed_legacy_hold_or_HBC_fault(self):
+        for name in (
+            "input_boolean.hpvc_update_in_progress",
+            "input_boolean.hpvc_update_reload_required",
+            "input_boolean.hpvc_auto_resume_pending",
+            "input_boolean.hpvc_negative_override_fault",
+        ):
+            b = sample()
+            b["states"].append(
+                dict(
+                    entity_id=name,
+                    state="on",
+                    last_reported=NOW,
+                    last_updated=NOW,
+                    attributes={},
+                )
+            )
+            r = audit_site(b, now=NOW)
+            self.assertEqual(r["overall_verdict"], "BLOCKED")
+            self.assertEqual(r["legacy"]["helper_indicators"][name], "on")
