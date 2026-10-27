@@ -8,6 +8,7 @@ release artifacts and flow/package structure instead.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -413,8 +414,10 @@ else:
 # 4) Function-node JavaScript syntax.
 function_nodes = [n for n in nodes if n.get("type") == "function"]
 js_failures = 0
-for node in function_nodes:
-    source = str(node.get("func", ""))
+js_sources = [(node, "func") for node in function_nodes]
+js_sources += [(node, field) for node in function_nodes for field in ["initialize", "finalize"] if str(node.get(field, "")).strip()]
+for node, field in js_sources:
+    source = str(node.get(field, ""))
     # Function node bodies can contain top-level return; wrap as a normal function.
     wrapped = "function __hpvc_node_red_function__() {\n" + source + "\n}\n"
     with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as tmp:
@@ -424,11 +427,12 @@ for node in function_nodes:
         result = subprocess.run(["node", "--check", str(temp_path)], text=True, capture_output=True)
         if result.returncode != 0:
             js_failures += 1
-            fail(f"Function-node JS syntax failed for {node.get('name') or node.get('id')}: {result.stderr.strip()}")
+            fail(f"Function-node JS syntax failed for {node.get('name') or node.get('id')} ({field}): {result.stderr.strip()}")
     finally:
         temp_path.unlink(missing_ok=True)
 if function_nodes and js_failures == 0:
     ok(f"JavaScript syntax passed for all {len(function_nodes)} Function nodes.")
+    ok(f"JavaScript syntax passed for all {len(js_sources)-len(function_nodes)} Function-node initialization/finalization bodies.")
 
 # 4b) Exec-node shell syntax and embedded Node.js heredoc syntax.
 exec_nodes = [n for n in nodes if n.get("type") == "exec" and str(n.get("command", "")).strip()]
@@ -440,7 +444,7 @@ for node in exec_nodes:
     command = str(node.get("command", ""))
     if bash_available:
         try:
-            shell_result = subprocess.run(["bash", "-n"], input=command, text=True, capture_output=True)
+            shell_result = subprocess.run([os.environ.get("HPVC_BASH", "bash"), "-n"], input=command, text=True, capture_output=True)
         except FileNotFoundError:
             bash_available = False
             skip("Exec-node shell syntax check skipped because bash is unavailable on this host.")
@@ -587,7 +591,7 @@ else:
     orphan_finish_source = str(ids.get("hpvcorphanfinish156", {}).get("func", ""))
     orphan_required = [
         "value.reason==='transaction-missing'",
-        "managed-v1.5.6-package-not-verified",
+        "managed-v1.6.0-package-not-verified",
         "updater.lock",
         "updater.reclaim.lock",
         "input_boolean.hpvc_update_in_progress",
@@ -881,10 +885,14 @@ if not any("22.9.0" in message for message in errors):
     if "Node-RED 5.x requires Node.js 22.9.0 or newer" in readme_text and "Node-RED 5.x requires Node.js 22.9.0 or newer" in read_text(ROOT / "docs" / "01-installation.md"):
         ok("Node-RED 5 minimum runtime is documented as Node.js 22.9.0+.")
 
-# 5e) CI coverage for v1.5.6 runtime regressions and user-visible documentation.
+# 5e) CI coverage for v1.6.0 runtime regressions and user-visible documentation.
 workflow_text = read_text(ROOT / ".github" / "workflows" / "validate-release.yml")
 if "scripts/test_control_runtime_load.py" not in workflow_text:
     fail("GitHub Actions does not run scripts/test_control_runtime_load.py.")
+if "node scripts/test_hbc_charge_priority.cjs" not in workflow_text:
+    fail("GitHub Actions does not run scripts/test_hbc_charge_priority.cjs.")
+if "node scripts/test_report_generation.cjs" not in workflow_text:
+    fail("GitHub Actions does not run scripts/test_report_generation.cjs.")
 else:
     ok("GitHub Actions runs the issue #9 runtime-load regression test.")
 
@@ -937,6 +945,9 @@ else:
         "python scripts/test_activation_recovery.py",
         "python scripts/test_insights_mode.py",
         "python scripts/test_control_runtime_load.py",
+        "node scripts/test_control_baselines.cjs",
+        "node scripts/test_control_safety.cjs",
+        "node scripts/test_dispatch_lifecycle.cjs",
         "permissions:",
         "contents: read",
     ]
@@ -994,6 +1005,19 @@ if (
 else:
     ok("Troubleshooting document structure is GitHub-ready.")
 
+
+# Current markers and the behavior suites must travel with this release.
+for script in ["control_test_runtime.cjs", "test_control_baselines.cjs", "test_control_safety.cjs", "test_dispatch_lifecycle.cjs", "test_enphase_registry.cjs"]:
+    if not (ROOT / "scripts" / script).is_file():
+        fail(f"Missing behavioral control test artifact: {script}")
+if "node scripts/test_enphase_registry.cjs" not in read_text(ROOT / ".github" / "workflows" / "validate-release.yml"):
+    fail("GitHub Actions must run registry discovery/controller opt-out regressions.")
+for node_id in ["e5bf3761b93e4564", "b4240d9c874b05aa", "411af491012c6308", "hpvcorphanreconcile156"]:
+    source = str(ids.get(node_id, {}).get("func", "")) + str(ids.get(node_id, {}).get("command", ""))
+    if VERSION not in source and VERSION.replace(".", "\\.") not in source:
+        fail(f"Current version marker missing from node {node_id}")
+if not any("behavioral control" in err for err in errors):
+    ok("Behavioral control suites and current runtime/report version markers are present.")
 
 # 6) Guard release-note date consistency.
 def release_date(text: str) -> str | None:

@@ -1,0 +1,142 @@
+HPVC 2.0 dev.4 — HBC derivation and runtime policy memory
+Completion report for ChatGPT
+
+Status: requested dev.4 scope completed. Physical writes remain hard Off.
+Baseline: hpvc-2.0.0-dev.3-pure-policy-allocation (approved).
+Version: 2.0.0-dev.4.
+Repository: BioPC/home-pv-control.
+Isolated acceptance branch: codex/hpvc-readonly-acceptance.
+Validated commit: 857d4b00a1002d40300a8eb04012ca4f4629998f.
+CI: https://github.com/BioPC/home-pv-control/actions/runs/40573144592.
+
+1. RAW HBC DERIVATION
+The native pure evaluator now accepts immutable raw Home Assistant states, timestamps,
+heartbeat attributes and options. It derives availability, HPVC permission, Charge /
+Charge PV execution state, count 0..6, count+1 rotation, SOC, power, observed maximum,
+cutoffs, RS485 mode, freshness, eligible batteries and aggregate headroom. Missing and
+numeric zero remain distinct. Malformed present configuration is restrictive.
+Health preserves active/idle freshness corroboration, full-cutoff idle handling,
+maximum-memory expiry and the 60-second continuously healthy recovery interval.
+
+2. CHARGE PRIORITY
+Off, Requested/Waiting diagnostics, Active and Exit hold are derived with the source
+50 W entry and 25 W remain thresholds. Response and transition settle are 15 seconds,
+persistent-export fallback is 30 seconds and exit hold is 20 seconds. Runtime elapsed
+windows use monotonic time and do not infer continuous observation through restart.
+
+3. BELOW 90 PERCENT
+Initial bounded PV release is allowed before measured battery charging. Aggregate
+eligible headroom, current grid/export interaction, source large-step shaping and
+reversal shaping are preserved. The evaluator does not exceed eligible headroom.
+
+4. TAPER AND LEARNING
+The 90-92, 92-94, 94-96, 96-98 and 98-100 SOC bands retain source scaling, per-battery
+allowances, learned ceilings, 30-minute maximum memory and independent 48-hour band
+expiry. Probe allowance is never promoted to learned capacity without evidence.
+Confirmed learning requires each battery's independent fresh post-write sample.
+Probe delay/timeout, partial response, contamination, failure/contamination counters,
+lockouts, idle startup probes and repeated-failure recovery remain typed memory.
+Aggregate taper release caps remain 10%, 6% from 95% SOC and 3% from 98% SOC.
+
+5. IMMUTABLE MEMORY
+Frozen typed records represent observations, clocks, maximum memories, per-band
+profiles, samples, pending probes, results, contamination, lockouts and expiry.
+Pure evaluation returns proposed next memory and never writes storage or creates tasks.
+
+6. NEGATIVE-PRICE OVERRIDE
+Original strategy and charge goal are captured under a durable token before a forced
+select intent becomes eligible. Entry orders strategy then goal; exit orders goal then
+strategy and requires independent raw confirmation. Unavailable/unknown originals,
+permission changes, retries, stuck phases, fault publication and recovery remain
+conservative. Ordered action intents are DATA only. Accepted simulated events own
+issued flags, retry clocks and fault-publication facts; policy cannot manufacture them.
+Fault-notification acceptance cannot delay the select retry clock.
+
+7. CALLER-SIDE RUNTIME ADAPTER
+The read-only coordinator now evaluates raw HBC and pure policy with its own memory
+adapter. Proposal, accepted runtime memory, durable memory and execution-owned facts
+are separate. Two private schema-1 companion stores are added: policy_memory and
+accepted_commands. Generation, ledger revision and fact revision reject stale proposals.
+Corrupt/missing companion stores and failed commits fail closed. Loading resets partial
+observation windows while preserving active Night Restore and durable override originals.
+
+8. COOLDOWN OWNERSHIP
+Only simulated execution-owned accepted/issued events start cooldown. The recorder
+requires an in-flight durable operation, the latest accepted policy evaluation,
+represented target, observed before-value, configuration/controller/dispatch/owner
+provenance and clock continuity. HBC events additionally match the native payload and
+capture token. Pure planning/persistence, fake service completion and cache state cannot
+create acceptance. Restart honors the original accepted UTC deadline without starting
+a fresh interval; backward-wall-clock uncertainty remains restrictive.
+
+9. AUTHORITATIVE EXECUTION SNAPSHOT
+The immutable snapshot comes from the durable ledger and accepted-command facts.
+Unresolved physical operations, pending verification, settling restrictions, restore
+obligations, maintenance, ownership uncertainty, replaced/removed controller identities,
+failed/unknown outcomes and per-controller eligibility are represented. Helper/cache
+state cannot resolve durable uncertainty. Logical planning eligibility never changes
+the literal-false physical authorization property.
+
+10. CONTINUOUS ORIGINAL-SOURCE CHARACTERIZATION
+The exact supplied v1.6 Function-node reference remains bundled and hash-checked:
+b83d0ceaedc66cce7a6be870dc9a376f053b9b831717e4649d80bc8e8fe35ba7.
+Original ZIP SHA-256:
+fc5e877ea714e340c0688872cbcde8e061e7d5bbac0f8ff7977183deedd4401d.
+103 frozen HBC sequences cover 395 cycles. Comparisons include transitions, headroom,
+shaping, battery diagnostic state, profile counters/windows, probe samples/shares,
+override phase/originals and ordered select intents.
+10 full-policy sequences cover 35 cycles: export/cooldown, import recovery, large
+reduction/reversal with settling restrictions, outage/healthy continuation, recovery /
+rebalance, Night entry/recovery, external release with pending verification, manual
+disable restoration and price-memory transitions. Context persists across cycles.
+All 430 normal-continuity cycles match the frozen source observables checked by their
+suite. Existing 219 policy, 220 allocation and 528 quantization cases remain intact.
+
+11. FAULTS AND RESTART
+The suite covers stale power/SOC, malformed count, disappeared batteries, unavailable
+HBC states, delayed response, stale post-write evidence, interrupted probes, reset
+response/exit windows, override restart and corrupt persistence. Supplemental local
+boundary checks also confirmed rejection of malformed present cutoff plus missing
+companion, rejection of changed but pre-acceptance samples, and response/exit reset.
+These conservative guards intentionally differ from permissive legacy cache or wall-
+clock behavior; they are not reported as exact legacy equivalence.
+
+12. SIMULATED LIFECYCLE
+Fake executors traverse actual durable PREPARED -> ARMED -> IN_FLIGHT transitions,
+matching simulated acceptance and cooldown, fake completion, independent fake readback
+verification, settling and the next policy evaluation. Service failure, verification
+failure, unknown outcome, superseded unsent work, restoration obligation and maintenance
+are tested. No real service implementation was added.
+
+13. SAFETY AND PRESERVATION
+binary_sensor.hpvc_physical_writes_authorized remains Off. No inverter writer, HBC
+writer, dispatcher, Node-RED fencing, native ownership commit or production cutover.
+The original Node-RED/YAML/dashboard/reference assets and previous stage tests are
+preserved. All eight inverter adapter modules are unchanged. Entity identities remain
+282. No merge, release or deployment was performed.
+
+14. VALIDATION
+Windows: 728 foundation tests passed; Ruff native undefined/unused checks passed.
+HA 2025.12.0 / Python 3.13: 728 foundation tests and 31 real HA tests passed.
+HA 2026.10.4 / Python 3.14: 728 foundation tests and 31 real HA tests passed.
+Both environments run the retained dev.1/dev.2/dev.3 suites plus the new acceptance.
+Real HA tests trap actuator-service access, exercise raw HBC observations, durable
+proposal memory, corrupt-store setup rejection, reload and lifecycle cleanup.
+See the validation JSON for exact installed Python/plugin versions and job evidence.
+All 74 native/test/oracle files match the CI commit after text line-ending normalization;
+55 preserve Windows line endings locally. There are no substantive content mismatches.
+
+LIMITS
+This completes the approved derivation/adapter stage. It does not validate hardware
+response, live dispatcher behavior, legacy quiescence or production readiness. Atomic
+file replacement/checksums do not claim universal power-loss durability. Dispatcher
+implementation and any ownership/cutover work require their separately scoped stage.
+
+DELIVERABLES
+hpvc-2.0.0-dev.4-hbc-runtime-memory.zip — complete repository development tree.
+hpvc-2.0.0-dev.4-hbc-runtime-memory.sha256 — ZIP checksum.
+HPVC-2.0-hbc-completion-report.txt — this complete report for ChatGPT.
+HPVC-2.0-hbc-validation.json — exact validation evidence.
+HPVC-2.0-hbc-file-manifest.csv — packaged files and SHA-256 hashes.
+HPVC-2.0-hbc-changed-files.csv — differences from approved dev.3.
+docs/hbc-stage4.md — implementation, source provenance and conservative differences.

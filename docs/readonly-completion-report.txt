@@ -1,0 +1,86 @@
+HPVC 2.0.0-dev.2 — Read-only architecture completion report
+Date: 27 October 2026
+Baseline: hpvc-2.0.0-dev.1-native-foundation
+Scope: requested phases A–E; physical inverter/HBC writes remain hard Off.
+
+1. REAL HOME ASSISTANT VERSIONS
+The original dev.1 production source first passed the prepared acceptance suite in real Linux Home Assistant 2025.12.0 (Python 3.13) and 2026.10.4 (Python 3.14). Phase A completed before read-only adapters were introduced.
+Phase A evidence: https://github.com/BioPC/home-pv-control/actions/runs/40553564521
+The final dev.2 acceptance run is recorded in the accompanying validation JSON.
+
+2. TESTS AND EXACT RESULTS
+Phase A, before adapter expansion: HA 2025.12.0 and HA 2026.10.4 each passed 14 real HA tests and 70 foundation tests.
+Final dev.2 matrix, run 40559709749, commit f907dd3cfc67637be34a0b579ffd19d05ea5fda0:
+- Linux HA 2025.12.0 / Python 3.13.17: 21 real HA tests passed in 4.86 seconds; 123 foundation tests passed in 2.350 seconds; zero failures/errors.
+- Linux HA 2026.10.4 / Python 3.14.9: 21 real HA tests passed in 9.12 seconds; 123 foundation tests passed in 2.429 seconds; zero failures/errors.
+These counts describe two independent environment runs of the same suites, not 288 unique tests.
+The local Windows/Python 3.12 dependency-free suite passes 123 tests, zero failures/errors. This includes model/storage tests, HA contract doubles, adapter/fleet/evidence/recovery/settling tests, runtime service traps and AST safety checks. Contract doubles are explicitly separate from the real HA Linux suite.
+One test iterates over 528 frozen Watt/Percent quantization results produced by executing the original v1.6 Node-RED JavaScript functions. All 528 cases match, including hard minimum/import floors, step ties, fractional percent representation and exact upper endpoints.
+Ruff undefined/unused-name checks pass for production source, real HA tests and the new read-only tests. Every native Python file parses successfully.
+The original legacy assets are unchanged. The previously documented v1.6 dashboard/controller-status baseline failure remains a legacy limitation; this stage does not claim that legacy check was repaired. Original baseline validation was 16/17 legacy scripts passing, with controller-status check 465 failing in the untouched original ZIP as well.
+
+Real HA acceptance covers integration discovery, config flow, fresh/zero install, entity creation, 282 unique IDs and rename/reload stability, source listener cleanup, config-entry reload/unload, failed setup cleanup, corrupt/missing storage, import preview, actual registry discovery, read-only OpenDTU GET/rating, renamed Enphase readiness, action open-loop classification, opt-out, physical identity replacement and unresolved-operation restart.
+
+3. FILES CREATED OR CHANGED
+An exhaustive relative-path/change/SHA256 list is supplied as HPVC-2.0-readonly-changed-files.csv; a complete ZIP file manifest is also supplied.
+Created production modules:
+- inverter/detection.py, manager.py, generic_number.py, generic_action.py, hoymiles.py, enphase.py
+- execution/verification.py, recovery.py, settling.py
+All production paths above are under custom_components/hpvc/.
+Changed production files: __init__.py, coordinator.py, inverter/base.py, execution/models.py, entity.py, number.py, sensor.py, binary_sensor.py, const.py and manifest.json.
+Added tests: tests/foundation/test_readonly_adapters.py; tests/ha/test_foundation_acceptance.py and test_readonly_acceptance.py; tests/fixtures/readonly-v1.6-oracle.json.
+Updated lifecycle/safety harness and real HA baseline tests; added the pinned minimum HA requirements and matrix workflow; updated foundation/read-only documentation and the intended entity manifest.
+The original desktop ZIP remains untouched, SHA256 fc5e877ea714e340c0688872cbcde8e061e7d5bbac0f8ff7977183deedd4401d. Original Node-RED flows, Home Assistant YAML, legacy scripts and existing documentation were checked byte-for-byte against that ZIP (compiled cache files excluded).
+
+4. DISCOVERY, ADAPTERS AND FLEET
+Generic Number: numeric/unknown/unavailable/stale observations; explicit range/capability validation; manual Full Limit remains authoritative; native max is not a rating; Watt/Percent quantization with native origin/steps and hard minimum/import floors; immutable number.set_value plan data only.
+Generic Action: normalized action/service names; fixed and target JSON; nested value fields; all seven source tokens; exact-token typed values and embedded-string substitution; recursive lists/objects; unknown token preservation; pre/main/post order; Watt/Percent action steps; initial synchronization/refresh reasons; optional independent readback. Cache/startup-full assumptions remain explicitly unverified. Embedded number formatting preserves JavaScript decimal/exponent thresholds.
+Enphase: metadata-first DPEL limit/enable/mode matching across renamed entities; same device/config-entry/platform; Production/Export capability; disabled/ambiguous/wrong roles rejected; fresh enable/Production readiness. Preparation-only plan data waits for separately observed readiness before any main plan. Full/min power remain user-owned and identity-bound.
+OpenDTU/Hoymiles: safe discovery of MQTT non-persistent absolute-Watt controls; persistent/relative/wrong controls excluded from auto detection. Rating precedence API > identity-bound API cache > manual Full Limit > unknown. HA number maximum never supplies rated power. GET /api/limit/status is the only HTTP method/path, with redirects forbidden and bounded timeout/payload handling.
+One authoritative fleet snapshot exposes configured/effective/participating/available/writable-capable/independently-verifiable dimensions, zero to ten effective controllers, overflow, manual-auto deduplication, opt-out, registry identity independent of slot, removal, replacement, reappearance and rebalance intent. No allocation runs.
+
+5. VERIFICATION, RECOVERY AND SETTLING
+Verification matches operation/controller/configuration signature/owner epoch/dispatch identity and adapter evidence source. Fresh post-dispatch HA readback must agree with the representable target. OpenDTU evidence additionally requires poll-start after dispatch, receive-after-poll, age <=120 seconds, established device/serial matching, credible rating/relative limit and Ok status. Enphase requires observed readiness.
+Stale target-shaped values, command cache, startup assumptions, elapsed time and legacy helper state cannot prove successful physical operation. Verdicts are diagnostic only and cannot clear retained execution uncertainty or restore obligations.
+Restart durably changes armed/in-flight work to unknown, retains original identities and reconstructs missing restore obligations. Missing archived full-power data remains an explicit unknown required target. A replacement controller in the same slot cannot satisfy old work.
+Settling interprets fresh directional PV response, large-change stability and distinct samples. Two stable samples are required for a large change. Timeout is an explicit fallback and never physical restoration proof.
+
+6. ENTITIES ADDED
+282 intended native entity IDs in total: 178 dev.1 entities plus 104 additions. The CSV lists every ID.
+- sensor.hpvc_effective_inverter_runtime, inverter_limit_validation, inverter_limit_entity_display and enphase_registry.
+- sensor.hpvc_pv1_actual_limit through pv10_actual_limit (independent observed Watts only).
+- sensor.hpvc_pv1_auto_identity through pv10_auto_identity (approved read-only identity mapping).
+- For each pv1..pv10: binary_sensor.hpvc_pvN_auto_detected, limit_range_invalid, max_power_locked, participating, available, writable_capable and independently_verifiable.
+- binary_sensor.hpvc_show_inverter_slot_2 through show_inverter_slot_10.
+- number.hpvc_inverters: validated native configuration count facade with automatic discovery floor; no physical effect.
+Existing binary_sensor.hpvc_recovery_required now exposes recovery details. binary_sensor.hpvc_physical_writes_authorized remains Off. Existing registry owners/user renames are respected; collisions can cause HA-assigned suffixes until later verified migration.
+
+7. HOME ASSISTANT INCOMPATIBILITIES FOUND
+The read-only expansion exposed a genuine minimum-version Number API difference: HA 2025.12.0 reads legacy value; the newer version uses native_value. The new count facade now implements both, without weakening assertions or changing its behavior.
+The historical minimum test stack's aiodns 3.5.0 is incompatible with pycares 5.x. requirements-test-ha-minimum.txt pins pycares 4.11.0 to make that exact historical environment reproducible. Production requires no additional dependency.
+Phase A also corrected test instrumentation for slotted ServiceRegistry and HA removing runtime_data on unload; these were test harness defects, not production lifecycle changes.
+
+8. PROOF OF THE HARD WRITE BLOCK
+The coordinator, fleet/adapters/recovery diagnostics and authorization entity return literal False. No configuration, import, enable intent, reload or observation can turn that into True.
+There is no service dispatcher or executable adapter method. Plans contain frozen action/data/target records only. Native source has no hass.services.async_call, inverter-affecting service helper, MQTT actuator or HTTP write transport. The single HTTP session method is GET of the fixed OpenDTU status endpoint, allow_redirects=False.
+AST checks reject actuator service access/transports/execution interfaces. Runtime service-call traps cover setup, validated setters, refresh, read-only polling, restart reconciliation, reload and unload. Both real HA versions assert the authorization sensor is Off. No live inverter or HBC command was sent; no live HA installation was modified.
+
+9. DEVIATIONS AND PRACTICAL LIMITS
+- The source's pre-write-already-full shortcut is deliberately not used as restoration authority in this read-only stage. Verification conservatively requires post-dispatch evidence; the shortcut needs separate operation/maintenance lifecycle tests later.
+- When original configuration-range archives are unavailable, reconstructed restore targets stay unknown and recovery remains required. Current-slot/replacement settings are never substituted.
+- The trusted OpenDTU rating cache is config-entry runtime state, not persisted across restart. Fresh API evidence or the manual fallback is needed afterward.
+- Manual entity-ID rename aliases are tracked within the entry runtime. A stale manual reference after restart needs an explicit configuration update. Auto-detected renamed Enphase controls are rediscovered from metadata.
+- Evidence verdicts and settling are exposed/tested data logic; this stage does not automatically finalize ledger operations or execute a policy/allocation loop.
+- Intended entity IDs may receive suffixes beside legacy registry owners. This is reported; no entity is seized or deleted.
+All requested read-only modules and phases are implemented within these stated limits. No physical-write, ownership or cutover scope was added.
+
+10. RECOMMENDED NEXT STAGE
+Implement the pure final policy and allocation pipeline, plus end-to-end simulated operation/recovery/maintenance tests, while physical writes remain hard Off. Resolve archived configuration references and test any already-full shortcut independently before considering an explicitly scoped dispatcher/ownership stage. Live writes, HBC writes, Node-RED fencing and ownership cutover require a later separately authorized stage.
+
+PUBLICATION AND DELIVERABLES
+Only the explicitly authorized isolated codex/hpvc-readonly-acceptance branch in BioPC/home-pv-control was updated. Main was not changed; no merge, release or deployment was performed.
+Final source commit: f907dd3cfc67637be34a0b579ffd19d05ea5fda0
+Final acceptance: https://github.com/BioPC/home-pv-control/actions/runs/40559709749
+Package: hpvc-2.0.0-dev.2-readonly-architecture.zip
+Full report: HPVC-2.0-readonly-completion-report.txt (this complete copy/paste text for ChatGPT)
+Additional files: validation JSON, intended entity CSV, changed-file CSV, complete package file manifest and SHA256.

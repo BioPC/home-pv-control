@@ -93,8 +93,8 @@ def phase_case(tx: dict, spec: dict | None = None, lock: dict | None = None) -> 
 
 def test_phase_recovery() -> None:
     now = int(time.time() * 1000)
-    tx = {"state": "complete", "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "activationComplete": False}
-    base = {"schema": 4, "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "phase": "awaiting_quick_reload"}
+    tx = {"state": "complete", "tag": "v1.6.0", "commit": "abc", "transactionId": "t1", "activationComplete": False}
+    base = {"schema": 4, "tag": "v1.6.0", "commit": "abc", "transactionId": "t1", "phase": "awaiting_quick_reload"}
     assert phase_case(tx, base)["run"] is False, "awaiting_quick_reload must remain user-authorized only"
     assert phase_case(tx, {**base, "phase": "checking"})["run"] is True, "abandoned checking must recover"
     fresh = {"transactionId": "t1", "startedAt": now, "heartbeatAt": now}
@@ -145,7 +145,7 @@ def test_finalized_activation_reconciles_stale_latches() -> None:
     assert pending["out"] is not None, "durable transaction classifier must see through a stale HA in-progress helper"
 
     # Genuine unfinished transactions are still rejected by durable transaction state.
-    unfinished = phase_case({"state": "installing", "tag": "v1.5.6", "commit": "abc", "transactionId": "t1"})
+    unfinished = phase_case({"state": "installing", "tag": "v1.6.0", "commit": "abc", "transactionId": "t1"})
     assert unfinished["run"] is False and unfinished.get("reason") == "transaction-not-complete", "live/incomplete update must never be reconciled as finalized"
 
     finish_source = str(BY_ID["2eb9a6910674ac6d"].get("func", ""))
@@ -190,7 +190,7 @@ const out=run(msg); console.log(JSON.stringify({{out,statuses}}));
 
 
 
-def orphan_reconcile_case(*, reload_state="on", progress_state="off", package_version="1.5.6", transaction=None, updater_lock=False, fail_service=None) -> dict:
+def orphan_reconcile_case(*, reload_state="on", progress_state="off", package_version="1.6.0", transaction=None, updater_lock=False, fail_service=None) -> dict:
     """Run the shipped orphan reconciler with a temporary config and mocked HA API."""
     source = heredoc("hpvcorphanreconcile156")
     with tempfile.TemporaryDirectory() as td:
@@ -283,7 +283,7 @@ def test_orphaned_activation_without_transaction() -> None:
     locked = orphan_reconcile_case(updater_lock=True)
     assert locked.get("ignore") is True and locked.get("reason") == "lock-present", "ambiguous updater lock must refuse orphan cleanup"
     wrong_package = orphan_reconcile_case(package_version="1.5.5")
-    assert wrong_package.get("ignore") is True and wrong_package.get("reason") == "managed-v1.5.6-package-not-verified", "orphan cleanup requires the managed v1.5.6 package marker"
+    assert wrong_package.get("ignore") is True and wrong_package.get("reason") == "managed-v1.6.0-package-not-verified", "orphan cleanup requires the managed v1.6.0 package marker"
     failed = orphan_reconcile_case(reload_state="on", progress_state="on", fail_service="input_boolean.hpvc_update_reload_required")
     assert failed["ok"] is False, "HA failure must remain retryable"
     failed_calls = failed.get("calls", [])
@@ -358,7 +358,7 @@ async function requestStates"""
 
 
 def test_finalized_readiness_runner_reconciles_without_transient_metadata() -> None:
-    base = {"state": "complete", "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "resumeEnabled": True}
+    base = {"state": "complete", "tag": "v1.6.0", "commit": "abc", "transactionId": "t1", "resumeEnabled": True}
     normal = finalized_readiness_case({**base, "activationComplete": True, "activationFinalized": True})
     assert normal.get("ok") is True and normal.get("alreadyComplete") is True, "finalized transaction must repair stale helpers without readiness metadata"
 
@@ -394,8 +394,8 @@ def test_exclusive_activation_lease() -> None:
         cfg = Path(td)
         recovery = cfg / "hpvc-data" / "update-recovery"
         recovery.mkdir(parents=True)
-        tx = {"state": "complete", "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "activationComplete": False}
-        spec = {"schema": 4, "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "phase": "awaiting_quick_reload", "entities": ["input_boolean.hpvc_test"]}
+        tx = {"state": "complete", "tag": "v1.6.0", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "activationComplete": False}
+        spec = {"schema": 4, "tag": "v1.6.0", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "phase": "awaiting_quick_reload", "entities": ["input_boolean.hpvc_test"]}
         (recovery / "transaction.json").write_text(json.dumps(tx), encoding="utf-8")
         (recovery / "reload-readiness.json").write_text(json.dumps(spec), encoding="utf-8")
         patched = patch_readiness_for_lock_test(source, cfg)
@@ -420,8 +420,8 @@ def test_create_before_write_boundary() -> None:
         cfg = Path(td)
         recovery = cfg / "hpvc-data" / "update-recovery"
         recovery.mkdir(parents=True)
-        tx = {"state": "complete", "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "activationComplete": False}
-        spec = {"schema": 4, "tag": "v1.5.6", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "phase": "awaiting_quick_reload", "entities": ["input_boolean.hpvc_test"]}
+        tx = {"state": "complete", "tag": "v1.6.0", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "activationComplete": False}
+        spec = {"schema": 4, "tag": "v1.6.0", "commit": "abc", "transactionId": "t1", "resumeEnabled": True, "phase": "awaiting_quick_reload", "entities": ["input_boolean.hpvc_test"]}
         (recovery / "transaction.json").write_text(json.dumps(tx), encoding="utf-8")
         (recovery / "reload-readiness.json").write_text(json.dumps(spec), encoding="utf-8")
         (recovery / "activation.lock").mkdir()  # interleave: mkdir completed, owner.json not yet written
@@ -720,6 +720,7 @@ def maintenance_case(node_id: str, readback: str, freshness: str, value: str = "
     wrapper = f"""
 const states={json.dumps(states)};
 const stateOf=(entity,fallback='')=>states[entity]&&states[entity].state!==undefined?String(states[entity].state):fallback;
+const global={{get:()=>undefined}};
 {fn}
 const out=configuredInverterVerification(states,stateOf);
 console.log(JSON.stringify(out));
@@ -754,6 +755,7 @@ def test_night_restore_maintenance_confirmation() -> None:
     wrapper = f"""
 {fn_state}
 {fn_full}
+const global={{get:()=>undefined}};
 const tolerance=25;
 const cases={{
  actionFreshFull:{{control_method:'Action/service',current_source:'readback',readback_entity_valid:true,full_power:1000,current:1000}},

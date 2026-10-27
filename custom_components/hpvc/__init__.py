@@ -213,6 +213,14 @@ async def async_setup_entry(hass, entry):
         from .execution.ha_executor import HaServiceExecutor
 
         coordinator.service_executor = HaServiceExecutor(hass)
+        from .migration.handoff import HandoffEngine
+        from .migration.detector import APPROVED_FINGERPRINT
+        coordinator.handoff = HandoffEngine(
+            config_store.path.with_name(config_store.path.name + "_migration.json"),
+            state.configuration.plant_uid,
+            APPROVED_FINGERPRINT,
+        )
+        await coordinator.handoff.load()
         owner.add_cleanup(coordinator.service_executor.revoke_admission)
         owner.add_async_cleanup(coordinator.service_executor.close)
         entry.runtime_data = coordinator

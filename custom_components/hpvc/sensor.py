@@ -168,7 +168,10 @@ class HpvcSensor(HpvcEntity, SensorEntity):
         if key == "migration_state":
             return {
                 "import_count": len(runtime.state.imports),
-                "handoff_implemented": False,
+                "handoff_implemented": True,
+                "dry_run_only": True,
+                "native_owner_ready": bool(getattr(runtime, "handoff", None) and runtime.handoff.current.native_owner_ready),
+                "production_transport_authorized": False,
                 "external_references_inspected": False,
                 "full_evaluations": runtime.scheduler.full_evaluations,
             }

@@ -1,0 +1,93 @@
+HPVC 2.0.0-dev.3 — Pure control policy and allocation completion report
+27 October 2026
+Baseline: approved hpvc-2.0.0-dev.2-readonly-architecture
+
+The pure policy/allocation stage is implemented and tested. Physical inverter and HBC writes remain impossible. The installed integration retains the dev.2 read-only runtime; the new pipeline is separately callable with immutable snapshots for simulation and acceptance. No live policy scheduling, dispatcher, ownership cutover or automatic policy-memory persistence loop was installed.
+
+1. FILES CREATED/CHANGED
+Created the five requested control modules under custom_components/hpvc/control/: engine.py, decisions.py, priorities.py, allocation.py and night_restore.py.
+Expanded execution/models.py with immutable execution restrictions and authoritative cooldown/last-command inputs. Expanded hbc/models.py with the validated HbcPolicyInput boundary. Updated version constants/manifest to 2.0.0-dev.3.
+Added scripts/build_policy_oracles.cjs, tests/policy_oracle_runtime.cjs, frozen policy/allocation fixtures, the compressed byte-exact source-flow reference, tests/foundation/policy_support.py, test_policy_pipeline.py and tests/ha/test_policy_acceptance.py.
+Updated README, FOUNDATION, the policy-stage documentation and the existing isolated-branch HA matrix workflow.
+The accompanying changed-file CSV is exhaustive; the file manifest lists every ZIP file and SHA256. All eight dev.2 inverter modules are byte-for-byte unchanged. Twenty-eight original legacy flow/YAML/script/document reference files were checked unchanged against the supplied desktop ZIP (compiled caches excluded).
+
+2. CONTROL POLICY IMPLEMENTED
+Typed frozen PolicySnapshot, PolicyController, PolicyMemory, PolicyIntent and PolicyResult separate input observations, desired intent and proposed next policy memory. Functions have no hass object, mutable HA state, running tasks, service calls or direct persistence writes.
+Ported negative-grid export sign conventions; strict Export Start (<); Target Export feedback; strict Import Restore (>); requested reduction/restoration; deadband equality; target clamps; source large-correction gain 0.65 and span limits; recent opposite-command damping; current-ceiling import protection; degraded controllable-limit baseline; minimum PV distinctions; cooldown active/expired behavior and manual/negative exceptions; price entry <= limiting price and exit > limit + hysteresis; and valid non-positive all-in price <=0 minimum protection.
+Price freshness uses the source two-hour window, while grid/PV use 180 seconds. Invalid/stale PV is never treated as a valid zero observation.
+priorities.py chooses exactly one final PV action before allocation. It resolves manual disable restore, Night Restore, negative-price minimum, external release, resolved HBC Charge Priority, import protection and ordinary export limiting. External full/degraded release is a non-authorizing observation candidate, not a lease, ownership grant or restored-operation proof.
+Cooldown starts in the execution owner when an actual command is accepted/issued. Pure evaluation and simulated plan construction never start it. Policy consumes the authoritative immutable deadline and last-command facts rather than pretending a plan has executed. The later execution stage must supply the accepted-command event/deadline and preserve that source contract.
+
+3. ALLOCATION
+Ported source maximum-power weighted proportional DELTA water filling, saturation redistribution and deterministic largest-remainder ordering, with integer Watt or milliwatt precision as required by controller bounds/current values. Hard minimums, full/max limits, opt-out, partial outage and controllable-capacity accounting are preserved.
+Recovery/rebalance uses source-equivalent ABSOLUTE proportional redistribution above minimums and distinguishes applied from already-confirmed balance. Frozen lagging controllers remain at live ceilings during permitted import recovery; healthy units absorb achievable increases. Capacity shortfalls do not overwrite the original request.
+Requested plant, allocated plant, per-controller allocated, adapter-representable/native and observed/verified values remain separate. Reasons expose capacity shortfall, frozen identity, hard minimum, saturation, unavailable/ineligible controllers, representation failure and quantization.
+The control layer delegates Watt/Percent representation to the unchanged dev.2 adapters; it contains no duplicate quantizer. Observed limits remain input evidence and are never replaced by a plan or command-cache assumption.
+
+4. NIGHT RESTORE
+Implemented a pure first-class transition function returning new state plus pending/suspension/full-observation/proof-invalidated/maintenance-candidate diagnostics.
+Entry requires valid fresh PV <= the configured Night threshold for 120 seconds. Missing/stale PV cannot start entry. sun.sun below-horizon corroboration can finish only a candidate that already began with valid low PV. Active mode remains active through unavailable nighttime telemetry.
+Recovery requires 30 continuous seconds strictly above max(25 W, Night entry threshold +15 W). Equality does not recover. An interrupted recovery resets its window. Restart keeps active mode but clears partial entry/recovery windows; this is tested against the existing durable ledger in real HA.
+Full-output proof references invalidate on contradictory partial readback, unknown/replaced fleet binding or pending execution. Open-loop/cache assumptions cannot provide proof. Pending operations/obligations, maintenance/recovery and HBC restoration restrict maintenance candidates. These outputs do not authorize maintenance or change execution state.
+
+5. HBC POLICY-INTERFACE STATUS
+Implemented the permitted typed-interface substage: HbcPolicyInput covers availability, enabled permission, Charge/Charge PV execution, usable battery eligibility/headroom, response/transition windows, persistent-export fallback, suppression, upward/taper release intent and override restoration. It validates battery count and finite, non-negative headroom/targets.
+Downstream PV arbitration consumes resolved HBC intents and keeps non-positive-price PV minimum independent of optional HBC charging permission. Ending a negative-price period while restoration remains pending cannot request a new force-charge override.
+Full upstream battery selection, response/fallback-window derivation, learned taper behavior, complete Charge Priority increase shaping and HBC override sequencing are NOT claimed as ported. They require a separate HBC substage before dispatcher work, as expressly allowed by the request. HBC oracle scenarios inject the resolved upstream interface and test its downstream interactions; they do not imply a complete HBC evaluator.
+No HBC entity is written.
+
+6. DIFFERENTIAL v1.6 TO v2 RESULTS
+All 219 full-policy frozen scenarios and 220 independent allocation frozen scenarios pass. There are zero mismatches in the characterized numeric/control-state outputs.
+Full-policy comparisons include final action/status, limiting reason, requested/calculated plant targets, allocated controller Watts, representable/native values, remembered/active price mode, cooldown state/deadline, Night Restore active/pending/timestamps and recovery/rebalance applied/confirmed state. Inputs are common scenario configuration, observations and runtime memory; expected values come exclusively from the original JavaScript runtime.
+Allocation comparisons cover zero through ten controllers, varying capacities/current/minimums, integer/fractional limits, saturation, deterministic residuals, frozen increases and absolute recovery rebalance. Achievable totals are conserved to source precision.
+The original ZIP has a mojibake euro glyph in some reason strings. The tests normalize only that display glyph; Python renders a proper euro glyph. No inequality, target or policy-state value is normalized away.
+The first Linux CI run stopped at the source provenance hash: the isolated branch inherited a different legacy flow from main. The check was retained and the exact supplied v1.6 flow was bundled as a compressed test reference instead of replacing the branch's legacy assets. Decompressed flow SHA256: b83d0ceaedc66cce7a6be870dc9a376f053b9b831717e4649d80bc8e8fe35ba7.
+The generator stops before Record Requested Inverter Writes. No HA service node, HTTP call or hardware is executed by the oracle harness.
+
+7. NUMBER OF FROZEN ORACLE SCENARIOS
+219 complete policy scenarios + 220 allocation scenarios = 439 new frozen scenarios.
+The existing 528 v1.6 quantization-oracle cases remain unchanged and passing.
+The complete local foundation/policy suite contains 589 unittest tests; some tests iterate multiple boundary/oracle cases. These counts are distinct and should not be added as if every oracle case were a separate test method.
+
+8. SIMULATED COMMAND-PLAN RESULTS
+The tested chain is observations -> pure policy -> allocation -> unchanged adapter representation -> immutable CommandBatch DATA.
+Generic Number plans contain the exact number.set_value data/target. Generic Action plans preserve exact pre/main/post ordering, nested payload and token values. Enphase plans contain only enable/Production preparation until a separate observed-ready snapshot allows the main number plan. OpenDTU/Hoymiles plans contain absolute-Watt number data using trusted rated power.
+For the characterized 3000 W controller, PV 2500 W and grid -600 W at limiting price, source damping produces a 2285 W request/allocation/native plan. Number/Action/OpenDTU tests verify those exact payloads. A constrained two-controller import example retains a 6000 W request while reporting only 4000 W achievable allocation because one controller is frozen.
+Plans do not advance operations, change cooldown, publish a physical observation or call services. Execution restrictions and identity eligibility can suppress plan composition without mutating the execution snapshot.
+
+9. REAL HOME ASSISTANT RESULTS
+Final source commit: 0984cf7e5cd94d58279589e0dba4e597f2940089
+Final acceptance: https://github.com/BioPC/home-pv-control/actions/runs/40564520163
+- Linux HA 2025.12.0 / Python 3.13.16: 589 foundation/policy tests passed in 1.810 s; 28 real-HA tests passed in 7.23 s; zero failures/errors.
+- Linux HA 2026.10.4 / Python 3.14.8: 589 foundation/policy tests passed in 2.277 s; 28 real-HA tests passed in 8.28 s; zero failures/errors.
+The same suites were independently run on both environments. This is 617 test methods/cases per environment, not 1234 distinct tests.
+Real HA coverage retains the dev.2 lifecycle/registry/read-only worker/unique-ID/recovery tests and adds observation-to-policy-to-plan composition, pending/settling/recovery/maintenance restrictions, ledger/cooldown side-effect checks, reload task cleanup and Night Restore active persistence with partial-window reset. Service-call traps remain active. Intended native entity IDs remain 282.
+The minimum-version historical test dependency pin pycares 4.11.0 is retained. No new production dependency or HA incompatibility was introduced by this stage.
+
+10. PROOF THAT PHYSICAL WRITES REMAIN IMPOSSIBLE
+binary_sensor.hpvc_physical_writes_authorized remains literal Off. The coordinator and immutable execution/policy diagnostics never authorize writes. No user setting, enable intent, policy result or plan can change that gate.
+There is no live dispatcher, executable adapter interface, inverter service invocation, MQTT actuator or HTTP write transport. The only network behavior retained is dev.2 read-only OpenDTU GET /api/limit/status with redirects disabled.
+Existing whole-native AST/runtime actuator traps pass. New policy AST tests reject HA imports/objects, async tasks, storage commits and actuator access. Real HA service-call traps verify that pure planning, reload and recovery do not call services, and the external controller state remains unchanged.
+No live hardware/HA installation, Node-RED flow, HBC setting, ownership record or cutover state was changed. Only the previously authorized isolated GitHub Actions branch was updated. This work did not update main, merge, release or deploy.
+
+11. SEMANTIC DIFFERENCES AND LIMITS
+There are no numeric/control-state differences in the 439 frozen characterized scenarios. This is bounded characterization, not a claim of equivalence across every possible history or the deferred HBC evaluator.
+The euro-glyph correction is presentation-only. Legacy slot keys are mapped to the equivalent physical identities in test comparisons.
+The pure pipeline returns proposed memory/decisions; unlike the old runtime, it does not directly mutate flow/global context, persist policy memory, start cooldown by writing, or acknowledge a release/maintenance lease. Those effects belong to the later execution/lifecycle adapter.
+Unknown execution, restore obligations, maintenance and missing controller write eligibility conservatively restrict plan composition. Fresh/full policy observations and degraded-release candidates do not clear durable uncertainty. This follows the approved native safety boundary rather than treating helper/cache state as proof.
+Full HBC derivation remains the permitted separate substage. The installed scheduler is not switched to live control-policy execution in this build.
+
+12. REMAINING WORK BEFORE DISPATCHER IMPLEMENTATION
+Complete the HBC Charge Priority derivation substage and its raw-battery/response/taper differential tests first. Add broader multi-cycle/long-run and fault-injection characterization. Design and test the caller-side policy-memory persistence adapter and complete execution-snapshot construction, including authoritative accepted-command cooldown events.
+Then test full simulated operation acceptance, completion/failure, independent verification, settling, restoration obligations and maintenance transactions. Any already-full shortcut must preserve operation-bound identity/freshness proof. Ownership fencing/cutover must remain separately gated.
+Do not add live service execution, HBC writes, Node-RED fencing/removal, native ownership or hardware deployment as an incidental next step.
+
+DELIVERABLES
+hpvc-2.0.0-dev.3-pure-policy-allocation.zip
+HPVC-2.0-policy-completion-report.txt — this full copy/paste report for ChatGPT
+HPVC-2.0-policy-validation.json
+HPVC-2.0-policy-changed-files.csv
+HPVC-2.0-policy-file-manifest.csv
+hpvc-2.0.0-dev.3-pure-policy-allocation.sha256
+
+The original dev.2 ZIP and original desktop v1.6 ZIP are preserved.

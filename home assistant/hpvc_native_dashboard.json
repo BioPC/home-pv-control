@@ -1,0 +1,923 @@
+{
+  "title": "Home PV Control",
+  "views": [
+    {
+      "title": "Overview",
+      "path": "overview",
+      "cards": [
+        {
+          "type": "markdown",
+          "content": "## Home PV Control 2.0\nDevelopment dry-run: physical writes remain Off."
+        },
+        {
+          "type": "entities",
+          "entities": [
+            "switch.hpvc_enabled",
+            "select.hpvc_selected_inverter",
+            "sensor.hpvc_status",
+            "sensor.hpvc_reason",
+            "sensor.hpvc_migration_state",
+            "binary_sensor.hpvc_physical_writes_authorized"
+          ]
+        },
+        {
+          "type": "conditional",
+          "conditions": [
+            {
+              "entity": "sensor.hpvc_effective_inverter_runtime",
+              "state": "0"
+            }
+          ],
+          "card": {
+            "type": "markdown",
+            "content": "**No inverters configured or discovered.** Configure a controller before control can become ready."
+          }
+        },
+        {
+          "type": "grid",
+          "columns": 5,
+          "square": false,
+          "cards": [
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "numeric_state",
+                  "entity": "sensor.hpvc_effective_inverter_runtime",
+                  "above": 0
+                }
+              ],
+              "card": {
+                "type": "button",
+                "name": "PV1",
+                "icon": "mdi:solar-panel",
+                "tap_action": {
+                  "action": "navigate",
+                  "navigation_path": "/hpvc-native/pv1"
+                }
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "numeric_state",
+                  "entity": "sensor.hpvc_effective_inverter_runtime",
+                  "above": 1
+                }
+              ],
+              "card": {
+                "type": "button",
+                "name": "PV2",
+                "icon": "mdi:solar-panel",
+                "tap_action": {
+                  "action": "navigate",
+                  "navigation_path": "/hpvc-native/pv2"
+                }
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "numeric_state",
+                  "entity": "sensor.hpvc_effective_inverter_runtime",
+                  "above": 2
+                }
+              ],
+              "card": {
+                "type": "button",
+                "name": "PV3",
+                "icon": "mdi:solar-panel",
+                "tap_action": {
+                  "action": "navigate",
+                  "navigation_path": "/hpvc-native/pv3"
+                }
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "numeric_state",
+                  "entity": "sensor.hpvc_effective_inverter_runtime",
+                  "above": 3
+                }
+              ],
+              "card": {
+                "type": "button",
+                "name": "PV4",
+                "icon": "mdi:solar-panel",
+                "tap_action": {
+                  "action": "navigate",
+                  "navigation_path": "/hpvc-native/pv4"
+                }
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "numeric_state",
+                  "entity": "sensor.hpvc_effective_inverter_runtime",
+                  "above": 4
+                }
+              ],
+              "card": {
+                "type": "button",
+                "name": "PV5",
+                "icon": "mdi:solar-panel",
+                "tap_action": {
+                  "action": "navigate",
+                  "navigation_path": "/hpvc-native/pv5"
+                }
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "numeric_state",
+                  "entity": "sensor.hpvc_effective_inverter_runtime",
+                  "above": 5
+                }
+              ],
+              "card": {
+                "type": "button",
+                "name": "PV6",
+                "icon": "mdi:solar-panel",
+                "tap_action": {
+                  "action": "navigate",
+                  "navigation_path": "/hpvc-native/pv6"
+                }
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "numeric_state",
+                  "entity": "sensor.hpvc_effective_inverter_runtime",
+                  "above": 6
+                }
+              ],
+              "card": {
+                "type": "button",
+                "name": "PV7",
+                "icon": "mdi:solar-panel",
+                "tap_action": {
+                  "action": "navigate",
+                  "navigation_path": "/hpvc-native/pv7"
+                }
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "numeric_state",
+                  "entity": "sensor.hpvc_effective_inverter_runtime",
+                  "above": 7
+                }
+              ],
+              "card": {
+                "type": "button",
+                "name": "PV8",
+                "icon": "mdi:solar-panel",
+                "tap_action": {
+                  "action": "navigate",
+                  "navigation_path": "/hpvc-native/pv8"
+                }
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "numeric_state",
+                  "entity": "sensor.hpvc_effective_inverter_runtime",
+                  "above": 8
+                }
+              ],
+              "card": {
+                "type": "button",
+                "name": "PV9",
+                "icon": "mdi:solar-panel",
+                "tap_action": {
+                  "action": "navigate",
+                  "navigation_path": "/hpvc-native/pv9"
+                }
+              }
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "numeric_state",
+                  "entity": "sensor.hpvc_effective_inverter_runtime",
+                  "above": 9
+                }
+              ],
+              "card": {
+                "type": "button",
+                "name": "PV10",
+                "icon": "mdi:solar-panel",
+                "tap_action": {
+                  "action": "navigate",
+                  "navigation_path": "/hpvc-native/pv10"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "entities",
+          "title": "HBC permissions and status",
+          "entities": [
+            "switch.hpvc_control_hbc_strategy",
+            "switch.hpvc_negative_price_hbc_charge",
+            "sensor.hpvc_migration_state"
+          ]
+        },
+        {
+          "type": "markdown",
+          "content": "HBC strategy: {{ states('input_select.house_battery_strategy') }}\n\nCharge goal: {{ states('input_select.house_battery_strategy_charge_goal') }}"
+        }
+      ]
+    },
+    {
+      "title": "PV1",
+      "path": "pv1",
+      "visible": false,
+      "cards": [
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[0] if rows|length >= 1 else {} %}### PV1\n**Inverter status:** {{ row.get('status', 'Not configured') }}\n\nSource: {{ row.get('source', 'manual') }} · {{ row.get('control_method', '') }}"
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[0] if rows|length >= 1 else {} %}**Limit entity**\n\n```text\n{{ row.get('limit_entity', '') }}\n```"
+        },
+        {
+          "type": "entities",
+          "entities": [
+            "switch.hpvc_pv1_control",
+            "sensor.hpvc_pv1_actual_limit",
+            "sensor.hpvc_pv1_auto_identity"
+          ]
+        },
+        {
+          "type": "conditional",
+          "conditions": [
+            {
+              "entity": "sensor.hpvc_pv1_auto_identity",
+              "state": "unknown"
+            }
+          ],
+          "card": {
+            "type": "entities",
+            "title": "Manual controller settings",
+            "entities": [
+              "select.hpvc_pv1_control_method",
+              "select.hpvc_pv1_limit_unit",
+              "text.hpvc_pv1_limit_number",
+              "number.hpvc_pv1_full_limit",
+              "number.hpvc_pv1_low_limit",
+              "text.hpvc_pv1_action",
+              "text.hpvc_pv1_value_field",
+              "text.hpvc_pv1_fixed_data_json",
+              "text.hpvc_pv1_target_json",
+              "text.hpvc_pv1_pre_actions_json",
+              "text.hpvc_pv1_post_actions_json",
+              "text.hpvc_pv1_readback_entity"
+            ]
+          }
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[0] if rows|length >= 1 else {} %}{% if row.get('source') == 'auto' %}Automatic identity and power-range provenance are maintained by discovery.{% endif %}"
+        },
+        {
+          "type": "button",
+          "name": "Overview",
+          "tap_action": {
+            "action": "navigate",
+            "navigation_path": "/hpvc-native/overview"
+          }
+        }
+      ]
+    },
+    {
+      "title": "PV2",
+      "path": "pv2",
+      "visible": false,
+      "cards": [
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[1] if rows|length >= 2 else {} %}### PV2\n**Inverter status:** {{ row.get('status', 'Not configured') }}\n\nSource: {{ row.get('source', 'manual') }} · {{ row.get('control_method', '') }}"
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[1] if rows|length >= 2 else {} %}**Limit entity**\n\n```text\n{{ row.get('limit_entity', '') }}\n```"
+        },
+        {
+          "type": "entities",
+          "entities": [
+            "switch.hpvc_pv2_control",
+            "sensor.hpvc_pv2_actual_limit",
+            "sensor.hpvc_pv2_auto_identity"
+          ]
+        },
+        {
+          "type": "conditional",
+          "conditions": [
+            {
+              "entity": "sensor.hpvc_pv2_auto_identity",
+              "state": "unknown"
+            }
+          ],
+          "card": {
+            "type": "entities",
+            "title": "Manual controller settings",
+            "entities": [
+              "select.hpvc_pv2_control_method",
+              "select.hpvc_pv2_limit_unit",
+              "text.hpvc_pv2_limit_number",
+              "number.hpvc_pv2_full_limit",
+              "number.hpvc_pv2_low_limit",
+              "text.hpvc_pv2_action",
+              "text.hpvc_pv2_value_field",
+              "text.hpvc_pv2_fixed_data_json",
+              "text.hpvc_pv2_target_json",
+              "text.hpvc_pv2_pre_actions_json",
+              "text.hpvc_pv2_post_actions_json",
+              "text.hpvc_pv2_readback_entity"
+            ]
+          }
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[1] if rows|length >= 2 else {} %}{% if row.get('source') == 'auto' %}Automatic identity and power-range provenance are maintained by discovery.{% endif %}"
+        },
+        {
+          "type": "button",
+          "name": "Overview",
+          "tap_action": {
+            "action": "navigate",
+            "navigation_path": "/hpvc-native/overview"
+          }
+        }
+      ]
+    },
+    {
+      "title": "PV3",
+      "path": "pv3",
+      "visible": false,
+      "cards": [
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[2] if rows|length >= 3 else {} %}### PV3\n**Inverter status:** {{ row.get('status', 'Not configured') }}\n\nSource: {{ row.get('source', 'manual') }} · {{ row.get('control_method', '') }}"
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[2] if rows|length >= 3 else {} %}**Limit entity**\n\n```text\n{{ row.get('limit_entity', '') }}\n```"
+        },
+        {
+          "type": "entities",
+          "entities": [
+            "switch.hpvc_pv3_control",
+            "sensor.hpvc_pv3_actual_limit",
+            "sensor.hpvc_pv3_auto_identity"
+          ]
+        },
+        {
+          "type": "conditional",
+          "conditions": [
+            {
+              "entity": "sensor.hpvc_pv3_auto_identity",
+              "state": "unknown"
+            }
+          ],
+          "card": {
+            "type": "entities",
+            "title": "Manual controller settings",
+            "entities": [
+              "select.hpvc_pv3_control_method",
+              "select.hpvc_pv3_limit_unit",
+              "text.hpvc_pv3_limit_number",
+              "number.hpvc_pv3_full_limit",
+              "number.hpvc_pv3_low_limit",
+              "text.hpvc_pv3_action",
+              "text.hpvc_pv3_value_field",
+              "text.hpvc_pv3_fixed_data_json",
+              "text.hpvc_pv3_target_json",
+              "text.hpvc_pv3_pre_actions_json",
+              "text.hpvc_pv3_post_actions_json",
+              "text.hpvc_pv3_readback_entity"
+            ]
+          }
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[2] if rows|length >= 3 else {} %}{% if row.get('source') == 'auto' %}Automatic identity and power-range provenance are maintained by discovery.{% endif %}"
+        },
+        {
+          "type": "button",
+          "name": "Overview",
+          "tap_action": {
+            "action": "navigate",
+            "navigation_path": "/hpvc-native/overview"
+          }
+        }
+      ]
+    },
+    {
+      "title": "PV4",
+      "path": "pv4",
+      "visible": false,
+      "cards": [
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[3] if rows|length >= 4 else {} %}### PV4\n**Inverter status:** {{ row.get('status', 'Not configured') }}\n\nSource: {{ row.get('source', 'manual') }} · {{ row.get('control_method', '') }}"
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[3] if rows|length >= 4 else {} %}**Limit entity**\n\n```text\n{{ row.get('limit_entity', '') }}\n```"
+        },
+        {
+          "type": "entities",
+          "entities": [
+            "switch.hpvc_pv4_control",
+            "sensor.hpvc_pv4_actual_limit",
+            "sensor.hpvc_pv4_auto_identity"
+          ]
+        },
+        {
+          "type": "conditional",
+          "conditions": [
+            {
+              "entity": "sensor.hpvc_pv4_auto_identity",
+              "state": "unknown"
+            }
+          ],
+          "card": {
+            "type": "entities",
+            "title": "Manual controller settings",
+            "entities": [
+              "select.hpvc_pv4_control_method",
+              "select.hpvc_pv4_limit_unit",
+              "text.hpvc_pv4_limit_number",
+              "number.hpvc_pv4_full_limit",
+              "number.hpvc_pv4_low_limit",
+              "text.hpvc_pv4_action",
+              "text.hpvc_pv4_value_field",
+              "text.hpvc_pv4_fixed_data_json",
+              "text.hpvc_pv4_target_json",
+              "text.hpvc_pv4_pre_actions_json",
+              "text.hpvc_pv4_post_actions_json",
+              "text.hpvc_pv4_readback_entity"
+            ]
+          }
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[3] if rows|length >= 4 else {} %}{% if row.get('source') == 'auto' %}Automatic identity and power-range provenance are maintained by discovery.{% endif %}"
+        },
+        {
+          "type": "button",
+          "name": "Overview",
+          "tap_action": {
+            "action": "navigate",
+            "navigation_path": "/hpvc-native/overview"
+          }
+        }
+      ]
+    },
+    {
+      "title": "PV5",
+      "path": "pv5",
+      "visible": false,
+      "cards": [
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[4] if rows|length >= 5 else {} %}### PV5\n**Inverter status:** {{ row.get('status', 'Not configured') }}\n\nSource: {{ row.get('source', 'manual') }} · {{ row.get('control_method', '') }}"
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[4] if rows|length >= 5 else {} %}**Limit entity**\n\n```text\n{{ row.get('limit_entity', '') }}\n```"
+        },
+        {
+          "type": "entities",
+          "entities": [
+            "switch.hpvc_pv5_control",
+            "sensor.hpvc_pv5_actual_limit",
+            "sensor.hpvc_pv5_auto_identity"
+          ]
+        },
+        {
+          "type": "conditional",
+          "conditions": [
+            {
+              "entity": "sensor.hpvc_pv5_auto_identity",
+              "state": "unknown"
+            }
+          ],
+          "card": {
+            "type": "entities",
+            "title": "Manual controller settings",
+            "entities": [
+              "select.hpvc_pv5_control_method",
+              "select.hpvc_pv5_limit_unit",
+              "text.hpvc_pv5_limit_number",
+              "number.hpvc_pv5_full_limit",
+              "number.hpvc_pv5_low_limit",
+              "text.hpvc_pv5_action",
+              "text.hpvc_pv5_value_field",
+              "text.hpvc_pv5_fixed_data_json",
+              "text.hpvc_pv5_target_json",
+              "text.hpvc_pv5_pre_actions_json",
+              "text.hpvc_pv5_post_actions_json",
+              "text.hpvc_pv5_readback_entity"
+            ]
+          }
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[4] if rows|length >= 5 else {} %}{% if row.get('source') == 'auto' %}Automatic identity and power-range provenance are maintained by discovery.{% endif %}"
+        },
+        {
+          "type": "button",
+          "name": "Overview",
+          "tap_action": {
+            "action": "navigate",
+            "navigation_path": "/hpvc-native/overview"
+          }
+        }
+      ]
+    },
+    {
+      "title": "PV6",
+      "path": "pv6",
+      "visible": false,
+      "cards": [
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[5] if rows|length >= 6 else {} %}### PV6\n**Inverter status:** {{ row.get('status', 'Not configured') }}\n\nSource: {{ row.get('source', 'manual') }} · {{ row.get('control_method', '') }}"
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[5] if rows|length >= 6 else {} %}**Limit entity**\n\n```text\n{{ row.get('limit_entity', '') }}\n```"
+        },
+        {
+          "type": "entities",
+          "entities": [
+            "switch.hpvc_pv6_control",
+            "sensor.hpvc_pv6_actual_limit",
+            "sensor.hpvc_pv6_auto_identity"
+          ]
+        },
+        {
+          "type": "conditional",
+          "conditions": [
+            {
+              "entity": "sensor.hpvc_pv6_auto_identity",
+              "state": "unknown"
+            }
+          ],
+          "card": {
+            "type": "entities",
+            "title": "Manual controller settings",
+            "entities": [
+              "select.hpvc_pv6_control_method",
+              "select.hpvc_pv6_limit_unit",
+              "text.hpvc_pv6_limit_number",
+              "number.hpvc_pv6_full_limit",
+              "number.hpvc_pv6_low_limit",
+              "text.hpvc_pv6_action",
+              "text.hpvc_pv6_value_field",
+              "text.hpvc_pv6_fixed_data_json",
+              "text.hpvc_pv6_target_json",
+              "text.hpvc_pv6_pre_actions_json",
+              "text.hpvc_pv6_post_actions_json",
+              "text.hpvc_pv6_readback_entity"
+            ]
+          }
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[5] if rows|length >= 6 else {} %}{% if row.get('source') == 'auto' %}Automatic identity and power-range provenance are maintained by discovery.{% endif %}"
+        },
+        {
+          "type": "button",
+          "name": "Overview",
+          "tap_action": {
+            "action": "navigate",
+            "navigation_path": "/hpvc-native/overview"
+          }
+        }
+      ]
+    },
+    {
+      "title": "PV7",
+      "path": "pv7",
+      "visible": false,
+      "cards": [
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[6] if rows|length >= 7 else {} %}### PV7\n**Inverter status:** {{ row.get('status', 'Not configured') }}\n\nSource: {{ row.get('source', 'manual') }} · {{ row.get('control_method', '') }}"
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[6] if rows|length >= 7 else {} %}**Limit entity**\n\n```text\n{{ row.get('limit_entity', '') }}\n```"
+        },
+        {
+          "type": "entities",
+          "entities": [
+            "switch.hpvc_pv7_control",
+            "sensor.hpvc_pv7_actual_limit",
+            "sensor.hpvc_pv7_auto_identity"
+          ]
+        },
+        {
+          "type": "conditional",
+          "conditions": [
+            {
+              "entity": "sensor.hpvc_pv7_auto_identity",
+              "state": "unknown"
+            }
+          ],
+          "card": {
+            "type": "entities",
+            "title": "Manual controller settings",
+            "entities": [
+              "select.hpvc_pv7_control_method",
+              "select.hpvc_pv7_limit_unit",
+              "text.hpvc_pv7_limit_number",
+              "number.hpvc_pv7_full_limit",
+              "number.hpvc_pv7_low_limit",
+              "text.hpvc_pv7_action",
+              "text.hpvc_pv7_value_field",
+              "text.hpvc_pv7_fixed_data_json",
+              "text.hpvc_pv7_target_json",
+              "text.hpvc_pv7_pre_actions_json",
+              "text.hpvc_pv7_post_actions_json",
+              "text.hpvc_pv7_readback_entity"
+            ]
+          }
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[6] if rows|length >= 7 else {} %}{% if row.get('source') == 'auto' %}Automatic identity and power-range provenance are maintained by discovery.{% endif %}"
+        },
+        {
+          "type": "button",
+          "name": "Overview",
+          "tap_action": {
+            "action": "navigate",
+            "navigation_path": "/hpvc-native/overview"
+          }
+        }
+      ]
+    },
+    {
+      "title": "PV8",
+      "path": "pv8",
+      "visible": false,
+      "cards": [
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[7] if rows|length >= 8 else {} %}### PV8\n**Inverter status:** {{ row.get('status', 'Not configured') }}\n\nSource: {{ row.get('source', 'manual') }} · {{ row.get('control_method', '') }}"
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[7] if rows|length >= 8 else {} %}**Limit entity**\n\n```text\n{{ row.get('limit_entity', '') }}\n```"
+        },
+        {
+          "type": "entities",
+          "entities": [
+            "switch.hpvc_pv8_control",
+            "sensor.hpvc_pv8_actual_limit",
+            "sensor.hpvc_pv8_auto_identity"
+          ]
+        },
+        {
+          "type": "conditional",
+          "conditions": [
+            {
+              "entity": "sensor.hpvc_pv8_auto_identity",
+              "state": "unknown"
+            }
+          ],
+          "card": {
+            "type": "entities",
+            "title": "Manual controller settings",
+            "entities": [
+              "select.hpvc_pv8_control_method",
+              "select.hpvc_pv8_limit_unit",
+              "text.hpvc_pv8_limit_number",
+              "number.hpvc_pv8_full_limit",
+              "number.hpvc_pv8_low_limit",
+              "text.hpvc_pv8_action",
+              "text.hpvc_pv8_value_field",
+              "text.hpvc_pv8_fixed_data_json",
+              "text.hpvc_pv8_target_json",
+              "text.hpvc_pv8_pre_actions_json",
+              "text.hpvc_pv8_post_actions_json",
+              "text.hpvc_pv8_readback_entity"
+            ]
+          }
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[7] if rows|length >= 8 else {} %}{% if row.get('source') == 'auto' %}Automatic identity and power-range provenance are maintained by discovery.{% endif %}"
+        },
+        {
+          "type": "button",
+          "name": "Overview",
+          "tap_action": {
+            "action": "navigate",
+            "navigation_path": "/hpvc-native/overview"
+          }
+        }
+      ]
+    },
+    {
+      "title": "PV9",
+      "path": "pv9",
+      "visible": false,
+      "cards": [
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[8] if rows|length >= 9 else {} %}### PV9\n**Inverter status:** {{ row.get('status', 'Not configured') }}\n\nSource: {{ row.get('source', 'manual') }} · {{ row.get('control_method', '') }}"
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[8] if rows|length >= 9 else {} %}**Limit entity**\n\n```text\n{{ row.get('limit_entity', '') }}\n```"
+        },
+        {
+          "type": "entities",
+          "entities": [
+            "switch.hpvc_pv9_control",
+            "sensor.hpvc_pv9_actual_limit",
+            "sensor.hpvc_pv9_auto_identity"
+          ]
+        },
+        {
+          "type": "conditional",
+          "conditions": [
+            {
+              "entity": "sensor.hpvc_pv9_auto_identity",
+              "state": "unknown"
+            }
+          ],
+          "card": {
+            "type": "entities",
+            "title": "Manual controller settings",
+            "entities": [
+              "select.hpvc_pv9_control_method",
+              "select.hpvc_pv9_limit_unit",
+              "text.hpvc_pv9_limit_number",
+              "number.hpvc_pv9_full_limit",
+              "number.hpvc_pv9_low_limit",
+              "text.hpvc_pv9_action",
+              "text.hpvc_pv9_value_field",
+              "text.hpvc_pv9_fixed_data_json",
+              "text.hpvc_pv9_target_json",
+              "text.hpvc_pv9_pre_actions_json",
+              "text.hpvc_pv9_post_actions_json",
+              "text.hpvc_pv9_readback_entity"
+            ]
+          }
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[8] if rows|length >= 9 else {} %}{% if row.get('source') == 'auto' %}Automatic identity and power-range provenance are maintained by discovery.{% endif %}"
+        },
+        {
+          "type": "button",
+          "name": "Overview",
+          "tap_action": {
+            "action": "navigate",
+            "navigation_path": "/hpvc-native/overview"
+          }
+        }
+      ]
+    },
+    {
+      "title": "PV10",
+      "path": "pv10",
+      "visible": false,
+      "cards": [
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[9] if rows|length >= 10 else {} %}### PV10\n**Inverter status:** {{ row.get('status', 'Not configured') }}\n\nSource: {{ row.get('source', 'manual') }} · {{ row.get('control_method', '') }}"
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[9] if rows|length >= 10 else {} %}**Limit entity**\n\n```text\n{{ row.get('limit_entity', '') }}\n```"
+        },
+        {
+          "type": "entities",
+          "entities": [
+            "switch.hpvc_pv10_control",
+            "sensor.hpvc_pv10_actual_limit",
+            "sensor.hpvc_pv10_auto_identity"
+          ]
+        },
+        {
+          "type": "conditional",
+          "conditions": [
+            {
+              "entity": "sensor.hpvc_pv10_auto_identity",
+              "state": "unknown"
+            }
+          ],
+          "card": {
+            "type": "entities",
+            "title": "Manual controller settings",
+            "entities": [
+              "select.hpvc_pv10_control_method",
+              "select.hpvc_pv10_limit_unit",
+              "text.hpvc_pv10_limit_number",
+              "number.hpvc_pv10_full_limit",
+              "number.hpvc_pv10_low_limit",
+              "text.hpvc_pv10_action",
+              "text.hpvc_pv10_value_field",
+              "text.hpvc_pv10_fixed_data_json",
+              "text.hpvc_pv10_target_json",
+              "text.hpvc_pv10_pre_actions_json",
+              "text.hpvc_pv10_post_actions_json",
+              "text.hpvc_pv10_readback_entity"
+            ]
+          }
+        },
+        {
+          "type": "markdown",
+          "content": "{% set rows = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') or [] %}{% set row = rows[9] if rows|length >= 10 else {} %}{% if row.get('source') == 'auto' %}Automatic identity and power-range provenance are maintained by discovery.{% endif %}"
+        },
+        {
+          "type": "button",
+          "name": "Overview",
+          "tap_action": {
+            "action": "navigate",
+            "navigation_path": "/hpvc-native/overview"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Power Control",
+      "path": "power-control",
+      "cards": [
+        {
+          "type": "history-graph",
+          "title": "Power Control",
+          "hours_to_show": 24,
+          "entities": [
+            "sensor.hpvc_pv1_actual_limit"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Price Interval",
+      "path": "price-interval",
+      "cards": [
+        {
+          "type": "history-graph",
+          "title": "Price Interval",
+          "hours_to_show": 24,
+          "entities": [
+            "number.hpvc_pv_limiting_price"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Insights",
+      "path": "insights",
+      "cards": [
+        {
+          "type": "entities",
+          "entities": [
+            "switch.hpvc_insights_enabled"
+          ]
+        },
+        {
+          "type": "markdown",
+          "content": "No compatible current-day Insights history imported."
+        }
+      ]
+    },
+    {
+      "title": "Reports",
+      "path": "reports",
+      "cards": [
+        {
+          "type": "markdown",
+          "content": "No compatible current-day report snapshot imported."
+        }
+      ]
+    }
+  ]
+}

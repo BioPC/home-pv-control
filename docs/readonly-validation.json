@@ -1,0 +1,74 @@
+{
+  "version": "2.0.0-dev.2",
+  "date": "2026-10-27",
+  "phase_a": {
+    "run_id": 40553564521,
+    "ha_versions": [
+      "2025.12.0",
+      "2026.10.4"
+    ],
+    "real_ha_passed_each": 14,
+    "foundation_passed_each": 70,
+    "completed_before_adapter_expansion": true
+  },
+  "final": {
+    "commit": "f907dd3cfc67637be34a0b579ffd19d05ea5fda0",
+    "branch": "codex/hpvc-readonly-acceptance",
+    "repository": "BioPC/home-pv-control",
+    "run_id": 40559709749,
+    "url": "https://github.com/BioPC/home-pv-control/actions/runs/40559709749",
+    "jobs": [
+      {
+        "version": "HA 2025.12.0 / Python 3.13",
+        "job_id": 122385127184,
+        "conclusion": "success",
+        "lines": [
+          "Ran 123 tests in 2.350s",
+          "homeassistant==2025.12.0",
+          "pycares==4.11.0",
+          "pytest-homeassistant-custom-component==0.13.298",
+          "platform linux -- Python 3.13.17, pytest-9.0.0, pluggy-1.7.0 -- /opt/hostedtoolcache/Python/3.13.17/x64/bin/python",
+          "============================== 21 passed in 4.86s =============================="
+        ]
+      },
+      {
+        "version": "HA 2026.10.4 / Python 3.14",
+        "job_id": 122385127539,
+        "conclusion": "success",
+        "lines": [
+          "Ran 123 tests in 2.429s",
+          "homeassistant==2026.10.4",
+          "pycares==5.2.1",
+          "pytest-homeassistant-custom-component==0.13.375",
+          "platform linux -- Python 3.14.9, pytest-9.0.3, pluggy-1.7.0 -- /opt/hostedtoolcache/Python/3.14.9/x64/bin/python",
+          "============================== 21 passed in 9.12s =============================="
+        ]
+      }
+    ],
+    "real_ha_tests_passed_each": 21,
+    "foundation_tests_passed_each": 123,
+    "failures": 0,
+    "errors": 0
+  },
+  "local": {
+    "python": "3.12",
+    "tests": 123,
+    "failures": 0,
+    "errors": 0,
+    "source_quantization_oracle_cases": 528,
+    "ruff_production_real_ha_new_readonly_tests": "passed",
+    "native_ast_parse": "passed"
+  },
+  "entity_ids": 282,
+  "added_entity_ids": 104,
+  "legacy_reference_files_byte_identical": 28,
+  "original_zip_sha256": "fc5e877ea714e340c0688872cbcde8e061e7d5bbac0f8ff7977183deedd4401d",
+  "physical_writes_authorized": false,
+  "dispatcher_present": false,
+  "hbc_writer_present": false,
+  "http_transport": "GET /api/limit/status only; allow_redirects=False",
+  "main_modified": false,
+  "merged": false,
+  "released": false,
+  "deployed": false
+}

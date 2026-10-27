@@ -1,0 +1,253 @@
+HPVC 2.0 dev.5 — authoritative dispatcher and maintenance against a FAKE executor
+Full completion report for ChatGPT
+
+Baseline: hpvc-2.0.0-dev.4-hbc-runtime-memory, approved.
+Version: 2.0.0-dev.5.
+Status: requested fake-dispatch stage implemented and native acceptance passed.
+Physical inverter/HBC write authorization remains hard Off.
+Repository: BioPC/home-pv-control.
+Branch: codex/hpvc-readonly-acceptance (isolated acceptance branch).
+Validated commit: 52680393d733e24ea5322b7d30bb669aeca3fc59.
+Native acceptance: https://github.com/BioPC/home-pv-control/actions/runs/40585524753.
+No merge, release, deployment, real ownership handoff or production cutover.
+
+1. FILES CHANGED
+  .github/workflows/validate-foundation.yml
+  FOUNDATION.md
+  README.md
+  custom_components/hpvc/const.py
+  custom_components/hpvc/coordinator.py
+  custom_components/hpvc/execution/dispatcher.py
+  custom_components/hpvc/execution/executor.py
+  custom_components/hpvc/execution/maintenance.py
+  custom_components/hpvc/execution/models.py
+  custom_components/hpvc/execution/recovery.py
+  custom_components/hpvc/execution/snapshot.py
+  custom_components/hpvc/manifest.json
+  custom_components/hpvc/policy_runtime.py
+  custom_components/hpvc/storage.py
+  docs/dispatcher-stage5.md
+  scripts/build_dispatch_characterization.cjs
+  tests/fixtures/dispatch-v1.6-characterization.json
+  tests/fixtures/dispatch-v1.6-driver.cjs
+  tests/foundation/dispatch_support.py
+  tests/foundation/test_dispatch_adapters.py
+  tests/foundation/test_dispatch_loop.py
+  tests/foundation/test_dispatch_restart.py
+  tests/foundation/test_dispatcher.py
+  tests/foundation/test_ha_contracts.py
+  tests/foundation/test_maintenance.py
+  tests/ha/test_dispatch_acceptance.py
+
+The changed-file CSV records hashes and whether each file is added or modified. The
+full manifest records every packaged file. Previous stage ZIPs remain available.
+Legacy Node-RED/YAML/dashboard assets and all eight inverter adapter modules remain
+byte-identical to approved dev.4. Entity identities remain 282. The prior safety test
+was updated to permit the newly requested fake-only dispatcher; its AST prohibitions
+on HA actuator services and write transports remain intact.
+
+2. DISPATCHER ARCHITECTURE
+execution/dispatcher.py is the sole owner of executable simulation sequencing.
+Control, HBC, inverter, entity and coordinator modules do not issue actuator actions.
+The dispatcher requires exactly FakeExecutor; no service-backed executor is supplied.
+Separate inverter and HBC lane locks allow an HBC operation alongside one inverter
+operation. Inverter physical service operations are serial. Immutable registered
+proposals own sequence identity and controller/configuration provenance.
+Identical pending work coalesces without resetting identity or accepted time. New
+intent supersedes only entirely unsent eligible batches. An issued sequence retains
+its remaining steps, including during safe-disable draining. Failure isolates the
+remaining unsent steps for that controller. Already queued unrelated controllers can
+continue after known terminal transport, while durable uncertainty remains restrictive.
+Live read-only setup does not automatically instantiate the fake dispatcher or invent
+simulated physical events from real telemetry. Real-HA tests explicitly inject it.
+
+3. FAKE EXECUTOR INTERFACE
+execution/executor.py defines immutable ExecutionRequest, IssueReceipt, Completion
+and QuiescenceReceipt data and an Executor protocol. FakeExecutor is the only concrete
+implementation. It accepts immutable command steps, records requests, permits delayed
+receipt and controlled completion, duplicates, stale/old-owner callbacks, transport
+failure, missing completion and explicit quiescence. Test checkpoints inject crashes
+at durable boundaries. It has no HA service, HTTP-write or MQTT-write implementation.
+
+4. DURABLE OPERATION LIFECYCLE
+The execution ledger remains authoritative. PREPARED commits before queue admission;
+DISPATCH_ARMED, owner/configuration/dispatch identity and time commit before invocation.
+A matching fake issue receipt permits SERVICE_IN_FLIGHT and accepted-event recording.
+Completion commits SERVICE_COMPLETED, then AWAITING_VERIFICATION or OPEN_LOOP.
+Independent proof permits VERIFIED; confirmed settling permits RETIRED for PV main
+work. Native select/switch steps retire after independent value confirmation.
+SUPERSEDED_UNSENT, SERVICE_FAILED, VERIFICATION_FAILED, UNVERIFIABLE_OPEN_LOOP,
+OUTCOME_UNKNOWN and RECOVERY_REQUIRED remain explicit. Commit failure means no call
+when arming failed. A call/commit ambiguity becomes UNKNOWN, never an automatic replay.
+Age does not clear work. Duplicate/stale callbacks must match epoch, configuration,
+controller, dispatch and exact step payload before they can advance an operation.
+An explicit quiescence receipt resolves transport continuity only. It cannot resolve
+the physical restoration obligation. Proven completed transport may resume independent
+verification through an explicit recovery transition.
+
+The checksummed fake_dispatch companion stores immutable registered plans/configuration
+references, bounded simulation audit history and settling state. Missing journal beside
+existing operations fails closed. Known dev.4 execution records migrate additively after
+checksum validation; arbitrary missing/extra fields and corruption remain rejected.
+
+5. HBC EXECUTION LANE
+The fake HBC lane orders strategy then goal on entry, goal then strategy on exit.
+Durable captured originals precede forced action registration and issue. The ARMED
+ledger commit also owns originals and possible-issuance uncertainty. A crash after
+the fake call but before accepted-event persistence cannot discard that ownership.
+Possible issuance is never misreported as an accepted/issued fact.
+Fresh independent native observations must match the issued entity, option, owner,
+configuration, dispatch and timestamps. Executor success alone never confirms a select.
+Known HBC verification uses its own snapshot lane and does not freeze inverter policy.
+Unknown HBC physical outcomes stay restrictive. A fresh explicit policy retry is allowed
+after completed transport failure; age cannot replay an uncertain HBC operation.
+Independent observation of both saved originals after their applicable possible writes
+clears captured ownership. Fault/helper intents remain data; no real services are added.
+
+6. COOLDOWN AND ACCEPTED-COMMAND INTEGRATION
+Only matched execution-owned simulated acceptance updates dev.4 accepted-command facts.
+Validation uses the immutable registered proposal rather than rebinding old work to a
+newer policy evaluation. It checks targets, observed before-values, controller/config
+identity, dispatch/owner identity, clock continuity, capture token and cooldown duration.
+A CommandBatch, PREPARED record, pre-action or memory commit cannot start main PV cooldown.
+The accepted main issue starts it. HBC events use their separate lane and cannot invent
+PV cooldown. Crash uncertainty remains restrictive even if acceptance could not commit.
+Maintenance full restoration has a narrow owned-registration path after an accepted
+disabled observation; it accepts only the archived full target and matching provenance.
+
+7. VERIFICATION, FINALIZATION AND SETTLING
+Production pure verification interprets independent fake evidence. Covered outcomes:
+service success + matching readback; stale evidence; wrong target; unavailable readback;
+transport failure; outcome unknown; open-loop controllers; OpenDTU post-dispatch API
+poll/status/device/serial evidence; and Enphase enable/Production readiness plus limit
+readback. Wrong-target final failure remains a durable failure with a restore obligation.
+Generic Action pre/main/post sequencing and partial failures are covered. Opaque actions
+without independent readback remain open-loop; transport success cannot be physical proof.
+Settling consumes fresh PV after verified limits, uses accepted monotonic elapsed time
+within a boot, retains completed settling across reload, and resets partial sampling
+continuity. A newer issued command explicitly supersedes the older interval without
+claiming that the old physical response occurred. Timeout is not restoration proof.
+
+8. RESTORATION OBLIGATIONS AND ALREADY-FULL PROOF
+Obligations retain archived controller UID, configuration signature/reference, full
+target, establishment time, owner and physical-operation references. They survive removal,
+reconfiguration, zero-controller rediscovery, restart, reload, failure and owner change.
+Failure and unknown status remain explicit; they are never erased because the fleet changed.
+Resolution requires matched independent full-output evidence after conflicting possible
+work is quiescent. Old proof cannot resolve a newer conflicting operation. Replacement
+identity/signature, command cache, startup assumption and stale full state are rejected.
+The already-full shortcut requires a matching fresh independently verifiable live adapter
+view and exact archived identity/range. Unstructured Enphase/OpenDTU observations are
+refused in favor of the complete structured evidence path. The approved durable Night
+Restore proof exception is identity-bound and cannot cover later conflicting activity.
+
+9. MAINTENANCE TRANSACTIONS
+Safe-disable captures original enable intent, transaction identity/token, owner epoch,
+request clock and every applicable current/historical restoration identity. A fresh
+accepted post-disable evaluation is mandatory. Unknown plant ownership is restrictive.
+Maintenance drains/reconciles work, resolves every applicable full-output obligation,
+requires confirmed HBC restoration and verified settling or the bounded Night proof
+exception. Exactly 180 monotonic seconds times out to BLOCKED, never authorization.
+A positive maintenance decision is a simulation result tied to owner, ledger revision
+and deadline; physical-write authorization remains false. It performs no update,
+uninstall or removal. Restart blocks the transaction and preserves obligations.
+Explicit recovery requires the old token and a fresh accepted disabled observation,
+creates a new token/deadline and retains obligations and original saved enable intent.
+It cannot silently resume an old authorization or clear unknown transport.
+
+10. RESTART / FAULT-INJECTION MATRIX
+Nine injected crash boundaries:
+  before PREPARED commit;
+  after PREPARED;
+  after DISPATCH_ARMED;
+  immediately before fake invocation;
+  after fake call before in-flight commit;
+  after SERVICE_IN_FLIGHT;
+  after fake completion;
+  before independent verification;
+  after independent verification.
+Additional tests cover completed settling reload, restoration obligations, maintenance
+restart, HBC override restart, exact dev.4 migration, HBC crash before acceptance,
+corrupt/missing journal, failed prepare/arm commit, delayed/never-completing work,
+duplicate/stale/old-owner callbacks, callback after reload, explicit quiescence and
+partial pre/main/post failures. Uncertain work is never replayed by age or startup.
+
+11. SIMULATED END-TO-END SCENARIOS
+There are 67 new native foundation tests beyond the retained 728:
+  21 dispatcher behavior/safety tests;
+  19 adapter/runtime-loop scenarios;
+  13 restart/migration cases;
+  14 maintenance cases.
+The adapter/runtime loops cover normal limiting, import recovery, cooldown, negative
+price, HBC Charge Priority, taper learning from accepted writes, partial outage,
+controller recovery/rebalance, Enphase preflight, OpenDTU, generic Action pre/main/post,
+manual safe disable, external release, Night Restore and maintenance.
+The runtime chain uses raw observations/HBC derivation, pure policy, allocation,
+representation, durable registration, fake dispatch, accepted events, fake completion,
+independent fake evidence, verification, settling, bounded simulation audit history /
+durable policy-memory updates and subsequent evaluation. Audit history is simulation
+lifecycle data; no real energy/financial history or hardware events are fabricated.
+All 795 native foundation tests pass, retaining dev.1/dev.2/dev.3/dev.4 acceptance.
+
+12. SOURCE CHARACTERIZATION AND CONSERVATIVE DIFFERENCES
+The exact original v1.6 Function-node flow digest remains:
+b83d0ceaedc66cce7a6be870dc9a376f053b9b831717e4649d80bc8e8fe35ba7.
+The bundled dispatcher driver digest after text line-ending normalization is:
+6fd5d638ab1dbd935a848a2650dfdf60a7b654d1d506f67625edc95e56f5e8e3.
+Twelve original dispatcher lifecycle scenarios pass with fake callbacks. Native tests
+characterize matching ordering/coalescing/progression/failure/restore/maintenance
+invariants. This is not a claim of full dispatcher event-by-event equivalence.
+The retained 430 normal-continuity policy/HBC oracle cycles remain unchanged.
+Native intentional differences: no warm/cold ambiguous replay; accepted-main issue
+rather than legacy queue construction owns cooldown; independent preflight/select
+proof; explicit unknown transport recovery; provenance-bound already-full evidence;
+revision/time/owner-bound maintenance. Opaque pre/post actions can remain open-loop.
+
+13. REAL HOME ASSISTANT AND OTHER VALIDATION
+HA 2025.12.0 and HA 2026.10.4 each pass 795 native foundation tests, 34 real HA tests,
+and the 12 original dispatcher characterization scenarios at the validated commit.
+Exact installed Python/HA/plugin versions and job evidence are in the validation JSON.
+Real HA tests trap actuator-service calls, exercise explicit fake scheduling, accepted
+facts, durable ledger, independent fake proof, reload, callback rejection, unload,
+delayed fake invocation cancellation and entry-owned task cleanup. Actual external
+inverter/HBC entity values remain unchanged. Ruff F checks and compileall pass.
+
+Supplemental original-reference checks:
+  Local release-integrity validator: 35 checks passed; Bash syntax check skipped on Windows.
+  Legacy behavioral scripts: 16 of 17 passed.
+  scripts/test_controller_status.py fails its dashboard-order assertion at check 465.
+  This exact failure was reproduced on the approved dev.4 ZIP; the script and dashboard
+  are byte-identical. The reference was preserved and the failure is not hidden.
+  A separate inherited GitHub legacy-release workflow still references v1.5.6 metadata
+  and lacks v1.6.0 release links on the isolated remote baseline. It reports two metadata
+  errors; the requested native two-HA matrix passes independently. The local supplied
+  v1.6 reference passes release-integrity checks. See validation JSON for both records.
+
+14. PROOF NO REAL ACTUATOR PATH EXISTS
+Only FakeExecutor is concrete; Dispatcher rejects any different implementation.
+Native AST tests prohibit HA service-registry access and actuator calls/transports,
+and retain the existing MQTT/HTTP/service import/call bans. Runtime service-call traps
+cover HA lifecycle and fake dispatch. Inverter adapters remain plan/data interfaces.
+The sole existing HTTP transport remains the constrained read-only OpenDTU status GET.
+No real inverter/HBC service executor, MQTT write, HTTP write, Node-RED fencing,
+native ownership commit, live update/uninstall action or production cutover was added.
+binary_sensor.hpvc_physical_writes_authorized remains Off with literal-false authority.
+
+15. REMAINING WORK BEFORE A REAL HA SERVICE EXECUTOR
+Separately review/authorize real transport admission and service-specific failure /
+receipt semantics. Complete proven production ownership/handoff/fencing and ensure
+fresh device/registry/config identity binding at invocation. Bind real independent
+readback/polling and service-specific pre/post proof; opaque scripts cannot be assumed
+verified. Review bounded ledger/journal/evidence retention and migrations for production
+throughput. Reconcile inherited legacy release metadata and the pre-existing dashboard
+assertion before claiming a completely green legacy release pipeline. Then implement
+and validate the real HA executor in its separately scoped stage. This build makes no
+live hardware-response, universal power-loss durability or production-readiness claim.
+
+DELIVERABLES
+hpvc-2.0.0-dev.5-fake-dispatcher.zip — complete development repository tree.
+hpvc-2.0.0-dev.5-fake-dispatcher.sha256 — archive checksum.
+HPVC-2.0-dispatcher-completion-report.txt — this full report for ChatGPT.
+HPVC-2.0-dispatcher-validation.json — exact native/legacy validation evidence.
+HPVC-2.0-dispatcher-file-manifest.csv — every packaged file, size and SHA-256.
+HPVC-2.0-dispatcher-changed-files.csv — differences from approved dev.4.

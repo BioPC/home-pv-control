@@ -1,4 +1,4 @@
-# HPVC 2.0 guarded HA executor — 2.0.0-dev.6
+# HPVC 2.0 dry-run legacy handoff — 2.0.0-dev.7
 
 This development build extends the accepted dev.1 foundation with read-only controller discovery, immutable command-plan representation, independent evidence interpretation, recovery classification and fleet diagnostics. Actuator-capable HA transport exists behind a permanently false production admission gate. The physical-write authorization sensor is always Off, including after enable, configuration edits, import, restart and reload.
 
@@ -84,3 +84,10 @@ Dedicated Python tests inject a non-serializable capability that maps every logi
 The executor supports approved Number, Action/service, Enphase and four ordered HBC selector steps. Before invocation it rechecks owner, plan, operation, sequence, live adapter/configuration, opt-out, maintenance, target availability and admission. Service return records transport completion only. Independent observations remain required for verification. Timeout and unload preserve possibly issued work without cancelling its service handler or replaying it. A per-owner transport journal retains issued timestamps, payloads and result/exception details; late callbacks cannot authorize a new owner.
 
 All HBC source files remain byte-identical to approved dev.5. Production cutover, legacy fencing, ownership commit and live hardware tests remain deferred.
+
+
+## Dev.7 migration ownership and fencing
+
+The durable migration transaction is implemented separately from production execution ownership. Normal setup loads its record but supplies no mutation driver. Dedicated contained tests exercise detection, safe-disable requests, restoration/quiescence, exact-flow fencing and post-fence validation. Owner-ready is stored separately from the permanently false transport authorization. Restart revokes the in-memory ready claim and requires a fresh challenge-bound source attestation and physical checks.
+
+See [migration-stage7.md](docs/migration-stage7.md). The native dashboard artifact is `home assistant/hpvc_native_dashboard.json`, generated from the actual entity mapping using `scripts/build_native_dashboard.py`. Historical v1.6 release records and flow behavior remain the reference; `DEVELOPMENT.json` identifies the v2 development build. No live migration or production cutover is performed in dev.7.
