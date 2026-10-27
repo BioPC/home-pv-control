@@ -112,6 +112,13 @@ class PolicyRuntimeAdapter:
             raise SchemaError(
                 "Simulated event has no matching accepted policy proposal"
             )
+        if (
+            event.accepted.boot_id != proposal.clock.boot_id
+            or event.accepted.age(proposal.clock) is None
+        ):
+            raise SchemaError(
+                "Accepted event predates evaluation or lost runtime continuity"
+            )
         if event.lane == "inverter":
             represented = proposal.policy.represented
             if (

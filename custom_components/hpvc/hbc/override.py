@@ -256,15 +256,30 @@ def evaluate_override(snapshot, entities):
     stuck = (
         memory.phase not in ("inactive", "active") and age is not None and age >= 300
     )
-    fault = memory.phase == "recovery_unknown_previous" or stuck or memory.fault
+    fault = memory.phase == "recovery_unknown_previous" or stuck
+    memory = replace(memory, fault=fault if memory.phase != "inactive" else False)
     if fault and memory.phase != "inactive":
-        memory = replace(memory, fault=True)
+        accepted_publication = next(
+            (
+                event
+                for event in reversed(snapshot.accepted_override_events)
+                if event.capture_token == memory.capture_token
+                and event.step in ("fault_on", "fault_notification")
+            ),
+            None,
+        )
+        if accepted_publication:
+            memory = replace(memory, fault_published=accepted_publication.accepted)
         published_age = clock.age(memory.fault_published)
-        if (
+        publication_due = (
             memory.fault_published is None
             or published_age is None
             or published_age >= 300
-        ):
+        )
+        helper_on = (
+            text(entities.get("input_boolean.hpvc_negative_override_fault")) == "on"
+        )
+        if not helper_on:
             actions.append(
                 HbcActionIntent(
                     "fault_on",
@@ -273,17 +288,22 @@ def evaluate_override(snapshot, entities):
                     capture_token=memory.capture_token,
                 )
             )
-            accepted_fault = next(
-                (
-                    event
-                    for event in reversed(snapshot.accepted_override_events)
-                    if event.capture_token == memory.capture_token
-                    and event.step == "fault_on"
-                ),
-                None,
+        if publication_due or not helper_on:
+            actions.append(
+                HbcActionIntent(
+                    "fault_notification",
+                    "persistent_notification.create",
+                    "",
+                    capture_token=memory.capture_token,
+                    data_json=json.dumps(
+                        {
+                            "notification_id": "hpvc_negative_override_fault",
+                            "title": "HPVC negative-price override needs attention",
+                            "message": reason,
+                        }
+                    ),
+                )
             )
-            if accepted_fault:
-                memory = replace(memory, fault_published=accepted_fault.accepted)
     if old.fault and not memory.fault:
         if not snapshot.acknowledge_unknown_override:
             actions.append(
@@ -300,22 +320,6 @@ def evaluate_override(snapshot, entities):
                 "",
                 data_json=json.dumps(
                     {"notification_id": "hpvc_negative_override_fault"}
-                ),
-            )
-        )
-    if any(action.step == "fault_on" for action in actions):
-        actions.append(
-            HbcActionIntent(
-                "fault_notification",
-                "persistent_notification.create",
-                "",
-                capture_token=memory.capture_token,
-                data_json=json.dumps(
-                    {
-                        "notification_id": "hpvc_negative_override_fault",
-                        "title": "HPVC negative-price override needs attention",
-                        "message": reason,
-                    }
                 ),
             )
         )

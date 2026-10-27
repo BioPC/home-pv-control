@@ -72,8 +72,19 @@ class AcceptedCommand(Record):
         ):
             raise SchemaError("PV accepted event needs represented Watts")
         if self.lane == "hbc_override" and (
-            not self.capture_token
-            or any(c.native_target is None or not c.entity_id for c in self.controllers)
+            (
+                not self.capture_token
+                and self.action
+                in ("enter_strategy", "enter_goal", "restore_goal", "restore_strategy")
+            )
+            or any(
+                c.native_target is None
+                or (
+                    not c.entity_id
+                    and self.action not in ("fault_notification", "fault_dismiss")
+                )
+                for c in self.controllers
+            )
         ):
             raise SchemaError(
                 "HBC accepted event requires captured identity and native target"

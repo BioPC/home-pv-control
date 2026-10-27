@@ -125,3 +125,41 @@ class HbcContinuityTests(unittest.TestCase):
                     self.assertIsNone(restored.last_retry)
                     return
         self.fail("No captured negative override covered")
+
+    def test_override_fault_publication_requires_accepted_event_and_reasserts_helper(
+        self,
+    ):
+        from custom_components.hpvc.hbc.state import (
+            OverrideMemory,
+            AcceptedOverrideStep,
+        )
+        from custom_components.hpvc.hbc.override import evaluate_override
+
+        row = next(
+            row
+            for seq in FIXTURE["sequences"]
+            for row in seq["cycles"]
+            if row["expected"]["override_phase"] == "recovery_unknown_previous"
+        )
+        _, snap = HbcDriver("fault").step(row)
+        c = snap.clock
+        memory = replace(
+            snap.memory,
+            override=OverrideMemory(
+                phase="recovery_unknown_previous",
+                phase_since=c,
+                capture_token="capture",
+                fault=True,
+            ),
+        )
+        snap = replace(snap, memory=memory)
+        entities = {e.entity_id: e for e in snap.entities}
+        result = evaluate_override(snap, entities)
+        self.assertTrue(result.memory.fault)
+        self.assertIsNone(result.memory.fault_published)
+        self.assertIn("fault_notification", [a.step for a in result.actions])
+        accepted = AcceptedOverrideStep("fault_notification", c, "capture")
+        snap = replace(snap, accepted_override_events=(accepted,))
+        result = evaluate_override(snap, entities)
+        self.assertEqual(result.memory.fault_published, c)
+        self.assertIn("fault_on", [a.step for a in result.actions])
