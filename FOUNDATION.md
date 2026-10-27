@@ -1,6 +1,6 @@
-# HPVC 2.0 fake dispatcher — 2.0.0-dev.5
+# HPVC 2.0 dry-run legacy handoff — 2.0.0-dev.7
 
-This development build extends the accepted dev.1 foundation with read-only controller discovery, immutable command-plan representation, independent evidence interpretation, recovery classification and fleet diagnostics. Native inverter and HBC writes do not exist. The physical-write authorization sensor is always Off, including after enable, configuration edits, import, restart and reload.
+This development build extends the accepted dev.1 foundation with read-only controller discovery, immutable command-plan representation, independent evidence interpretation, recovery classification and fleet diagnostics. Actuator-capable HA transport exists behind a permanently false production admission gate. The physical-write authorization sensor is always Off, including after enable, configuration edits, import, restart and reload.
 
 ## Installation and scope
 
@@ -26,7 +26,7 @@ Each envelope contains kind, schema version, revision, payload and SHA-256 paylo
 
 Commits serialize under an async lock, validate before writing, fsync a same-directory temporary file, atomically replace the destination and sync the parent directory on POSIX. Windows testing covers file fsync and replacement; it does not prove universal power-loss durability. A commit failure poisons the store until a validated reload. Cancellation drains outstanding filesystem work before returning.
 
-Execution transitions are data representation only: there is no service executor. Armed/in-flight work becomes unknown after continuity loss; restore obligations survive removal from active configuration. Unknown execution blocks conflicting armed work. Referenced proof cannot be evicted to satisfy evidence retention. Evidence is capped at 128; terminal operation retention is bounded. Command-cache/startup assumptions cannot be verified evidence.
+The dispatcher can use the guarded HA executor only through explicit test injection; ordinary runtime remains non-actuating. Armed/in-flight work becomes unknown after continuity loss; restore obligations survive removal from active configuration. Unknown execution blocks conflicting armed work. Referenced proof cannot be evicted to satisfy evidence retention. Evidence is capped at 128; terminal operation retention is bounded. Command-cache/startup assumptions cannot be verified evidence.
 
 - `_policy.json`: `policy_memory` envelope; accepted policy/HBC memory, generation, boot clock and consumed probe-event identities.
 - `_accepted_commands.json`: `accepted_commands` envelope; execution-owned simulated events only. Runtime policy evaluation never creates accepted commands. Missing companion files and corruption fail closed.
@@ -35,7 +35,7 @@ Execution transitions are data representation only: there is no service executor
 
 One entry-owned scheduler worker uses bounded settings/timer flags, five-second startup delay, ten-second main wake and thirty-second forced full evaluation. Telemetry events mark dirty state without immediate evaluations. Power significance uses the source's strict >20 W AND >2% comparison against the last full snapshot. This phase evaluates and publishes observations only; HBC/final policy-specific rate-limiter bypasses belong to the later engine stage.
 
-Listeners are rebound when configured sensor references change and are removed on unload. Owned workers/timers are cancelled and awaited; filesystem commits drain. Entry-owned registry refresh runs initially after two seconds and every 60 seconds; OpenDTU status refresh runs initially after eight seconds and every 30 seconds. The HTTP worker uses only GET of /api/limit/status with redirects forbidden. No report worker is installed. Setup-failure cleanup is tested. No task is allowed to grant write authorization.
+Listeners are rebound when configured sensor references change and are removed on unload. Owned unissued workers/timers are cancelled and awaited; filesystem commits drain. Issued HA service tasks survive unload, retaining uncertainty. Entry-owned registry refresh runs initially after two seconds and every 60 seconds; OpenDTU status refresh runs initially after eight seconds and every 30 seconds. The HTTP worker uses only GET of /api/limit/status with redirects forbidden. No report worker is installed. Setup-failure cleanup is tested. No task is allowed to grant write authorization.
 
 ## Legacy import framework
 
@@ -58,7 +58,7 @@ These test actual model/storage/scheduler/entity-wrapper code, but the HA contra
 
 Real Linux acceptance runs on the isolated codex/hpvc-readonly-acceptance branch. The matrix pins HA 2025.12.0 / Python 3.13 and HA 2026.10.4 / Python 3.14. Phase A passed 14 real HA and 70 foundation tests per environment before adapter expansion. See docs/phase-a-accepted.md and docs/readonly-stage2.md for the staged scope and evidence.
 
-The safety suite rejects actuator service access and HTTP/MQTT actuator transports anywhere in native integration source. A runtime service-call trap is exercised across setup, entity edits, import, evaluation, reload and unload. The concrete adapters have observation, representation and immutable plan-building interfaces only. The source has no dispatcher or HBC writer. The new pure engine is callable with immutable inputs and returns decisions/allocation/plan data; it is not connected to live scheduler dispatch. The only HTTP transport is a constrained OpenDTU status GET.
+The safety suite permits ServiceRegistry access only in the guarded executor and rejects HTTP/MQTT actuator transports throughout native integration source. A runtime service-call trap is exercised across setup, entity edits, import, evaluation, reload and unload. The concrete adapters have observation, representation and immutable plan-building interfaces only. The dispatcher supports fake execution and guarded HA transport; HBC modules contain no service calls. The new pure engine is callable with immutable inputs and returns decisions/allocation/plan data; it is not connected to live scheduler dispatch. The only HTTP transport is a constrained OpenDTU status GET.
 
 ## Dev.5 fake dispatcher
 
@@ -66,10 +66,28 @@ The dispatcher, maintenance transactions and fake-only transport boundary are im
 
 ## Next stage
 
-The dev.4 raw HBC evaluator, durable memory adapter, authoritative execution snapshot and fake lifecycle acceptance are documented in docs/hbc-stage4.md. Live dispatcher implementation remains a separately scoped later stage. Do not enable actuation, fence legacy, remove old assets or perform production cutover without a separately scoped stage.
+The dev.4 raw HBC evaluator, durable memory adapter, authoritative execution snapshot and fake lifecycle acceptance are documented in docs/hbc-stage4.md. Production admission and ownership handoff remain separately scoped later stages. Do not enable actuation, fence legacy, remove old assets or perform production cutover without a separately scoped stage.
 
 ## API references checked
 
 - https://developers.home-assistant.io/docs/config_entries_index/
 - https://contributors.home-assistant.io/core/integrations/config-entries/
 - https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/entity_platform.py
+
+
+## Dev.6 guarded Home Assistant transport
+
+`execution/ha_executor.py` contains the sole ServiceRegistry invocation. The dispatcher registers immutable compiled adapter plans; the executor never re-templates data or rebuilds commands. Ordinary construction has no test capability and `production_transport_admitted()` always returns false independently of enabled intent. Physical-write authorization stays Off. No ownership transfer or legacy fencing is implemented.
+
+Dedicated Python tests inject a non-serializable capability that maps every logical service to `hpvc_transport_test`. Even this capability cannot route to real actuator domains. No state, flow, YAML, import, service or event installs a capability.
+
+The executor supports approved Number, Action/service, Enphase and four ordered HBC selector steps. Before invocation it rechecks owner, plan, operation, sequence, live adapter/configuration, opt-out, maintenance, target availability and admission. Service return records transport completion only. Independent observations remain required for verification. Timeout and unload preserve possibly issued work without cancelling its service handler or replaying it. A per-owner transport journal retains issued timestamps, payloads and result/exception details; late callbacks cannot authorize a new owner.
+
+All HBC source files remain byte-identical to approved dev.5. Production cutover, legacy fencing, ownership commit and live hardware tests remain deferred.
+
+
+## Dev.7 migration ownership and fencing
+
+The durable migration transaction is implemented separately from production execution ownership. Normal setup loads its record but supplies no mutation driver. Dedicated contained tests exercise detection, safe-disable requests, restoration/quiescence, exact-flow fencing and post-fence validation. Owner-ready is stored separately from the permanently false transport authorization. Restart revokes the in-memory ready claim and requires a fresh challenge-bound source attestation and physical checks.
+
+See [migration-stage7.md](docs/migration-stage7.md). The native dashboard artifact is `home assistant/hpvc_native_dashboard.json`, generated from the actual entity mapping using `scripts/build_native_dashboard.py`. Historical v1.6 release records and flow behavior remain the reference; `DEVELOPMENT.json` identifies the v2 development build. No live migration or production cutover is performed in dev.7.

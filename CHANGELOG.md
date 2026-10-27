@@ -1,5 +1,128 @@
 # Changelog
 
+## v1.6.0 — 2026-10-25
+
+### Limit entity layout
+
+- Display each inverter Limit entity as a native two-line Entities row: `Limit entity` on the first line and the full exact entity ID as secondary information on the second line, with no custom-card dependency.
+
+### Min/Max warning rendering
+
+- Fixed the per-inverter Min/Max warning card to use the same per-slot invalid-range sensor that hides/disables HPVC Control, eliminating separate warning-condition drift for manual, Hoymiles/OpenDTU and Enphase controllers.
+
+### Invalid Min/Max recovery guidance
+
+- Expanded the per-inverter invalid-range warning to explain that HPVC Control was forced OFF and must be manually re-enabled after correcting Min to `<= Max`; no control behavior changed.
+
+### Live Min/Max validation refresh
+
+- Fixed Home Assistant dependency tracking for the centralized inverter Min/Max validator by explicitly subscribing it to all 20 per-slot Max/Min helpers. Editing a limit now immediately refreshes the invalid-range warning and the HPVC-Control force-off/hide guard; this prevents the runtime status from becoming incomplete while the dashboard warning remains stale.
+
+### Inverter Min/Max guard and warning placement
+
+- Show `Min power must be ≤ Max power. Correct it, then re-enable HPVC Control.` directly below the per-inverter status banner when Min exceeds Max for manual, Hoymiles/OpenDTU and auto-detected Enphase slots, including auto controllers whose manual entity helper is blank.
+- Use explicit invalid-range gating for all ten inverter slots: **Min power equal to Max power is valid**; if Min exceeds Max, HPVC preserves the entered value, forces that inverter HPVC Control OFF, hides the unavailable control switch, and shows the range warning until the user corrects Min to `<= Max`.
+
+### Dashboard Min/Max validation
+
+- Render the Min/Max warning from the same per-slot invalid-range sensor that gates HPVC Control, so `Min power must be ≤ Max power. Correct it, then re-enable HPVC Control.` appears consistently for manual, OpenDTU/Hoymiles, and Enphase controllers whenever Min exceeds Max.
+
+### Maintenance verification parity
+
+- Retire auto-controller `homePvControlAdapterCompletedWrites` barriers immediately after the authoritative pending-write verifier confirms the physical write. Destructive maintenance now treats a resolved auto-detected Number write the same way the proven v1.5.7 manual Number path did, instead of re-checking a historical adapter-completion record and misclassifying healthy full-output Hoymiles/Enphase controllers as unavailable/unverifiable.
+
+
+### Release priorities
+
+This release prioritizes control correctness and safe recovery first, followed by inverter action sequencing, controller management, automatic integration support, maintenance recovery and validation.
+
+### Control and safety
+- Auto-detected native Number controllers (OpenDTU/Hoymiles and Enphase DPEL) now use the same Home Assistant template `last_reported` freshness contract as manual Number controllers during restore/maintenance verification. Auto-detected slots are mirrored into the normal `pvN` helpers, so `sensor.hpvc_source_freshness` resolves the real controller entity and reads HA-core `last_reported` directly. This fixes false `unavailable/unverifiable` results seen only with auto-detected controllers while preserving stale-readback protection.
+- Prevent disable, Smart Update, flow removal and full uninstall from stalling when a Number-entity inverter was already independently confirmed at its trusted full output before a redundant restore-to-full write. HPVC now carries that pre-write full-output proof through the adapter completion record, so an unchanged OpenDTU value does not create a false verification barrier; genuinely stale full readback after a real limiting write remains blocked.
+- Restore writes are now eligible for confirmation after 5 seconds when the live verified readback already matches the requested full limit; normal limiting writes retain the configured cooldown-based initial verification delay and slow OpenDTU writes keep their extended retry/failure windows.
+- Align the **Smart Update**, **Remove HPVC flows** and **Full Uninstall** safe-shutdown gates: a merely active disable-restore lifecycle no longer blocks maintenance after every currently configured inverter is independently verified at full output and no inverter action/write remains pending. Unresolved obligations with unavailable, below-full or zero-current-controller evidence still block destructive maintenance.
+
+- Release HPVC-owned auto-managed Enphase DPEL and Hoymiles/OpenDTU slots when registry discovery no longer finds the controller, instead of reclassifying stale mirrored values as manual `Incomplete` slots. Genuine manual inverter slots remain persistent.
+- Fix independent maintenance-audit findings: Smart Update, flow removal and uninstall now consume the dedicated OpenDTU registry `.controllers` shape, normalize legacy/manual Enphase DPEL slots to native Watt metadata before full-output proof, and keep unresolved disable-restore obligations blocking even if rediscovery temporarily yields zero controllers.
+- Correlate OpenDTU API write evidence to the physical adapter dispatch: limit-status polls are timestamped at request start, pending writes are stamped with their actual dispatch generation/time, and API `Ok` evidence is accepted only when that poll began after the relevant dispatch. Pre-command snapshots can no longer confirm later writes.
+- Fix the final v1.6.0 release-audit controller boundary findings: use one configuration-only adapter policy across producer/dispatch/recovery, keep DPEL permission checks live at dispatch without signing mutable limit telemetry, honor configured per-slot power settings for newly auto-detected controllers, stamp real pending records by logical control key plus readback identity, and reject contradictory known OpenDTU serials.
+- Require fresh PV evidence before Night Restore entry/recovery; retained stale zero values cannot authorize full output, while disappearance after a fresh night start keeps the existing bounded below-horizon policy.
+- Use at least the current controllable output ceiling for import recovery so low measured PV cannot reduce the limit during an upward recalculation.
+- Preserve write authorization through quantization; cooldown and pending-write holds also gate initial synchronization and heartbeat refreshes, while explicit minimum protection and authorized recovery rebalance remain available.
+- Retain configured manual-disable restore obligations through unavailable telemetry and report verification pending until independent full-output confirmation; configuration changes and command-cache values cannot fabricate completion.
+- Block Smart Update, flow removal and uninstall while registered, queued, in-flight or uncertain dispatcher work remains; neither Night Restore proof nor verification age exempts outstanding physical work. Reject full readback predating the relevant completed inverter call.
+
+### Inverter action sequencing
+
+- Serialize inverter service calls, replace superseded unsent steps, and drain an already-sent action before sending the newer target.
+- Guard continuations and failures with generation/dispatch identities so delayed or duplicate callbacks cannot overwrite or erase newer work; preserve unrelated-inverter failure isolation.
+- Cancel old continuations on live control-ownership/adapter changes and request fresh target reconciliation after cancellation or deployment. A service call that never returns remains held for investigation rather than permitting unsafe overlap.
+- Coalesce identical pending sequences without restarting their generation or verification clock, preventing slow pre-actions from starving restores. Replay interrupted pre-dispatch delivery with the original identity.
+- Preserve a live call barrier across warm partial Function deployment. Surface uncertain persisted/legacy leases as recovery-required and require explicit reconciliation rather than silently clearing them.
+
+### Controller UI and per-controller permission
+
+- Centralized all ten inverter Min/Max classifications (`valid`, `min_equal_max`, `min_above_max`) in `sensor.hpvc_inverter_limit_validation`. Equality is valid; only `min_above_max` is invalid. Dashboard warnings and the automatic HPVC-Control-off guard consume that shared result, and HPVC never rewrites the user's Min helper.
+- Live Inputs now keeps switched-off inverter limits visible with the native label `PVx actual limit (Off)`; enabled rows retain `PVx actual limit`, while `unknown`/`unavailable` control-switch states remain hidden. No new entities or custom dashboard dependencies are required.
+- The Settings dashboard now uses one persistent native **Inverters** numeric-input row for both zero and non-zero counts; the separate zero-state add card was removed, while PV configuration remains hidden until at least one effective inverter exists.
+- Dashboard polish: auto-detected read-only inverter fields now use muted grey lock icons, and trusted OpenDTU Max power remains locked across independent registry refreshes instead of transiently reverting to a manual input.
+- Dashboard terminology now uses **Total inverters** and **Inverter status** for clearer user-facing labels; internal controller IDs and runtime semantics are unchanged.
+- Dashboard inverter status now identifies auto-detected integrations as **Hoymiles detected** or **Enphase detected**, while internal status semantics remain unchanged.
+- Dashboard incomplete status now preserves detection context: manual controllers show **Detected but incomplete**, auto OpenDTU/Hoymiles shows **Hoymiles detected but incomplete**, and auto Enphase shows **Enphase detected but incomplete**. Internal runtime status remains `Incomplete`.
+- Fixed a dashboard card regression that rendered a false `Configuration error` above valid auto-detected controllers; removed the redundant `Controller configuration` heading while keeping the existing HPVC Control and controller fields.
+- Bound the visible **Inverters** control to a dynamic minimum equal to the current auto-detected controller count, so detected controllers cannot be hidden by decrementing below the live automatic floor.
+- Allow a genuine zero-inverter setup state. With no manual capacity and no auto-detected controller, **Inverters** is `0`, the empty PV configuration area is hidden, and Settings shows only the add-inverter control. Zero is accepted by the runtime as a setup value but is not operational: HPVC requires at least one usable inverter and remains OFF. Existing legacy empty PV1 placeholders collapse to zero at Home Assistant startup.
+- Add a dedicated Main-tab warning for the supported zero-inverter setup state: **No PV inverters available**. With no usable inverter, HPVC control is unavailable and the existing required-input safety path keeps the master control OFF; monitoring/dashboard diagnostics remain available until a manual inverter is added or Enphase/OpenDTU discovery supplies one. Existing configuration/live-input alerts retain priority for real faults.
+- Auto-detected controller values are mirrored into the existing PV slot fields for a consistent configuration view. Control method, limit entity and unit are mirrored for all auto controllers; Hoymiles/OpenDTU may also mirror trusted Max power, while Enphase Max/Min remain user-owned manual values. The runtime source remains auto-detected so this mirroring does not create duplicate manual controllers.
+- Auto-detected Enphase/OpenDTU Control method, Limit entity and Limit unit rows are read-only; Max power is locked only when a trusted detected maximum is available, while Min power stays editable and Max power remains editable when HPVC needs a manual rated value.
+- Hide duplicate and incomplete controller readbacks from Live Inputs while retaining valid monitoring-only and unavailable-controller rows.
+- Show duplicate Number-entity assignment feedback only on later-entered slots, identify the original slot and hide conflicting toggles; preserve the runtime duplicate-target safety gate.
+- Evaluate manual power-range warnings directly from entered controller fields; keep empty/not-configured slots quiet and preserve native adapter limits.
+- Show counted but unfilled manual slots as amber **Not configured**, derive Detected/Configured/Incomplete/Unavailable from existing runtime data, and add no extra status entities/helpers.
+- Show a brand-neutral auto-detected/manual inverter total and include effective auto-detected slots in navigation, Main badges and actual-limit rows.
+- Add transition-only Insights for controller exclusion, all-controller monitoring-only mode and return to control.
+
+### OpenDTU/Hoymiles registry auto-detection
+
+- Hardened OpenDTU/Hoymiles auto-control: prefer `/api/limit/status` `max_power`, cache confirmed rated power, require the slot's manual Full Limit when API/cache data is unavailable, never infer rated power from HA Number `max`, use `limit_set_status` as optional early verification evidence, and enforce a 300-second minimum final verification window for slow absolute-limit readback.
+- Keep the OpenDTU limit-status HTTP Request node as the sole owner of the GET method; dynamic polling now supplies only `msg.url` and HPVC metadata, avoiding Node-RED override warnings on current runtimes.
+- Added automatic Hoymiles/OpenDTU controller discovery through the existing independent registry refresh. HPVC now reads both Home Assistant entity and device registries, identifies MQTT `limit_nonpersistent_absolute` roles on OpenDTU/Hoymiles devices, and uses the writable Watt number as a normal verified Number-entity controller.
+- Registry/device pairing supports renamed Home Assistant entities. When registry metadata is unavailable, a strict `_limit_nonpersistent_absolute` + Watt-unit + positive-native-max fallback remains available.
+- Persistent/relative limits, unrelated MQTT numbers and inverter power controls are rejected for automatic control. Multiple OpenDTU devices, mixed Enphase/manual setups, deduplication, per-controller HPVC Control, maintenance verification and the shared ten-slot ceiling are covered by regression tests.
+- Align Smart Update, flow removal and full-uninstall OpenDTU verification with runtime rated-power precedence (API `max_power` → cached confirmed value → manual Full Limit); maintenance no longer substitutes the HA Number `max`.
+
+### Enphase DPEL integration
+
+- DPEL discovery now prefers original entity registry roles and shared HA device IDs, supports fully renamed triplets, rejects production/PV-limit siblings and ambiguous pairings, and keeps suffix fallback without registry metadata.
+- Registry reads run on a separate startup/60-second timer. Runtime, HA validation/dashboard templates and maintenance use the same cached mapping; multiple Envoys and the ten-slot maximum remain supported.
+- Added persistent per-slot HPVC Control switches, enabled by default. Opt-out stops further commands without changing the last limit; maintenance still requires verified full output. See the configuration guide for restoration and slot assignment details.
+- Added shipped-function registry, rename, ambiguity, cache, slot, opt-out and queued-action regressions, plus rendered HA template tests and CI coverage. Version remains v1.6.0.
+- Added native Enphase Envoy DPEL auto-detection for Enphase Envoy Installer 0.10.2+ with one Envoy counted as one effective HPVC controller slot.
+- Preserve user-owned Enphase Max/Min across temporary auto-detection loss by binding the saved range to the detected DPEL controller identity; the same Envoy regains its range after rediscovery, while a different Envoy cannot inherit the previous controller's values.
+- Normalize manually configured DPEL Number-entity slots to native Watts/step/readback while preserving manual HPVC Max/Min power, and require an explicit `Production` + `Export` mode set.
+- Make Home Assistant configuration/readiness/onboarding accept a complete auto-detected DPEL triplet without any manually populated inverter entity helper.
+- Added an effective runtime inverter map so dashboard actual-limit sensors, slot visibility, inverter navigation, maintenance diagnostics, PV-limited and at-minimum indicators include auto-detected Enphase controllers.
+- Capture the Node-RED adapter policy only after DPEL discovery to avoid a safe but unnecessary first-discovery resync cycle.
+- Harden DPEL runtime validation: the mode select must continue to advertise both `Production` and `Export`, and `unknown`/`unavailable` enable or mode states now pause the Enphase adapter without issuing futile service calls until Home Assistant reports real states again.
+- Fixed Home Assistant runtime-map consumers to accept both JSON strings and native list attributes, preventing `PVx actual limit` sensors from becoming `Unavailable` on installations where HA preserves the attribute as a native list.
+
+### Smart Update activation recovery
+
+- Retain the v1.5.6 activation recovery protections and update all current runtime/package/report markers and managed-version checks to v1.6.0.
+- Preserve historical release documents, stable node IDs and existing Home Assistant helper inventory.
+
+### Validation
+
+- Add a dedicated HBC Charge Priority state-machine regression suite covering Waiting, Active, Exit hold/transition settle, taper-region step caps, persistent-export fallback, and negative-price separation.
+- Add a fixture-driven report regression that builds the shared report model, renders TXT and HTML, verifies parity, exercises generation-token guards, and validates the generation-scoped atomic publication contract.
+- Move auto-detected-controller documentation out of post-footer text and into the existing controller/adapter sections so the configuration and architecture guides remain structurally clean.
+- Add behavioral control-safety regressions for all five audit findings, delayed actions, stale errors, multi-inverter outages, freshness boundaries and deployment.
+- Add twelve dispatcher lifecycle regressions covering the three follow-up findings, maintenance completion, multi-inverter coalescing, replay and cold recovery.
+- Add twelve baseline control simulations to GitHub Actions alongside the existing activation, Insights and runtime-load suites.
+- Replace the Enphase Home Assistant string-presence check with rendered Jinja scenarios covering Enphase-only onboarding, strict DPEL option validation, native-list/JSON runtime attributes, manual Number Watts/Percent, Action/service readback, manual-DPEL deduplication/Watts normalization, mixed controllers and multiple Envoys.
+- Pin Jinja2 in CI for rendered-template regression coverage, use explicit UTF-8 reads in Python scripts, and validate the new CI entries and current-version markers.
+- Reorganize Enphase documentation into the existing Installation, Configuration, How it works, Troubleshooting and Compatibility sections; remove duplicated end-of-file callouts and update Live Inputs/navigation wording to the effective runtime slot model.
+
 ## v1.5.6 — 2026-10-14
 
 ### Smart Update activation recovery

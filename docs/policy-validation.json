@@ -1,0 +1,65 @@
+{
+  "version": "2.0.0-dev.3",
+  "date": "2026-10-27",
+  "baseline": "hpvc-2.0.0-dev.2-readonly-architecture",
+  "commit": "0984cf7e5cd94d58279589e0dba4e597f2940089",
+  "repository": "BioPC/home-pv-control",
+  "branch": "codex/hpvc-readonly-acceptance",
+  "run_id": 40564520163,
+  "run_url": "https://github.com/BioPC/home-pv-control/actions/runs/40564520163",
+  "jobs": [
+    {
+      "name": "HA 2026.10.4 / Python 3.14",
+      "job_id": 122402078979,
+      "conclusion": "success",
+      "lines": [
+        "Ran 589 tests in 2.277s",
+        "homeassistant==2026.10.4",
+        "pycares==5.2.1",
+        "pytest-homeassistant-custom-component==0.13.375",
+        "platform linux -- Python 3.14.8, pytest-9.0.3, pluggy-1.7.0 -- /opt/hostedtoolcache/Python/3.14.8/x64/bin/python",
+        "============================== 28 passed in 8.28s =============================="
+      ]
+    },
+    {
+      "name": "HA 2025.12.0 / Python 3.13",
+      "job_id": 122402079383,
+      "conclusion": "success",
+      "lines": [
+        "Ran 589 tests in 1.810s",
+        "homeassistant==2025.12.0",
+        "pycares==4.11.0",
+        "pytest-homeassistant-custom-component==0.13.298",
+        "platform linux -- Python 3.13.16, pytest-9.0.0, pluggy-1.7.0 -- /opt/hostedtoolcache/Python/3.13.16/x64/bin/python",
+        "============================== 28 passed in 7.23s =============================="
+      ]
+    }
+  ],
+  "foundation_policy_tests_passed_each": 589,
+  "real_ha_tests_passed_each": 28,
+  "failures": 0,
+  "errors": 0,
+  "full_policy_oracle_scenarios": 219,
+  "allocation_oracle_scenarios": 220,
+  "total_new_frozen_oracle_scenarios": 439,
+  "retained_quantization_oracle_cases": 528,
+  "differential_numeric_state_mismatches": 0,
+  "reason_text_normalization": "Original v1.6 mojibake euro glyph corrected; no numeric or policy-state normalization",
+  "source_flow_sha256": "b83d0ceaedc66cce7a6be870dc9a376f053b9b831717e4649d80bc8e8fe35ba7",
+  "reference": "tests/fixtures/policy-v1.6-runtime.json.gz; decompressed bytes exactly match original supplied ZIP flow",
+  "initial_ci_provenance_failure_run": 40563680802,
+  "safety": {
+    "physical_writes_authorized": false,
+    "dispatcher_present": false,
+    "hbc_writer_present": false,
+    "policy_calls_ha": false,
+    "policy_creates_tasks": false,
+    "policy_writes_storage": false,
+    "readonly_opendtu_get_retained": true
+  },
+  "hbc_status": "Typed validated interface and downstream arbitration; full battery/response/taper derivation required in a separate substage before dispatcher work",
+  "runtime_status": "Pure pipeline callable for simulation/acceptance; no live policy scheduling or automatic policy-memory commits",
+  "native_entity_ids": 282,
+  "unchanged_dev2_inverter_modules": 8,
+  "legacy_reference_files_unchanged": 28
+}

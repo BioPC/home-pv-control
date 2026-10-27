@@ -218,7 +218,7 @@ class PolicyRuntimeAdapter:
                         phase_since=clock,
                         previous_strategy=override.saved_strategy,
                         previous_goal=override.saved_charge_goal,
-                        forced_write_issued=override.forced_write_issued is not False,
+                        forced_write_issued=override.forced_write_issued is True,
                         fault=True,
                     ),
                 )
@@ -265,6 +265,40 @@ class PolicyRuntimeAdapter:
         accepted = self.accepted
         memory = align_policy(accepted.policy, accepted.last_clock, clock)
         hbc_memory = accepted.hbc
+        owned = ledger.hbc_override
+        if owned.phase.value != "inactive":
+            existing = hbc_memory.override
+            # Possible issuance is durable uncertainty, never an accepted-command
+            # fact. Preserve originals and take the restoration path if the request
+            # ends before an accepted fact was committed.
+            ended = (
+                not policy.enabled
+                or not permission
+                or not negative_charge_permission
+                or policy.all_in.value is not None
+                and policy.all_in.value > 0
+            )
+            phase = (
+                "restoring_goal"
+                if ended and not existing.phase.startswith("restoring")
+                else existing.phase
+                if existing.phase != "inactive"
+                else owned.phase.value
+            )
+            hbc_memory = replace(
+                hbc_memory,
+                override=replace(
+                    existing,
+                    phase=phase,
+                    previous_strategy=owned.saved_strategy
+                    or existing.previous_strategy,
+                    previous_goal=owned.saved_charge_goal or existing.previous_goal,
+                    capture_token=owned.persistence_token or existing.capture_token,
+                    phase_since=clock
+                    if phase != existing.phase
+                    else existing.phase_since or clock,
+                ),
+            )
         applied = accepted.applied_probe_event_ids
         release = facts.last_release
         # Probe creation comes only from a ledger-bound simulated accepted event.
@@ -346,6 +380,26 @@ class PolicyRuntimeAdapter:
             last_command_failed=failed,
         )
         hbc = evaluate_hbc(hbc_snapshot)
+        uncertain_hbc = any(
+            o.lane.value == "hbc_override"
+            and o.state.value in ("outcome_unknown", "recovery_required")
+            for o in ledger.operations
+        )
+        if owned.phase.value != "inactive" and uncertain_hbc:
+            preserved = replace(hbc.memory, override=hbc_memory.override)
+            hbc = replace(
+                hbc,
+                memory=preserved,
+                override=replace(
+                    hbc.override,
+                    memory=preserved.override,
+                    actions=(),
+                    minimum_lock=True,
+                    recovery_required=True,
+                    reason="HBC execution continuity is unresolved; captured originals remain owned.",
+                ),
+                resolved=replace(hbc.resolved, override_restore_pending=True),
+            )
         execution = build_execution_snapshot(
             ledger,
             policy.controllers,

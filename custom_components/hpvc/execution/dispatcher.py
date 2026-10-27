@@ -7,8 +7,9 @@ from ..codec import Record, SchemaError
 from ..storage import VersionedStore, StorageError
 from ..policy_runtime import EvaluationProposal
 from ..hbc.state import Clock
+from ..hbc.models import HbcOverrideRecovery, OverridePhase
 from ..control.engine import command_batches
-from ..inverter.base import fingerprint
+from ..inverter.base import fingerprint, AdapterView
 from .models import (
     CommandBatch,
     CommandStep,
@@ -20,8 +21,11 @@ from .models import (
     RestoreObligation,
     ObligationState,
     VerificationEvidence,
+    OwnershipState,
 )
 from .executor import FakeExecutor, ExecutionRequest, QuiescenceReceipt
+from .ha_executor import HaServiceExecutor, TransportRefused
+from .service_plan import compile_service_step, maintenance_fingerprint
 from .facts import AcceptedCommand, AcceptedController, CommandOutcome
 from .verification import verify_operation, VerificationOutcome
 from .settling import SettlingState, SettlingOutcome, SettlingResult, observe_settling
@@ -46,6 +50,7 @@ class Registration(Record):
     hbc_step: str = ""
     capture_token: str = ""
     maintenance_token: str = ""
+    adapter_binding: AdapterView | None = None
 
 
 @dataclass(frozen=True)
@@ -117,8 +122,13 @@ class Dispatcher:
     def __init__(
         self, prefix, ledger, runtime, executor, *, owner_epoch=None, checkpoint=None
     ):
-        if type(executor) is not FakeExecutor:
-            raise SchemaError("dev.5 permits only the concrete FakeExecutor")
+        if (
+            type(executor) is not FakeExecutor
+            and type(executor) is not HaServiceExecutor
+        ):
+            raise SchemaError(
+                "Only the concrete fake or closed HA executor is permitted"
+            )
         if getattr(ledger, "_dispatcher", None) is not None:
             raise SchemaError("Ledger already has a dispatcher owner")
         ledger._dispatcher = self
@@ -139,6 +149,11 @@ class Dispatcher:
         self._registration_lock = asyncio.Lock()
         self._lanes = {lane: asyncio.Lock() for lane in Lane}
         self._running = set()
+        self._service_authority = (
+            executor.bind_dispatcher(self, prefix)
+            if type(executor) is HaServiceExecutor
+            else None
+        )
         self.identities = {}
         self.settling_results = {}
         self._old_validator = runtime.event_recorder.plan_validator
@@ -169,6 +184,8 @@ class Dispatcher:
 
     async def load(self, clock):
         value = await self.store.load()
+        if type(self.executor) is HaServiceExecutor:
+            await self.executor.load()
         if value is not None and value.plant_uid != self.ledger.plant_uid:
             raise StorageError("Wrong plant dispatcher journal")
         self.current = value or self.current
@@ -300,7 +317,11 @@ class Dispatcher:
                 candidate.serial if candidate else None,
             )
             # The raw PV sample, not grid target, owns the settling baseline.
-            reg = replace(reg, pv_before_w=getattr(proposal, "pv_before_w", 0.0))
+            reg = replace(
+                reg,
+                pv_before_w=getattr(proposal, "pv_before_w", 0.0),
+                adapter_binding=v,
+            )
             ids.append(await self._register(reg, clock))
         return tuple(ids)
 
@@ -311,6 +332,13 @@ class Dispatcher:
             raise SchemaError("HBC registration needs accepted proposal")
         ids = []
         for intent in proposal.hbc.override.actions:
+            if type(self.executor) is HaServiceExecutor and intent.step not in (
+                "enter_strategy",
+                "enter_goal",
+                "restore_goal",
+                "restore_strategy",
+            ):
+                continue  # Fault/helper/notification intents remain diagnostic DATA in dev.6.
             if intent.step not in (
                 "enter_strategy",
                 "enter_goal",
@@ -443,6 +471,19 @@ class Dispatcher:
                     expected_native_value=native,
                 )
                 operations.append(operation)
+            compiled = (
+                tuple(
+                    compile_service_step(
+                        reg,
+                        op,
+                        self.ledger.current.maintenance,
+                        self.executor.live_bindings() if reg.lane == Lane.HBC else None,
+                    )
+                    for op in operations
+                )
+                if type(self.executor) is HaServiceExecutor
+                else ()
+            )
             await self._point("before_prepared_commit")
             await self._journal(
                 lambda j: replace(j, registrations=(*j.registrations, reg))
@@ -469,6 +510,8 @@ class Dispatcher:
             except BaseException:
                 self.fault = "prepared_commit_failed"
                 raise
+            if compiled:
+                self.executor.install_plans(compiled, self._service_authority)
             await self._point("after_prepared_commit", operations[0])
             return batch.batch_id
 
@@ -551,6 +594,12 @@ class Dispatcher:
         try:
             async with self._lanes[lane]:
                 self._healthy()
+                if self.ledger.current.ownership.state not in (
+                    OwnershipState.READY_DISABLED,
+                    OwnershipState.NATIVE_OWNER_COMMITTED,
+                    OwnershipState.NATIVE_ACTIVE,
+                ):
+                    return None
                 if self._lane_busy(lane):
                     return None
                 item = self._next(lane)
@@ -579,12 +628,40 @@ class Dispatcher:
                         dispatch_id=dispatch_id,
                         dispatch_started_at_utc=clock.utc,
                     )
+                    override = l.hbc_override
+                    if lane == Lane.HBC and reg.hbc_step in (
+                        "enter_strategy",
+                        "enter_goal",
+                        "restore_goal",
+                        "restore_strategy",
+                    ):
+                        saved = reg.proposal.hbc.override.memory
+                        if (
+                            override.phase != OverridePhase.INACTIVE
+                            and override.persistence_token != reg.capture_token
+                        ):
+                            raise SchemaError("Conflicting HBC capture ownership")
+                        override = HbcOverrideRecovery(
+                            OverridePhase(saved.phase),
+                            saved.previous_strategy,
+                            saved.previous_goal,
+                            override.forced_write_issued
+                            if override.phase != OverridePhase.INACTIVE
+                            else None,
+                            reg.capture_token,
+                            tuple(
+                                dict.fromkeys(
+                                    (*override.operation_ids, op.operation_id)
+                                )
+                            ),
+                        )
                     return replace(
                         l,
                         operations=tuple(
                             armed if o.operation_id == op.operation_id else o
                             for o in l.operations
                         ),
+                        hbc_override=override,
                     )
 
                 try:
@@ -607,25 +684,87 @@ class Dispatcher:
                     )
                     if receipt.request != request or not receipt.simulated:
                         raise SchemaError("Executor receipt provenance mismatch")
+                    current = self._op(op.operation_id)
+                    if current.state != S.ARMED or (
+                        current.dispatch_id,
+                        current.owner_epoch,
+                        current.controller_uid,
+                        current.configuration_signature,
+                        current.step_id,
+                        current.sequence_fingerprint,
+                    ) != (
+                        request.dispatch_id,
+                        request.owner_epoch,
+                        request.controller_uid,
+                        request.configuration_signature,
+                        request.step.step_id,
+                        reg.batch.sequence_fingerprint,
+                    ):
+                        raise SchemaError(
+                            "Issued receipt lost its current durable operation identity"
+                        )
                     await self.ledger.transition_operation(
-                        op.operation_id, S.IN_FLIGHT, transport=T.IN_FLIGHT
+                        op.operation_id,
+                        S.IN_FLIGHT,
+                        transport=T.IN_FLIGHT,
+                        dispatch_started_at_utc=(receipt.issued or clock).utc,
                     )
                     await self._point(
                         "after_inflight_commit", self._op(op.operation_id)
                     )
                     if op.step_phase == "main":
-                        await self._accept(self._op(op.operation_id), reg, clock)
+                        await self._accept(
+                            self._op(op.operation_id), reg, receipt.issued or clock
+                        )
                     await self._audit(op.operation_id, "issued", clock)
                     return request
+                except TransportRefused as error:
+                    if type(
+                        self.executor
+                    ) is not HaServiceExecutor or not self.executor.knows_not_issued(
+                        dispatch_id
+                    ):
+                        await self.ledger.transition_operation(
+                            op.operation_id,
+                            S.UNKNOWN,
+                            transport=T.UNKNOWN,
+                            reason="unproven_transport_refusal",
+                        )
+                        raise
+                    current = self._op(op.operation_id)
+                    if (
+                        current.state != S.ARMED
+                        or current.dispatch_id != request.dispatch_id
+                        or current.owner_epoch != request.owner_epoch
+                    ):
+                        return None  # Refusal of the old request cannot clear a newer lease.
+                    await self.ledger.transition_operation(
+                        op.operation_id,
+                        S.SUPERSEDED,
+                        transport=T.NOT_SENT,
+                        reason="executor_confirmed_not_issued:" + error.reason,
+                    )
+                    await self._isolate(op.batch_id, op.step_index)
+                    await self._audit(
+                        op.operation_id, "transport_refused_before_invocation", clock
+                    )
+                    return None
                 except BaseException:
                     possible = self._op(op.operation_id)
                     if possible.state in (S.ARMED, S.IN_FLIGHT):
                         try:
+                            not_issued = type(
+                                self.executor
+                            ) is HaServiceExecutor and self.executor.knows_not_issued(
+                                dispatch_id
+                            )
                             await self.ledger.transition_operation(
                                 op.operation_id,
-                                S.UNKNOWN,
-                                transport=T.UNKNOWN,
-                                reason="issue_boundary_uncertain",
+                                S.SUPERSEDED if not_issued else S.UNKNOWN,
+                                transport=T.NOT_SENT if not_issued else T.UNKNOWN,
+                                reason="executor_confirmed_not_issued:cancelled_before_invocation"
+                                if not_issued
+                                else "issue_boundary_uncertain",
                             )
                         except BaseException:
                             self.fault = "issue_commit_uncertain"
@@ -674,6 +813,12 @@ class Dispatcher:
             owner_epoch=self.owner_epoch,
         )
         await self.runtime.event_recorder.record_simulated_acceptance(event)
+        if op.lane == Lane.HBC and reg.hbc_step in ("enter_strategy", "enter_goal"):
+            await self.ledger.update(
+                lambda l: replace(
+                    l, hbc_override=replace(l.hbc_override, forced_write_issued=True)
+                )
+            )
         if op.lane == Lane.INVERTER:
             older = tuple(
                 s.operation_id
@@ -713,6 +858,45 @@ class Dispatcher:
                 ),
                 None,
             )
+            if (
+                type(self.executor) is HaServiceExecutor
+                and op is not None
+                and op.state == S.IN_FLIGHT
+                and (
+                    op.owner_epoch,
+                    op.dispatch_id,
+                    op.controller_uid,
+                    op.configuration_signature,
+                )
+                == (
+                    request.owner_epoch,
+                    request.dispatch_id,
+                    request.controller_uid,
+                    request.configuration_signature,
+                )
+            ):
+                try:
+                    owner_lost = (
+                        self.executor.live_bindings().owner_epoch != request.owner_epoch
+                        or self.owner_epoch != request.owner_epoch
+                    )
+                except Exception:
+                    owner_lost = True
+                if owner_lost:
+                    await self.ledger.transition_operation(
+                        op.operation_id,
+                        S.UNKNOWN,
+                        transport=T.UNKNOWN,
+                        reason="owner_changed_during_registry_invocation",
+                    )
+                    await self._isolate(op.batch_id, op.step_index)
+                    await self._ensure_obligation(
+                        op, self._reg(op.batch_id), completion.observed
+                    )
+                    await self._record_outcome(
+                        op, "outcome_unknown", completion.observed
+                    )
+                    return False
             if (
                 op is None
                 or request.owner_epoch != self.owner_epoch
@@ -1014,6 +1198,8 @@ class Dispatcher:
         if self.closed:
             return
         self.closed = True
+        if type(self.executor) is HaServiceExecutor:
+            self.executor.revoke_admission()
         active = [t for t in self._running if t is not asyncio.current_task()]
         for task in active:
             task.cancel()
@@ -1052,6 +1238,11 @@ class Dispatcher:
             op.configuration_reference,
             "unresolved_simulated_operation",
             reg.full_w,
+            state=ObligationState.FAILED
+            if op.state in (S.SERVICE_FAILED, S.VERIFICATION_FAILED)
+            else ObligationState.UNKNOWN
+            if op.state in (S.UNKNOWN, S.RECOVERY_REQUIRED)
+            else ObligationState.UNRESOLVED,
             operation_ids=(op.operation_id,),
             established_at_utc=clock.utc,
             owner_epoch=op.owner_epoch,
@@ -1138,6 +1329,7 @@ class Dispatcher:
                 view.candidate.device_id if view.candidate else None,
                 view.candidate.serial if view.candidate else None,
                 maintenance_token=owner_token,
+                adapter_binding=view,
             )
             ids.append(await self._register(reg, clock))
         return tuple(ids)
@@ -1209,3 +1401,166 @@ class Dispatcher:
         await self.ledger.transition_operation(
             op_id, S.AWAITING_VERIFICATION, verification=V.PENDING
         )
+
+    @owned_work
+    async def confirm_hbc_restored(self, proposal, entities, clock):
+        old = self.ledger.current.hbc_override
+        if old.phase == OverridePhase.INACTIVE:
+            return True
+        if (
+            proposal != self.runtime.last_proposal
+            or proposal.hbc.override.memory.phase != "inactive"
+        ):
+            return False
+        raw = {e.entity_id: e for e in entities}
+        expected = {
+            "input_select.house_battery_strategy": old.saved_strategy,
+            "input_select.house_battery_strategy_charge_goal": old.saved_charge_goal,
+        }
+        for entity, value in expected.items():
+            sample = raw.get(entity)
+            operations = [
+                o
+                for o in self.ledger.current.operations
+                if o.operation_id in old.operation_ids
+                and json.loads(
+                    self._reg(o.batch_id).batch.steps[o.step_index].target_json
+                ).get("entity_id")
+                == entity
+            ]
+            if (
+                sample is None
+                or not value
+                or sample.state != value
+                or sample.updated_at_utc is None
+                or not -60 <= clock.utc - sample.updated_at_utc <= 180
+            ):
+                return False
+            if any(
+                o.transport not in (T.COMPLETED, T.FAILED)
+                or o.dispatch_started_at_utc is not None
+                and sample.updated_at_utc < o.dispatch_started_at_utc
+                for o in operations
+            ):
+                return False
+        await self.ledger.update(
+            lambda l: replace(l, hbc_override=HbcOverrideRecovery())
+        )
+        await self._audit(
+            "hbc", "original_strategy_and_goal_independently_restored", clock
+        )
+        return True
+
+    def recheck_service_invocation(self, request, plan, live, clock):
+        """Synchronous final barrier; the executor performs no await after it."""
+        self._healthy()
+        if getattr(self.ledger, "_dispatcher", None) is not self:
+            raise TransportRefused("dispatcher_ownership_changed")
+        if (
+            live.plant_uid != self.ledger.plant_uid
+            or live.owner_epoch != self.owner_epoch
+            or request.owner_epoch != self.owner_epoch
+        ):
+            raise TransportRefused("owner_epoch_or_plant_changed")
+        age = clock.age(live.observed)
+        if age is None or age > 2 or clock.age(request.issued) is None:
+            raise TransportRefused("live_binding_snapshot_stale")
+        op = self._op(request.operation_id)
+        reg = self._reg(op.batch_id)
+        if op.state != S.ARMED or (
+            op.dispatch_id,
+            op.owner_epoch,
+            op.controller_uid,
+            op.configuration_signature,
+        ) != (
+            request.dispatch_id,
+            request.owner_epoch,
+            request.controller_uid,
+            request.configuration_signature,
+        ):
+            raise TransportRefused("operation_identity_or_state_changed")
+        if (
+            (plan.operation_id, plan.batch_id, plan.step_id, plan.sequence_fingerprint)
+            != (op.operation_id, op.batch_id, op.step_id, op.sequence_fingerprint)
+            or request.step != reg.batch.steps[op.step_index]
+            or plan.step_fingerprint != fingerprint(request.step.to_dict())
+        ):
+            raise TransportRefused("sequence_or_payload_changed")
+        if self.ledger.current.ownership.state not in (
+            OwnershipState.READY_DISABLED,
+            OwnershipState.NATIVE_OWNER_COMMITTED,
+            OwnershipState.NATIVE_ACTIVE,
+        ):
+            raise TransportRefused("plant_ownership_unresolved")
+        m = self.ledger.current.maintenance
+        if reg.maintenance_token:
+            if (
+                m.owner_token != reg.maintenance_token
+                or m.owner_epoch != self.owner_epoch
+                or m.state.value not in ("restoring", "verifying")
+                or not m.post_disable_evaluation_id
+                or live.enabled_intent
+            ):
+                raise TransportRefused("maintenance_restoration_ownership_changed")
+        elif maintenance_fingerprint(m) != plan.maintenance_fingerprint:
+            raise TransportRefused("maintenance_state_changed")
+        if op.lane == Lane.INVERTER:
+            view = next(
+                (
+                    v
+                    for v in live.views
+                    if v.configuration.identity.uid == op.controller_uid
+                ),
+                None,
+            )
+            if (
+                view is None
+                or view.configuration_signature != op.configuration_signature
+                or view.configuration.identity.adapter.value != reg.adapter_kind
+            ):
+                raise TransportRefused(
+                    "live_controller_configuration_or_binding_changed"
+                )
+            if not view.configuration.control_enabled:
+                raise TransportRefused("controller_opted_out")
+            if not view.valid or not view.available:
+                raise TransportRefused("controller_unavailable_or_invalid")
+            if (
+                not reg.maintenance_token
+                and live.enabled_intent != reg.proposal.enabled_intent
+            ):
+                raise TransportRefused("master_intent_changed")
+            if (
+                reg.adapter_kind in ("enphase", "enphase_dpel")
+                and op.step_phase == "main"
+                and not view.readiness_observed
+            ):
+                raise TransportRefused("Enphase_readiness_not_independently_observed")
+        else:
+            native = next(
+                (b for b in live.native_bindings if b.entity_id in plan.entity_ids),
+                None,
+            )
+            if (
+                native is None
+                or not native.available
+                or native.identity != plan.hbc_binding_identity
+            ):
+                raise TransportRefused("HBC_entity_binding_changed")
+            if reg.hbc_step in ("enter_strategy", "enter_goal") and (
+                not live.hbc_permission
+                or not live.negative_charge_permission
+                or self.runtime.durable.hbc.override.capture_token != reg.capture_token
+            ):
+                raise TransportRefused("HBC_permission_or_durable_capture_changed")
+            if self.ledger.current.hbc_override.persistence_token != reg.capture_token:
+                raise TransportRefused("HBC_capture_ownership_changed")
+            current = self.runtime.last_proposal
+            if current is None or not any(
+                a.step == reg.hbc_step
+                and a.entity_id in plan.entity_ids
+                and a.capture_token == reg.capture_token
+                for a in current.hbc.override.actions
+            ):
+                raise TransportRefused("HBC_ordered_intent_changed")
+        return True

@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-flow = json.loads((ROOT / "node-red" / "hpvc_flow.json").read_text())
+flow = json.loads((ROOT / "node-red" / "hpvc_flow.json").read_text(encoding="utf-8"))
 by = {n.get("id"): n for n in flow if n.get("id")}
 
 main = by["49ecf8749ba7c0be"]

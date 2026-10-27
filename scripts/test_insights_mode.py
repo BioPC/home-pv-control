@@ -3,9 +3,9 @@ from pathlib import Path
 import json
 import yaml
 ROOT=Path(__file__).resolve().parents[1]
-config=(ROOT/'home assistant/hpvc_config.yaml').read_text()
-dash=(ROOT/'home assistant/hpvc_dashboard.yaml').read_text()
-flow=json.loads((ROOT/'node-red/hpvc_flow.json').read_text())
+config=(ROOT/'home assistant/hpvc_config.yaml').read_text(encoding="utf-8")
+dash=(ROOT/'home assistant/hpvc_dashboard.yaml').read_text(encoding="utf-8")
+flow=json.loads((ROOT/'node-red/hpvc_flow.json').read_text(encoding="utf-8"))
 byid={n.get('id'):n for n in flow}
 assert 'hpvc_insights_enabled:' in config
 assert '- input_boolean.hpvc_insights_enabled' in config

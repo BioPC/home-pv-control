@@ -235,3 +235,36 @@ class MaintenanceTests(unittest.IsolatedAsyncioTestCase):
         await self.disabled(token, 11, controllers=[])
         self.assertTrue(await h.maintenance.night_exception(token))
         self.assertTrue((await h.maintenance.evaluate(h.clock(12), token)).authorized)
+
+    async def test_timeout_can_only_start_a_new_explicit_recovery_transaction(self):
+        h = self.h
+        await h.proposal(controllers=[])
+        token = await self.request(views=[])
+        await self.disabled(token, controllers=[])
+        decision = await h.maintenance.evaluate(h.clock(180), token)
+        self.assertEqual(decision.state, M.BLOCKED)
+        q = await h.proposal(181, enabled=False, controllers=[])
+        with self.assertRaises(SchemaError):
+            await h.maintenance.recover_request("wrong", q, h.clock(181))
+        new_token = await h.maintenance.recover_request(token, q, h.clock(181))
+        self.assertNotEqual(new_token, token)
+        self.assertTrue(h.ledger.current.maintenance.saved_enable_intent)
+        with self.assertRaises(SchemaError):
+            await h.maintenance.evaluate(h.clock(182), token)
+        self.assertTrue(
+            (await h.maintenance.evaluate(h.clock(182), new_token)).authorized
+        )
+
+    async def test_unknown_plant_ownership_cannot_authorize_even_empty_maintenance(
+        self,
+    ):
+        from custom_components.hpvc.execution.models import HandoffRecord
+
+        h = self.h
+        await h.proposal(controllers=[])
+        token = await self.request(views=[])
+        await self.disabled(token, controllers=[])
+        await h.ledger.update(lambda l: replace(l, ownership=HandoffRecord()))
+        decision = await h.maintenance.evaluate(h.clock(2), token)
+        self.assertFalse(decision.authorized)
+        self.assertIn("plant_ownership_unresolved", decision.reasons)

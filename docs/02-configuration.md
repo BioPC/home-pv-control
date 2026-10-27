@@ -41,11 +41,31 @@ The dashboard exposes HBC's native strategy selector and reads `input_text.house
 
 ## PV inverter setup
 
-Each inverter requires a **Control method** plus its common power limits:
+### Inverter status and permission
+
+Each PV controller window shows a derived status. No additional Home Assistant status entities or helpers are required. The existing `sensor.hpvc_effective_inverter_runtime` exposes `controller_ui_json` alongside its unchanged runtime map, using the same registry/device-based Enphase/OpenDTU discovery and effective slot assignment. Auto-detected OpenDTU/Hoymiles and Enphase slots identify the brand in the dashboard status as **Hoymiles detected** or **Enphase detected** while the internal runtime status remains `Detected`. When an entity/controller is present but its configuration is incomplete, the dashboard preserves that context as **Hoymiles detected but incomplete**, **Enphase detected but incomplete**, or **Detected but incomplete** for manual controllers; the internal runtime status remains `Incomplete`.
+
+| Configuration | Display | HPVC Control |
+| --- | --- | --- |
+| Valid Number/OpenDTU or complete Enphase DPEL controller | Green **Detected** | Available |
+| Valid Action/service configuration | Green **Configured** | Available |
+| Detected/present controller with partial or invalid configuration | Amber **Detected but incomplete** (brand-prefixed for auto Hoymiles/Enphase) | Hidden |
+| Valid controller with unavailable live states | **Unavailable** | Available; permission preserved |
+| Counted but unfilled manual slot | Amber **Not configured** | Hidden |
+
+Status checks include power ranges, units, entity existence, native number ranges, Action/service name syntax and JSON fields, and Enphase enable/mode pairing. Status is configuration and live-state feedback; the normal runtime freshness, validation and write-verification gates still decide whether a command is safe. Action/service readback remains optional: without it, Configured describes the existing command-cache mode and does not claim independent verification. Service execution errors remain subject to runtime safety handling.
+
+This registry-clean package already uses `switch.hpvc_pvN_control`, backed by `input_boolean.hpvc_pvN_control_disabled` (N=1…10). Those names and persistent values are preserved; no `control_enabled` replacements are introduced. An invalid or empty slot makes the existing template switch unavailable, hiding its dashboard row without resetting its saved permission. A valid controller's communication outage does not make this permission switch unavailable.
+
+With Insights enabled, an observed ON→OFF permission transition reports controller exclusion, or monitoring-only mode when every configured controller is excluded. OFF→ON reports the controller's return to control. Unchanged 10-second evaluations produce no repeated permission Insights. Initial observation and controller replacement establish a baseline; changes while Insights is disabled are not replayed when it is enabled. An outage is not a permission change. Switching control off preserves the last limit and does not bypass the existing verified full-output requirements for update, removal or uninstall.
+
+Manual inverter slots require a **Control method** plus their common power limits. Native Enphase DPEL controllers and supported OpenDTU/Hoymiles absolute-Watt limiters are exceptions: HPVC can discover them automatically and assign them to the effective runtime slot map without requiring a placeholder entity.
+
+For manually configured slots:
 
 - **Control method** — `Number entity` for a writable Home Assistant `number.*`, or `Action/service` for an integration action/register-write path.
 - **Limit unit** — `Watts` when the control value is power in W, or `Percent` when it uses a 0–100% active-power limit.
-- **Full power** — normal maximum inverter power in watts.
+- **Full Limit / full power** — normal maximum inverter power in watts. For auto-detected OpenDTU/Hoymiles controllers, HPVC prefers confirmed OpenDTU `max_power`; if unavailable, enter the effective slot's Full Limit manually.
 - **Minimum power** — lowest power HPVC may request, always configured in watts. It must be zero or positive and lower than Full power.
 - **Limit entity** — required only for `Number entity` control. Action/service fields are described below.
 
@@ -57,9 +77,23 @@ The writable number entity is also used as the command-state readback for write 
 
 A slot-local invalid inverter configuration is excluded from allocation and reported while another valid inverter can continue degraded control. If every configured slot is invalid, control stops with a configuration error. Shared/ambiguous faults such as duplicate physical Number targets remain plant-wide blocking. A percentage entity reporting outside 0–100% is treated as a slot-local invalid configuration.
 
+### Inverter total and manual slots
+
+Above the **Inverters** +/− control, the settings show one line such as **Total inverters:** _2 auto-detected · 0 manual_. The breakdown comes from the effective runtime slot map, so values mirrored into the visible configuration fields do not reclassify an auto-detected controller as manual. Each controller uses one of the ten shared slots.
+
+Automatic controllers reuse otherwise empty manual slots first, then occupy additional slots. The visible **Inverters** control has a dynamic minimum equal to the number of currently auto-detected controllers and a maximum of ten. With two auto-detected controllers it therefore cannot be reduced below 2; `+` can still increase capacity for additional manual controllers. If auto-detection later falls, the minimum falls with it without deleting existing manual configuration. Switching HPVC Control off changes control permission only and does not remove the controller from this floor or the effective total.
+
+PV navigation and actual-limit rows use the effective runtime total, so the left/right selector cannot expose a slot beyond the real controller count.
+
+### Duplicate controller assignments
+
+Entering the same Number limit entity in another slot marks the later assignment **Incomplete — Limit entity already assigned to PVN** and hides that slot's control toggle. The original slot keeps its normal detection/availability display. Matching uses normalized entity IDs, not friendly names. Identical service names or shared readback entities alone do not prove that Action/service adapters target the same device.
+
+The original assignment is selected using the limit fields' Home Assistant change timestamps. Equal or missing timestamps fall back to the lowest slot number; timestamps may reset after a Home Assistant restart. No persistent status helper is introduced. The existing runtime safety gate still blocks duplicate physical Number targets until the conflict is removed, even though only the later slot displays the duplicate alert. Clear or replace the duplicated entity to resolve it.
+
 ### Inverter navigation
 
-The Settings dashboard shows one configured inverter at a time. Use the left/right arrows to move through PV1 up to the configured `input_number.hpvc_inverter_count`. Navigation wraps at the first/last configured inverter and uses `input_select.hpvc_selected_inverter`; it does not affect runtime control or inverter allocation. If the inverter count is reduced below the currently selected PV, `automation.hpvc_keep_selected_inverter_in_range` automatically clamps the selection to the highest still-configured inverter (for example, PV5 → PV2 when the count is changed to 2), preventing an empty inverter panel.
+The Settings dashboard shows one effective controller slot at a time. Manual Number/Action-service slots and supported auto-detected Enphase DPEL/OpenDTU-Hoymiles controllers share the same ten-slot runtime map. For auto-detected controllers HPVC mirrors the active control method, Limit entity and unit into the existing visible configuration fields while keeping the runtime source explicitly auto-detected. Enphase Max power and Min power remain user-owned manual settings. For auto-detected controllers, **Control method, Limit entity and Limit unit are read-only**. For **Enphase**, **Max power and Min power are always editable/manual** and must describe the actual installation range; HPVC never treats the DPEL Number entity min/max as rated power. For **OpenDTU/Hoymiles**, Max power is read-only when HPVC has a trusted API/cached maximum and otherwise remains editable/required; Min power remains editable. Manual Number controllers keep the normal editable fields. The dashboard navigation follows `sensor.hpvc_effective_inverter_runtime`, wraps at the first/last effective slot, and uses `input_select.hpvc_selected_inverter`; it does not change runtime allocation. If the effective count shrinks below the selected PV, `automation.hpvc_keep_selected_inverter_in_range` clamps the selection to the highest remaining slot.
 
 ## Control relationships
 
@@ -95,7 +129,7 @@ These values are safe starting points, not universal recommendations. Review the
 | Enable Insights | Off |
 | HBC integration / Charge Priority | Off |
 | Force charge at negative price | On by default; effective only when HBC integration is enabled |
-| Number of PV Inverters | 1 |
+| Number of PV Inverters | 0 |
 | PV limiting price | `0.00 €/kWh` |
 | PV price exit hysteresis | `0.02 €/kWh` |
 | Export start | `-150 W` |
@@ -108,6 +142,8 @@ These values are safe starting points, not universal recommendations. Review the
 | PV1–PV10 full limit | `0 W` until configured |
 | PV1–PV10 limit unit | `Watts` |
 | PV1–PV10 minimum limit | `0 W` until configured |
+
+When no manual inverter capacity is configured and no Enphase/OpenDTU controller is auto-detected, **Inverters** is `0`. Settings hides the PV slot configuration and keeps the normal **Inverters** counter row visible at `0`; the minus button is unavailable at the current minimum and `+` creates a manual slot. The Main tab shows **No PV inverters available**. Zero is a supported setup state, but HPVC requires at least one usable inverter to operate, so the existing required-input safety automation keeps the master control OFF. Monitoring/dashboard diagnostics can still be viewed. Auto-detection raises the effective inverter count automatically; pressing `+` creates a manual slot.
 
 Night Restore enters after 120 continuous seconds at or below the configured threshold. It exits only after valid PV remains above `max(25 W, threshold + 15 W)` for 30 seconds. See [How it works](03-how-it-works.md#restore-and-recovery) for restart and offline-telemetry behavior.
 
@@ -177,6 +213,42 @@ The restore sequence also starts if either HBC permission is turned off. The ove
 ## Inverter control method
 
 Each inverter has its own **Control method**.
+
+### OpenDTU / Hoymiles auto-detection
+
+When OpenDTU is connected to Home Assistant through MQTT with **Home Assistant MQTT Auto Discovery** enabled, HPVC can discover Hoymiles inverter devices automatically. The preferred control entity is the inverter's writable **non-persistent absolute limit** in watts. HPVC reads the Home Assistant entity registry and device registry on the independent 60-second discovery path, identifies the original `limit_nonpersistent_absolute` role on an MQTT/OpenDTU/Hoymiles device, and registers that inverter as one normal Number-entity controller.
+
+Renaming the entity in Home Assistant does not break registry-based discovery because pairing uses the HA `device_id` plus original/immutable entity metadata. If registry metadata is unavailable, HPVC retains a conservative fallback for an entity whose ID ends in `_limit_nonpersistent_absolute`, whose native unit is watts, and whose native maximum is positive. Relative and persistent limit controls are not auto-selected.
+
+Each detected OpenDTU inverter consumes one of the shared maximum ten effective controller slots. Empty Number slots are reused first; additional controllers are appended only while capacity remains. If the same limit number is already configured manually, HPVC deduplicates it and normalizes the runtime adapter to native Watt min/max/step semantics.
+
+For the effective **Full/Max power**, HPVC prefers OpenDTU's read-only `/api/limit/status` `max_power` value when the DTU web API is reachable. The detected device `configuration_url` is used automatically and no API call is placed in the 10-second control loop. If OpenDTU requires authentication and guest read-only access is disabled, HPVC falls back to the last cached confirmed OpenDTU `max_power`, then the effective slot's manual **Full Limit**. The Home Assistant Number entity's native `max` is never treated as inverter rated power. If no trusted API/cache/manual value exists, the controller remains detected and visible as **Detected — Full Limit required** but is excluded from limiting until a valid Full Limit is entered. Smart Update, flow removal and full uninstall use this same rated-power precedence for their full-output verification; they do not substitute the HA Number `max`.
+
+### Enphase DPEL auto-detection
+
+When the **Enphase Envoy Installer** integration (recommended **0.10.2+**) exposes a complete DPEL set, HPVC detects it automatically. Do **not** create an `enphase` control method or type `enphase` into a slot. A valid set contains `number.envoy_*_dpel_limit`, `switch.envoy_*_dpel_enabled`, and `select.envoy_*_dpel_mode`, with both `Production` and `Export` present in the mode options.
+
+The controller is represented internally as a Number-entity adapter in native Watts. Empty configured Number slots are reused before an Enphase controller is appended to the effective runtime list. If the same DPEL number is already configured manually, HPVC deduplicates it and normalizes control to native Watts/step/readback while preserving the slot's manually configured Max power and Min power. Each Envoy consumes one effective controller slot regardless of the number of microinverters behind it; the total manual + auto-detected controller count cannot exceed ten.
+
+Before a DPEL limit write, HPVC requires the enable switch to report `on` and the mode to report `Production`. `unknown`/`unavailable` supporting states pause that controller without issuing corrective calls. `Export` mode is never used for HPVC's production-ceiling writes.
+
+Each Envoy DPEL controller consumes one controller slot inside HPVC's existing maximum of ten. Manually configured `number.*`/OpenDTU slots continue to work normally. HPVC auto-detects the DPEL control entities but takes the operating **Max power** and **Min power** from the HPVC slot settings. It requires DPEL to be enabled and mode `Production` before it will send a Watt limit.
+
+If `number.envoy_*_dpel_limit` was already entered manually in a slot, HPVC reuses that slot rather than creating a duplicate. Because the native DPEL Limit is always a Watt entity, HPVC normalizes that enriched slot to **Watts** at runtime and refreshes native step/readback capability metadata while preserving the manually configured HPVC Max/Min power. This also safely upgrades older/manual configurations that may still have `Percent` selected.
+
+HPVC refreshes Home Assistant's supported WebSocket entity registry on startup and every 60 seconds, independently of the 10-second control timer. It pairs the DPEL Watt number, mode select and enable switch by their shared `device_id` (the HA device registry relationship), then uses integration `unique_id` role suffixes, `original_name`, `translation_key` or original entity role when available. Editable entity IDs are the last source of role evidence. The mode must advertise both `Production` and `Export`. A device with duplicate role candidates, disabled members or conflicting integration/config-entry identities is rejected; `production`, `pv_limit`, `pv_limit_enabled` and `pvlimit_pct` siblings cannot substitute for DPEL.
+
+Renaming all three entity IDs is supported when original registry role metadata remains available. The official defaults `switch.envoy_*_dpel_enabled`, `number.envoy_*_dpel_limit` and `select.envoy_*_dpel_mode` remain supported. Legacy suffix pairing is used only when device registry information is unavailable for the triplet; it never overrides an authoritative registry rejection. Registry API failures retain the last successful mapping and retry on the next timer; a successful empty response clears removed controllers. Live state checks still gate every write.
+
+The cached mapping is shared with HA templates by the `hpvc_enphase_registry_refreshed` event and `sensor.hpvc_enphase_registry`. Dashboard runtime slots, configuration validity, readiness and all three maintenance watchers use those same pairs. After installing the modified package and flow, reload the HA templates and deploy the flow; allow up to 60 seconds for renamed controllers to appear. Device IDs determine registry controller order, so entity renames do not reorder those controllers. Adding/removing devices or manual slots can change slot allocation; review the assigned slots and their control toggles after such changes.
+
+Auto-detected controller values are mirrored into the existing PV slot fields while the runtime source remains auto-detected. Identity fields are read-only; Min power stays editable, and Max power is editable only when HPVC still needs a user-supplied trusted maximum.
+
+### Per-controller HPVC Control
+
+Each slot has an **HPVC Control** switch (`switch.hpvc_pv1_control` through `switch.hpvc_pv10_control`) in its dashboard settings. It defaults to On and persists across restarts using an inverse disabled helper. Off excludes that slot from HPVC allocation and stops new limit, DPEL preflight and automatic restore commands. It does not turn off solar production or change the DPEL enable switch, and it leaves the last physical limit in place. A service call already sent must finish; remaining queued steps are cancelled. Re-enable the slot to resume control. If every slot is off, no inverter commands are sent.
+
+For restoration, leave HPVC Control on and disable the main HPVC switch first; wait for full-output confirmation before opting out. Maintenance still checks every configured/discovered controller, including opted-out slots, and blocks removal/update if full output cannot be verified. The ten-slot cap and manual/auto slot deduplication apply before opt-out, so switching off a slot does not move another controller into it.
 
 ### Number entity
 
@@ -250,4 +322,3 @@ For the complete uninstall procedure and the files removed automatically, see [I
 - [Troubleshoot unexpected behavior](04-troubleshooting.md)
 
 [← README](../README.md) · [Installation](01-installation.md) · [Configuration](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
-

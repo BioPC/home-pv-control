@@ -1,8 +1,8 @@
-name: Validate HPVC release
+name: Validate development metadata and legacy reference
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/hpvc-readonly-acceptance]
   pull_request:
   workflow_dispatch:
 
@@ -29,8 +29,12 @@ jobs:
           node-version: "22"
 
       - name: Install validator dependency
-        run: python -m pip install --disable-pip-version-check PyYAML==6.0.2
+        run: python -m pip install --disable-pip-version-check PyYAML==6.0.2 Jinja2==3.1.6
 
+      - name: Validate v2 development metadata
+        run: python scripts/validate_development.py
+      - name: Test migration bridge without a live runtime
+        run: node scripts/test_migration_bridge.cjs
       - name: Validate release integrity
         run: python scripts/validate_release.py
 
@@ -42,3 +46,44 @@ jobs:
 
       - name: Test issue #9 runtime-load behavior
         run: python scripts/test_control_runtime_load.py
+
+      - name: Test baseline PV control behavior
+        run: node scripts/test_control_baselines.cjs
+
+      - name: Test audited control safety regressions
+        run: node scripts/test_control_safety.cjs
+
+      - name: Test HBC Charge Priority state machine
+        run: node scripts/test_hbc_charge_priority.cjs
+
+      - name: Test report generation and publication contract
+        run: node scripts/test_report_generation.cjs
+
+      - name: Test independent maintenance and OpenDTU verification regressions
+        run: node scripts/test_independent_audit_regressions.cjs
+      - name: Run Enphase DPEL regression tests
+        run: node scripts/test_enphase_dpel.cjs
+
+      - name: Test Enphase registry discovery and controller opt-out
+        run: node scripts/test_enphase_registry.cjs
+
+      - name: Test OpenDTU/Hoymiles registry auto-detection
+        run: node scripts/test_opendtu_registry.cjs
+
+      - name: Test Enphase Home Assistant auto-detect templates
+        run: python scripts/test_enphase_ha_templates.py
+
+      - name: Test dispatch and maintenance lifecycle
+        run: node scripts/test_dispatch_lifecycle.cjs
+
+      - name: Test derived controller status without additional entities
+        run: python scripts/test_controller_status.py
+
+      - name: Test controller permission transition Insights
+        run: node scripts/test_controller_participation.cjs
+
+      - name: Test controller totals and generic discovery breakdown
+        run: python scripts/test_controller_totals.py
+
+      - name: Test effective controller dashboard mapping
+        run: python scripts/test_dashboard_effective_controller.py

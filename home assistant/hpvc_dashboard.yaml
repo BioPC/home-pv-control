@@ -18,7 +18,7 @@ views:
               <div align="center">
 
 
-              ## Home PV Control (v1.5.6)
+              ## Home PV Control (v1.6.0)
 
               #### Standalone PV optimization for dynamic energy contracts.
               Optional HBC integration.
@@ -76,8 +76,10 @@ views:
         show_name: true
         show_state: true
         show_icon: true
-        entity: input_number.hpvc_inverter_count
-        name: Inverters
+        entity: sensor.hpvc_effective_inverter_runtime
+        name: Total inverters
+        tap_action:
+          action: none
         visibility:
           - condition: state
             entity: input_boolean.hpvc_onboarding_complete
@@ -227,14 +229,46 @@ views:
               - condition: state
                 entity: input_boolean.hpvc_onboarding_complete
                 state: 'on'
+              - condition: state
+                entity: binary_sensor.hpvc_configuration_valid
+                state: 'on'
+              - condition: state
+                entity: binary_sensor.hpvc_core_inputs_ready
+                state: 'on'
+              - condition: numeric_state
+                entity: sensor.hpvc_effective_inverter_runtime
+                below: 1
+            card:
+              type: markdown
+              content: >-
+                <ha-alert title="No PV inverters available"
+                alert-type="warning">
+
+                HPVC is monitoring only. Add an inverter or wait for them to be
+                detected to enable PV limiting.
+
+                </ha-alert>
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_boolean.hpvc_onboarding_complete
+                state: 'on'
               - condition: or
                 conditions:
                   - condition: state
                     entity: binary_sensor.hpvc_configuration_valid
                     state: 'off'
                   - condition: state
-                    entity: binary_sensor.hpvc_required_inputs_ready
+                    entity: binary_sensor.hpvc_core_inputs_ready
                     state: 'off'
+                  - condition: and
+                    conditions:
+                      - condition: numeric_state
+                        entity: sensor.hpvc_effective_inverter_runtime
+                        above: 0
+                      - condition: state
+                        entity: binary_sensor.hpvc_required_inputs_ready
+                        state: 'off'
             card:
               type: markdown
               content: >-
@@ -302,7 +336,8 @@ views:
                   {% if live %}✅{% else %}❌{% endif %} **{{ label }}**{% if configured %} — `{{ normalized }}`{% endif %}
                 {% endfor %}
 
-                {% set count = states('input_number.hpvc_inverter_count') | int(0) %}
+                {% set count = states('input_number.hpvc_inverter_count') |
+                int(0) %}
 
                 {% set inv = namespace(number_entities=[], rows=[]) %}
 
@@ -733,89 +768,220 @@ views:
                 name: Grid power
               - entity: sensor.hpvc_diag_pv_power
                 name: Total solar power
-              - entity: sensor.hpvc_pv1_actual_limit
-                name: PV1 actual limit
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: switch.hpvc_pv1_control
+                    state: 'on'
+                row:
+                  entity: sensor.hpvc_pv1_actual_limit
+                  name: PV1 actual limit
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: switch.hpvc_pv1_control
+                    state: 'off'
+                row:
+                  entity: sensor.hpvc_pv1_actual_limit
+                  name: PV1 actual limit (Off)
               - type: conditional
                 conditions:
                   - condition: numeric_state
-                    entity: input_number.hpvc_inverter_count
+                    entity: sensor.hpvc_effective_inverter_runtime
                     above: 1
+                  - condition: state
+                    entity: switch.hpvc_pv2_control
+                    state: 'on'
                 row:
                   entity: sensor.hpvc_pv2_actual_limit
                   name: PV2 actual limit
               - type: conditional
                 conditions:
                   - condition: numeric_state
-                    entity: input_number.hpvc_inverter_count
+                    entity: sensor.hpvc_effective_inverter_runtime
+                    above: 1
+                  - condition: state
+                    entity: switch.hpvc_pv2_control
+                    state: 'off'
+                row:
+                  entity: sensor.hpvc_pv2_actual_limit
+                  name: PV2 actual limit (Off)
+              - type: conditional
+                conditions:
+                  - condition: numeric_state
+                    entity: sensor.hpvc_effective_inverter_runtime
                     above: 2
+                  - condition: state
+                    entity: switch.hpvc_pv3_control
+                    state: 'on'
                 row:
                   entity: sensor.hpvc_pv3_actual_limit
                   name: PV3 actual limit
               - type: conditional
                 conditions:
                   - condition: numeric_state
-                    entity: input_number.hpvc_inverter_count
+                    entity: sensor.hpvc_effective_inverter_runtime
+                    above: 2
+                  - condition: state
+                    entity: switch.hpvc_pv3_control
+                    state: 'off'
+                row:
+                  entity: sensor.hpvc_pv3_actual_limit
+                  name: PV3 actual limit (Off)
+              - type: conditional
+                conditions:
+                  - condition: numeric_state
+                    entity: sensor.hpvc_effective_inverter_runtime
                     above: 3
+                  - condition: state
+                    entity: switch.hpvc_pv4_control
+                    state: 'on'
                 row:
                   entity: sensor.hpvc_pv4_actual_limit
                   name: PV4 actual limit
               - type: conditional
                 conditions:
                   - condition: numeric_state
-                    entity: input_number.hpvc_inverter_count
+                    entity: sensor.hpvc_effective_inverter_runtime
+                    above: 3
+                  - condition: state
+                    entity: switch.hpvc_pv4_control
+                    state: 'off'
+                row:
+                  entity: sensor.hpvc_pv4_actual_limit
+                  name: PV4 actual limit (Off)
+              - type: conditional
+                conditions:
+                  - condition: numeric_state
+                    entity: sensor.hpvc_effective_inverter_runtime
                     above: 4
+                  - condition: state
+                    entity: switch.hpvc_pv5_control
+                    state: 'on'
                 row:
                   entity: sensor.hpvc_pv5_actual_limit
                   name: PV5 actual limit
               - type: conditional
                 conditions:
                   - condition: numeric_state
-                    entity: input_number.hpvc_inverter_count
+                    entity: sensor.hpvc_effective_inverter_runtime
+                    above: 4
+                  - condition: state
+                    entity: switch.hpvc_pv5_control
+                    state: 'off'
+                row:
+                  entity: sensor.hpvc_pv5_actual_limit
+                  name: PV5 actual limit (Off)
+              - type: conditional
+                conditions:
+                  - condition: numeric_state
+                    entity: sensor.hpvc_effective_inverter_runtime
                     above: 5
+                  - condition: state
+                    entity: switch.hpvc_pv6_control
+                    state: 'on'
                 row:
                   entity: sensor.hpvc_pv6_actual_limit
                   name: PV6 actual limit
               - type: conditional
                 conditions:
                   - condition: numeric_state
-                    entity: input_number.hpvc_inverter_count
+                    entity: sensor.hpvc_effective_inverter_runtime
+                    above: 5
+                  - condition: state
+                    entity: switch.hpvc_pv6_control
+                    state: 'off'
+                row:
+                  entity: sensor.hpvc_pv6_actual_limit
+                  name: PV6 actual limit (Off)
+              - type: conditional
+                conditions:
+                  - condition: numeric_state
+                    entity: sensor.hpvc_effective_inverter_runtime
                     above: 6
+                  - condition: state
+                    entity: switch.hpvc_pv7_control
+                    state: 'on'
                 row:
                   entity: sensor.hpvc_pv7_actual_limit
                   name: PV7 actual limit
               - type: conditional
                 conditions:
                   - condition: numeric_state
-                    entity: input_number.hpvc_inverter_count
+                    entity: sensor.hpvc_effective_inverter_runtime
+                    above: 6
+                  - condition: state
+                    entity: switch.hpvc_pv7_control
+                    state: 'off'
+                row:
+                  entity: sensor.hpvc_pv7_actual_limit
+                  name: PV7 actual limit (Off)
+              - type: conditional
+                conditions:
+                  - condition: numeric_state
+                    entity: sensor.hpvc_effective_inverter_runtime
                     above: 7
+                  - condition: state
+                    entity: switch.hpvc_pv8_control
+                    state: 'on'
                 row:
                   entity: sensor.hpvc_pv8_actual_limit
                   name: PV8 actual limit
               - type: conditional
                 conditions:
                   - condition: numeric_state
-                    entity: input_number.hpvc_inverter_count
+                    entity: sensor.hpvc_effective_inverter_runtime
+                    above: 7
+                  - condition: state
+                    entity: switch.hpvc_pv8_control
+                    state: 'off'
+                row:
+                  entity: sensor.hpvc_pv8_actual_limit
+                  name: PV8 actual limit (Off)
+              - type: conditional
+                conditions:
+                  - condition: numeric_state
+                    entity: sensor.hpvc_effective_inverter_runtime
                     above: 8
+                  - condition: state
+                    entity: switch.hpvc_pv9_control
+                    state: 'on'
                 row:
                   entity: sensor.hpvc_pv9_actual_limit
                   name: PV9 actual limit
               - type: conditional
                 conditions:
                   - condition: numeric_state
-                    entity: input_number.hpvc_inverter_count
+                    entity: sensor.hpvc_effective_inverter_runtime
+                    above: 8
+                  - condition: state
+                    entity: switch.hpvc_pv9_control
+                    state: 'off'
+                row:
+                  entity: sensor.hpvc_pv9_actual_limit
+                  name: PV9 actual limit (Off)
+              - type: conditional
+                conditions:
+                  - condition: numeric_state
+                    entity: sensor.hpvc_effective_inverter_runtime
                     above: 9
+                  - condition: state
+                    entity: switch.hpvc_pv10_control
+                    state: 'on'
                 row:
                   entity: sensor.hpvc_pv10_actual_limit
                   name: PV10 actual limit
-            show_header_toggle: false
-        visibility:
-          - condition: state
-            entity: input_boolean.hpvc_onboarding_complete
-            state: 'on'
-      - type: grid
-        columns: 1
-        square: false
-        cards:
+              - type: conditional
+                conditions:
+                  - condition: numeric_state
+                    entity: sensor.hpvc_effective_inverter_runtime
+                    above: 9
+                  - condition: state
+                    entity: switch.hpvc_pv10_control
+                    state: 'off'
+                row:
+                  entity: sensor.hpvc_pv10_actual_limit
+                  name: PV10 actual limit (Off)
           - type: conditional
             conditions:
               - entity: input_boolean.hpvc_control_hbc_strategy
@@ -2290,10 +2456,10 @@ views:
               ### 🔆 Inverters
           - type: markdown
             text_only: true
-            content: |
+            content: |-
               Configure up to 10 active inverter limit entities.
 
-              For each inverter enter:
+              For manually configured inverters, enter:
 
               • Control method: Number entity or Action/service.
               • For Number entity, enter the writable power-limit entity ID.
@@ -2305,16 +2471,35 @@ views:
               Paste (Ctrl + V) the entity IDs into the fields below.
           - type: markdown
             text_only: true
+            visibility:
+              - condition: numeric_state
+                entity: sensor.hpvc_effective_inverter_runtime
+                above: 0
             content: >-
-              <ha-alert title="Negative price protection" alert-type="info">
-
-              When the all-in price is ≤ 0 €/kWh, PV is limited to the
-              configured minimum. Set it to <b>0 W</b> for full shutdown during
-              negative price.
-
-              </ha-alert>
+              {% set effective =
+              states('sensor.hpvc_effective_inverter_runtime') %} {% set total =
+              effective | int(0) %} {% set raw =
+              state_attr('sensor.hpvc_effective_inverter_runtime',
+              'runtime_json') %} {% set rows = raw if raw is sequence and raw is
+              not string and raw is not mapping else raw | from_json([]) %} {%
+              set counts = namespace(auto=0) %} {% if total >= 1 and total <= 10
+              and rows is sequence and rows is not string and rows is not
+              mapping and rows | count == total %}
+                {% for row in rows %}
+                  {% set parts = row.split('|') if row is string else [] %}
+                  {% if parts | count >= 7 and parts[6] | trim == 'auto' %}
+                    {% set counts.auto = counts.auto + 1 %}
+                  {% endif %}
+                {% endfor %}
+              **Total inverters:** _{{ counts.auto }} auto-detected · {{ total -
+              counts.auto }} manual_ {% elif total >= 1 and total <= 10 %}
+              **Total inverters:** _Breakdown unavailable_ {% else %} **Total
+              inverters:** _Unavailable_ {% endif %}
+            grid_options:
+              rows: auto
+              columns: 12
           - type: tile
-            entity: input_number.hpvc_inverter_count
+            entity: number.hpvc_inverters
             name: Inverters
             icon: mdi:solar-panel-large
             hide_state: true
@@ -2330,7 +2515,7 @@ views:
             square: false
             visibility:
               - condition: numeric_state
-                entity: input_number.hpvc_inverter_count
+                entity: sensor.hpvc_effective_inverter_runtime
                 above: 1
             cards:
               - type: tile
@@ -2385,12 +2570,43 @@ views:
                   rows: 1
           - type: conditional
             conditions:
+              - condition: numeric_state
+                entity: sensor.hpvc_effective_inverter_runtime
+                above: 0
               - condition: state
                 entity: input_select.hpvc_selected_inverter
                 state: PV1
             card:
               type: vertical-stack
               cards:
+                - type: markdown
+                  text_only: true
+                  content: >-
+                    {% set raw =
+                    state_attr('sensor.hpvc_effective_inverter_runtime',
+                    'controller_ui_json') %} {% set rows = raw if raw is
+                    sequence and raw is not string and raw is not mapping else
+                    raw | from_json([]) %} {% set status = rows[0].status if
+                    rows is sequence and rows is not string and rows | count >=
+                    1 else '' %} {% set source = rows[0].source |
+                    default('manual') if rows is sequence and rows is not string
+                    and rows | count >= 1 else 'manual' %} {% set kind =
+                    rows[0].kind | default('') if rows is sequence and rows is
+                    not string and rows | count >= 1 else '' %} {% set
+                    display_status = 'Hoymiles detected' if status == 'Detected'
+                    and source == 'auto' and kind == 'opendtu' else 'Enphase
+                    detected' if status == 'Detected' and source == 'auto' and
+                    kind == 'enphase' else 'Hoymiles detected but incomplete' if
+                    status == 'Incomplete' and source == 'auto' and kind ==
+                    'opendtu' else 'Enphase detected but incomplete' if status
+                    == 'Incomplete' and source == 'auto' and kind == 'enphase'
+                    else 'Detected but incomplete' if status == 'Incomplete'
+                    else status %} {% if status %} <ha-alert alert-type="{{
+                    'success' if status in ['Detected','Configured'] else
+                    'warning' if status in ['Incomplete','Not configured'] else
+                    'error' }}">Inverter status: {{ display_status }}{% if
+                    rows[0].reason | default('') %} — {{ rows[0].reason }}{%
+                    endif %}</ha-alert> {% endif %}
                 - type: conditional
                   conditions:
                     - condition: state
@@ -2400,25 +2616,114 @@ views:
                     type: markdown
                     text_only: true
                     content: >-
-                      <ha-alert alert-type="warning">PV1 Min power must be lower
-                      than Max power.</ha-alert>
+                      <ha-alert alert-type="warning">PV1 Min power must be ≤ Max
+                      power. Correct it, then re-enable HPVC Control.</ha-alert>
                 - type: entities
                   show_header_toggle: false
                   entities:
-                    - entity: input_select.hpvc_pv1_control_method
-                      name: Control method
+                    - type: conditional
+                      conditions:
+                        - entity: switch.hpvc_pv1_control
+                          state_not: unavailable
+                        - entity: switch.hpvc_pv1_control
+                          state_not: unknown
+                      row:
+                        entity: switch.hpvc_pv1_control
+                        name: HPVC Control
                     - type: conditional
                       conditions:
                         - condition: state
-                          entity: input_select.hpvc_pv1_control_method
-                          state: Number entity
+                          entity: binary_sensor.hpvc_pv1_auto_detected
+                          state: 'on'
                       row:
-                        entity: input_text.hpvc_pv1_limit_number
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv1_auto_detected
+                        state_color: false
+                        attribute: control_method
+                        name: Method
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv1_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv1_control_method
+                        name: Control method
+                    - type: conditional
+                      conditions:
+                        - condition: or
+                          conditions:
+                            - condition: state
+                              entity: binary_sensor.hpvc_pv1_auto_detected
+                              state: 'on'
+                            - condition: and
+                              conditions:
+                                - condition: state
+                                  entity: binary_sensor.hpvc_pv1_auto_detected
+                                  state: 'off'
+                                - condition: state
+                                  entity: input_select.hpvc_pv1_control_method
+                                  state: Number entity
+                      row:
+                        entity: sensor.hpvc_inverter_limit_entity_display
                         name: Limit entity
-                    - entity: input_select.hpvc_pv1_limit_unit
-                      name: Limit unit
-                    - entity: input_number.hpvc_pv1_full_limit
-                      name: Max power
+                        icon: mdi:lock-outline
+                        color: none
+                        secondary_info: pv1_limit_entity
+                        tap_action:
+                          action: none
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv1_auto_detected
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv1_auto_detected
+                        state_color: false
+                        attribute: limit_unit
+                        name: Unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv1_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv1_limit_unit
+                        name: Limit unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv1_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv1_max_power_locked
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv1_auto_detected
+                        state_color: false
+                        attribute: max_power
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv1_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv1_max_power_locked
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv1_full_limit
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv1_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv1_full_limit
+                        name: Max power
                     - entity: input_number.hpvc_pv1_low_limit
                       name: Min power
                     - type: conditional
@@ -2503,6 +2808,34 @@ views:
             card:
               type: vertical-stack
               cards:
+                - type: markdown
+                  text_only: true
+                  content: >-
+                    {% set raw =
+                    state_attr('sensor.hpvc_effective_inverter_runtime',
+                    'controller_ui_json') %} {% set rows = raw if raw is
+                    sequence and raw is not string and raw is not mapping else
+                    raw | from_json([]) %} {% set status = rows[1].status if
+                    rows is sequence and rows is not string and rows | count >=
+                    2 else '' %} {% set source = rows[1].source |
+                    default('manual') if rows is sequence and rows is not string
+                    and rows | count >= 2 else 'manual' %} {% set kind =
+                    rows[1].kind | default('') if rows is sequence and rows is
+                    not string and rows | count >= 2 else '' %} {% set
+                    display_status = 'Hoymiles detected' if status == 'Detected'
+                    and source == 'auto' and kind == 'opendtu' else 'Enphase
+                    detected' if status == 'Detected' and source == 'auto' and
+                    kind == 'enphase' else 'Hoymiles detected but incomplete' if
+                    status == 'Incomplete' and source == 'auto' and kind ==
+                    'opendtu' else 'Enphase detected but incomplete' if status
+                    == 'Incomplete' and source == 'auto' and kind == 'enphase'
+                    else 'Detected but incomplete' if status == 'Incomplete'
+                    else status %} {% if status %} <ha-alert alert-type="{{
+                    'success' if status in ['Detected','Configured'] else
+                    'warning' if status in ['Incomplete','Not configured'] else
+                    'error' }}">Inverter status: {{ display_status }}{% if
+                    rows[1].reason | default('') %} — {{ rows[1].reason }}{%
+                    endif %}</ha-alert> {% endif %}
                 - type: conditional
                   conditions:
                     - condition: state
@@ -2512,25 +2845,114 @@ views:
                     type: markdown
                     text_only: true
                     content: >-
-                      <ha-alert alert-type="warning">PV2 Min power must be lower
-                      than Max power.</ha-alert>
+                      <ha-alert alert-type="warning">PV2 Min power must be ≤ Max
+                      power. Correct it, then re-enable HPVC Control.</ha-alert>
                 - type: entities
                   show_header_toggle: false
                   entities:
-                    - entity: input_select.hpvc_pv2_control_method
-                      name: Control method
+                    - type: conditional
+                      conditions:
+                        - entity: switch.hpvc_pv2_control
+                          state_not: unavailable
+                        - entity: switch.hpvc_pv2_control
+                          state_not: unknown
+                      row:
+                        entity: switch.hpvc_pv2_control
+                        name: HPVC Control
                     - type: conditional
                       conditions:
                         - condition: state
-                          entity: input_select.hpvc_pv2_control_method
-                          state: Number entity
+                          entity: binary_sensor.hpvc_pv2_auto_detected
+                          state: 'on'
                       row:
-                        entity: input_text.hpvc_pv2_limit_number
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv2_auto_detected
+                        state_color: false
+                        attribute: control_method
+                        name: Method
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv2_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv2_control_method
+                        name: Control method
+                    - type: conditional
+                      conditions:
+                        - condition: or
+                          conditions:
+                            - condition: state
+                              entity: binary_sensor.hpvc_pv2_auto_detected
+                              state: 'on'
+                            - condition: and
+                              conditions:
+                                - condition: state
+                                  entity: binary_sensor.hpvc_pv2_auto_detected
+                                  state: 'off'
+                                - condition: state
+                                  entity: input_select.hpvc_pv2_control_method
+                                  state: Number entity
+                      row:
+                        entity: sensor.hpvc_inverter_limit_entity_display
                         name: Limit entity
-                    - entity: input_select.hpvc_pv2_limit_unit
-                      name: Limit unit
-                    - entity: input_number.hpvc_pv2_full_limit
-                      name: Max power
+                        icon: mdi:lock
+                        color: none
+                        secondary_info: pv2_limit_entity
+                        tap_action:
+                          action: none
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv2_auto_detected
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv2_auto_detected
+                        state_color: false
+                        attribute: limit_unit
+                        name: Unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv2_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv2_limit_unit
+                        name: Limit unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv2_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv2_max_power_locked
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv2_auto_detected
+                        state_color: false
+                        attribute: max_power
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv2_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv2_max_power_locked
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv2_full_limit
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv2_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv2_full_limit
+                        name: Max power
                     - entity: input_number.hpvc_pv2_low_limit
                       name: Min power
                     - type: conditional
@@ -2615,6 +3037,34 @@ views:
             card:
               type: vertical-stack
               cards:
+                - type: markdown
+                  text_only: true
+                  content: >-
+                    {% set raw =
+                    state_attr('sensor.hpvc_effective_inverter_runtime',
+                    'controller_ui_json') %} {% set rows = raw if raw is
+                    sequence and raw is not string and raw is not mapping else
+                    raw | from_json([]) %} {% set status = rows[2].status if
+                    rows is sequence and rows is not string and rows | count >=
+                    3 else '' %} {% set source = rows[2].source |
+                    default('manual') if rows is sequence and rows is not string
+                    and rows | count >= 3 else 'manual' %} {% set kind =
+                    rows[2].kind | default('') if rows is sequence and rows is
+                    not string and rows | count >= 3 else '' %} {% set
+                    display_status = 'Hoymiles detected' if status == 'Detected'
+                    and source == 'auto' and kind == 'opendtu' else 'Enphase
+                    detected' if status == 'Detected' and source == 'auto' and
+                    kind == 'enphase' else 'Hoymiles detected but incomplete' if
+                    status == 'Incomplete' and source == 'auto' and kind ==
+                    'opendtu' else 'Enphase detected but incomplete' if status
+                    == 'Incomplete' and source == 'auto' and kind == 'enphase'
+                    else 'Detected but incomplete' if status == 'Incomplete'
+                    else status %} {% if status %} <ha-alert alert-type="{{
+                    'success' if status in ['Detected','Configured'] else
+                    'warning' if status in ['Incomplete','Not configured'] else
+                    'error' }}">Inverter status: {{ display_status }}{% if
+                    rows[2].reason | default('') %} — {{ rows[2].reason }}{%
+                    endif %}</ha-alert> {% endif %}
                 - type: conditional
                   conditions:
                     - condition: state
@@ -2624,25 +3074,114 @@ views:
                     type: markdown
                     text_only: true
                     content: >-
-                      <ha-alert alert-type="warning">PV3 Min power must be lower
-                      than Max power.</ha-alert>
+                      <ha-alert alert-type="warning">PV3 Min power must be ≤ Max
+                      power. Correct it, then re-enable HPVC Control.</ha-alert>
                 - type: entities
                   show_header_toggle: false
                   entities:
-                    - entity: input_select.hpvc_pv3_control_method
-                      name: Control method
+                    - type: conditional
+                      conditions:
+                        - entity: switch.hpvc_pv3_control
+                          state_not: unavailable
+                        - entity: switch.hpvc_pv3_control
+                          state_not: unknown
+                      row:
+                        entity: switch.hpvc_pv3_control
+                        name: HPVC Control
                     - type: conditional
                       conditions:
                         - condition: state
-                          entity: input_select.hpvc_pv3_control_method
-                          state: Number entity
+                          entity: binary_sensor.hpvc_pv3_auto_detected
+                          state: 'on'
                       row:
-                        entity: input_text.hpvc_pv3_limit_number
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv3_auto_detected
+                        state_color: false
+                        attribute: control_method
+                        name: Method
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv3_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv3_control_method
+                        name: Control method
+                    - type: conditional
+                      conditions:
+                        - condition: or
+                          conditions:
+                            - condition: state
+                              entity: binary_sensor.hpvc_pv3_auto_detected
+                              state: 'on'
+                            - condition: and
+                              conditions:
+                                - condition: state
+                                  entity: binary_sensor.hpvc_pv3_auto_detected
+                                  state: 'off'
+                                - condition: state
+                                  entity: input_select.hpvc_pv3_control_method
+                                  state: Number entity
+                      row:
+                        entity: sensor.hpvc_inverter_limit_entity_display
                         name: Limit entity
-                    - entity: input_select.hpvc_pv3_limit_unit
-                      name: Limit unit
-                    - entity: input_number.hpvc_pv3_full_limit
-                      name: Max power
+                        icon: mdi:lock
+                        color: none
+                        secondary_info: pv3_limit_entity
+                        tap_action:
+                          action: none
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv3_auto_detected
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv3_auto_detected
+                        state_color: false
+                        attribute: limit_unit
+                        name: Unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv3_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv3_limit_unit
+                        name: Limit unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv3_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv3_max_power_locked
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv3_auto_detected
+                        state_color: false
+                        attribute: max_power
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv3_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv3_max_power_locked
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv3_full_limit
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv3_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv3_full_limit
+                        name: Max power
                     - entity: input_number.hpvc_pv3_low_limit
                       name: Min power
                     - type: conditional
@@ -2727,6 +3266,34 @@ views:
             card:
               type: vertical-stack
               cards:
+                - type: markdown
+                  text_only: true
+                  content: >-
+                    {% set raw =
+                    state_attr('sensor.hpvc_effective_inverter_runtime',
+                    'controller_ui_json') %} {% set rows = raw if raw is
+                    sequence and raw is not string and raw is not mapping else
+                    raw | from_json([]) %} {% set status = rows[3].status if
+                    rows is sequence and rows is not string and rows | count >=
+                    4 else '' %} {% set source = rows[3].source |
+                    default('manual') if rows is sequence and rows is not string
+                    and rows | count >= 4 else 'manual' %} {% set kind =
+                    rows[3].kind | default('') if rows is sequence and rows is
+                    not string and rows | count >= 4 else '' %} {% set
+                    display_status = 'Hoymiles detected' if status == 'Detected'
+                    and source == 'auto' and kind == 'opendtu' else 'Enphase
+                    detected' if status == 'Detected' and source == 'auto' and
+                    kind == 'enphase' else 'Hoymiles detected but incomplete' if
+                    status == 'Incomplete' and source == 'auto' and kind ==
+                    'opendtu' else 'Enphase detected but incomplete' if status
+                    == 'Incomplete' and source == 'auto' and kind == 'enphase'
+                    else 'Detected but incomplete' if status == 'Incomplete'
+                    else status %} {% if status %} <ha-alert alert-type="{{
+                    'success' if status in ['Detected','Configured'] else
+                    'warning' if status in ['Incomplete','Not configured'] else
+                    'error' }}">Inverter status: {{ display_status }}{% if
+                    rows[3].reason | default('') %} — {{ rows[3].reason }}{%
+                    endif %}</ha-alert> {% endif %}
                 - type: conditional
                   conditions:
                     - condition: state
@@ -2736,25 +3303,114 @@ views:
                     type: markdown
                     text_only: true
                     content: >-
-                      <ha-alert alert-type="warning">PV4 Min power must be lower
-                      than Max power.</ha-alert>
+                      <ha-alert alert-type="warning">PV4 Min power must be ≤ Max
+                      power. Correct it, then re-enable HPVC Control.</ha-alert>
                 - type: entities
                   show_header_toggle: false
                   entities:
-                    - entity: input_select.hpvc_pv4_control_method
-                      name: Control method
+                    - type: conditional
+                      conditions:
+                        - entity: switch.hpvc_pv4_control
+                          state_not: unavailable
+                        - entity: switch.hpvc_pv4_control
+                          state_not: unknown
+                      row:
+                        entity: switch.hpvc_pv4_control
+                        name: HPVC Control
                     - type: conditional
                       conditions:
                         - condition: state
-                          entity: input_select.hpvc_pv4_control_method
-                          state: Number entity
+                          entity: binary_sensor.hpvc_pv4_auto_detected
+                          state: 'on'
                       row:
-                        entity: input_text.hpvc_pv4_limit_number
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv4_auto_detected
+                        state_color: false
+                        attribute: control_method
+                        name: Method
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv4_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv4_control_method
+                        name: Control method
+                    - type: conditional
+                      conditions:
+                        - condition: or
+                          conditions:
+                            - condition: state
+                              entity: binary_sensor.hpvc_pv4_auto_detected
+                              state: 'on'
+                            - condition: and
+                              conditions:
+                                - condition: state
+                                  entity: binary_sensor.hpvc_pv4_auto_detected
+                                  state: 'off'
+                                - condition: state
+                                  entity: input_select.hpvc_pv4_control_method
+                                  state: Number entity
+                      row:
+                        entity: sensor.hpvc_inverter_limit_entity_display
                         name: Limit entity
-                    - entity: input_select.hpvc_pv4_limit_unit
-                      name: Limit unit
-                    - entity: input_number.hpvc_pv4_full_limit
-                      name: Max power
+                        icon: mdi:lock
+                        color: none
+                        secondary_info: pv4_limit_entity
+                        tap_action:
+                          action: none
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv4_auto_detected
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv4_auto_detected
+                        state_color: false
+                        attribute: limit_unit
+                        name: Unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv4_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv4_limit_unit
+                        name: Limit unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv4_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv4_max_power_locked
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv4_auto_detected
+                        state_color: false
+                        attribute: max_power
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv4_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv4_max_power_locked
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv4_full_limit
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv4_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv4_full_limit
+                        name: Max power
                     - entity: input_number.hpvc_pv4_low_limit
                       name: Min power
                     - type: conditional
@@ -2839,6 +3495,34 @@ views:
             card:
               type: vertical-stack
               cards:
+                - type: markdown
+                  text_only: true
+                  content: >-
+                    {% set raw =
+                    state_attr('sensor.hpvc_effective_inverter_runtime',
+                    'controller_ui_json') %} {% set rows = raw if raw is
+                    sequence and raw is not string and raw is not mapping else
+                    raw | from_json([]) %} {% set status = rows[4].status if
+                    rows is sequence and rows is not string and rows | count >=
+                    5 else '' %} {% set source = rows[4].source |
+                    default('manual') if rows is sequence and rows is not string
+                    and rows | count >= 5 else 'manual' %} {% set kind =
+                    rows[4].kind | default('') if rows is sequence and rows is
+                    not string and rows | count >= 5 else '' %} {% set
+                    display_status = 'Hoymiles detected' if status == 'Detected'
+                    and source == 'auto' and kind == 'opendtu' else 'Enphase
+                    detected' if status == 'Detected' and source == 'auto' and
+                    kind == 'enphase' else 'Hoymiles detected but incomplete' if
+                    status == 'Incomplete' and source == 'auto' and kind ==
+                    'opendtu' else 'Enphase detected but incomplete' if status
+                    == 'Incomplete' and source == 'auto' and kind == 'enphase'
+                    else 'Detected but incomplete' if status == 'Incomplete'
+                    else status %} {% if status %} <ha-alert alert-type="{{
+                    'success' if status in ['Detected','Configured'] else
+                    'warning' if status in ['Incomplete','Not configured'] else
+                    'error' }}">Inverter status: {{ display_status }}{% if
+                    rows[4].reason | default('') %} — {{ rows[4].reason }}{%
+                    endif %}</ha-alert> {% endif %}
                 - type: conditional
                   conditions:
                     - condition: state
@@ -2848,25 +3532,114 @@ views:
                     type: markdown
                     text_only: true
                     content: >-
-                      <ha-alert alert-type="warning">PV5 Min power must be lower
-                      than Max power.</ha-alert>
+                      <ha-alert alert-type="warning">PV5 Min power must be ≤ Max
+                      power. Correct it, then re-enable HPVC Control.</ha-alert>
                 - type: entities
                   show_header_toggle: false
                   entities:
-                    - entity: input_select.hpvc_pv5_control_method
-                      name: Control method
+                    - type: conditional
+                      conditions:
+                        - entity: switch.hpvc_pv5_control
+                          state_not: unavailable
+                        - entity: switch.hpvc_pv5_control
+                          state_not: unknown
+                      row:
+                        entity: switch.hpvc_pv5_control
+                        name: HPVC Control
                     - type: conditional
                       conditions:
                         - condition: state
-                          entity: input_select.hpvc_pv5_control_method
-                          state: Number entity
+                          entity: binary_sensor.hpvc_pv5_auto_detected
+                          state: 'on'
                       row:
-                        entity: input_text.hpvc_pv5_limit_number
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv5_auto_detected
+                        state_color: false
+                        attribute: control_method
+                        name: Method
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv5_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv5_control_method
+                        name: Control method
+                    - type: conditional
+                      conditions:
+                        - condition: or
+                          conditions:
+                            - condition: state
+                              entity: binary_sensor.hpvc_pv5_auto_detected
+                              state: 'on'
+                            - condition: and
+                              conditions:
+                                - condition: state
+                                  entity: binary_sensor.hpvc_pv5_auto_detected
+                                  state: 'off'
+                                - condition: state
+                                  entity: input_select.hpvc_pv5_control_method
+                                  state: Number entity
+                      row:
+                        entity: sensor.hpvc_inverter_limit_entity_display
                         name: Limit entity
-                    - entity: input_select.hpvc_pv5_limit_unit
-                      name: Limit unit
-                    - entity: input_number.hpvc_pv5_full_limit
-                      name: Max power
+                        icon: mdi:lock
+                        color: none
+                        secondary_info: pv5_limit_entity
+                        tap_action:
+                          action: none
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv5_auto_detected
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv5_auto_detected
+                        state_color: false
+                        attribute: limit_unit
+                        name: Unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv5_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv5_limit_unit
+                        name: Limit unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv5_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv5_max_power_locked
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv5_auto_detected
+                        state_color: false
+                        attribute: max_power
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv5_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv5_max_power_locked
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv5_full_limit
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv5_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv5_full_limit
+                        name: Max power
                     - entity: input_number.hpvc_pv5_low_limit
                       name: Min power
                     - type: conditional
@@ -2951,6 +3724,34 @@ views:
             card:
               type: vertical-stack
               cards:
+                - type: markdown
+                  text_only: true
+                  content: >-
+                    {% set raw =
+                    state_attr('sensor.hpvc_effective_inverter_runtime',
+                    'controller_ui_json') %} {% set rows = raw if raw is
+                    sequence and raw is not string and raw is not mapping else
+                    raw | from_json([]) %} {% set status = rows[5].status if
+                    rows is sequence and rows is not string and rows | count >=
+                    6 else '' %} {% set source = rows[5].source |
+                    default('manual') if rows is sequence and rows is not string
+                    and rows | count >= 6 else 'manual' %} {% set kind =
+                    rows[5].kind | default('') if rows is sequence and rows is
+                    not string and rows | count >= 6 else '' %} {% set
+                    display_status = 'Hoymiles detected' if status == 'Detected'
+                    and source == 'auto' and kind == 'opendtu' else 'Enphase
+                    detected' if status == 'Detected' and source == 'auto' and
+                    kind == 'enphase' else 'Hoymiles detected but incomplete' if
+                    status == 'Incomplete' and source == 'auto' and kind ==
+                    'opendtu' else 'Enphase detected but incomplete' if status
+                    == 'Incomplete' and source == 'auto' and kind == 'enphase'
+                    else 'Detected but incomplete' if status == 'Incomplete'
+                    else status %} {% if status %} <ha-alert alert-type="{{
+                    'success' if status in ['Detected','Configured'] else
+                    'warning' if status in ['Incomplete','Not configured'] else
+                    'error' }}">Inverter status: {{ display_status }}{% if
+                    rows[5].reason | default('') %} — {{ rows[5].reason }}{%
+                    endif %}</ha-alert> {% endif %}
                 - type: conditional
                   conditions:
                     - condition: state
@@ -2960,25 +3761,114 @@ views:
                     type: markdown
                     text_only: true
                     content: >-
-                      <ha-alert alert-type="warning">PV6 Min power must be lower
-                      than Max power.</ha-alert>
+                      <ha-alert alert-type="warning">PV6 Min power must be ≤ Max
+                      power. Correct it, then re-enable HPVC Control.</ha-alert>
                 - type: entities
                   show_header_toggle: false
                   entities:
-                    - entity: input_select.hpvc_pv6_control_method
-                      name: Control method
+                    - type: conditional
+                      conditions:
+                        - entity: switch.hpvc_pv6_control
+                          state_not: unavailable
+                        - entity: switch.hpvc_pv6_control
+                          state_not: unknown
+                      row:
+                        entity: switch.hpvc_pv6_control
+                        name: HPVC Control
                     - type: conditional
                       conditions:
                         - condition: state
-                          entity: input_select.hpvc_pv6_control_method
-                          state: Number entity
+                          entity: binary_sensor.hpvc_pv6_auto_detected
+                          state: 'on'
                       row:
-                        entity: input_text.hpvc_pv6_limit_number
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv6_auto_detected
+                        state_color: false
+                        attribute: control_method
+                        name: Method
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv6_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv6_control_method
+                        name: Control method
+                    - type: conditional
+                      conditions:
+                        - condition: or
+                          conditions:
+                            - condition: state
+                              entity: binary_sensor.hpvc_pv6_auto_detected
+                              state: 'on'
+                            - condition: and
+                              conditions:
+                                - condition: state
+                                  entity: binary_sensor.hpvc_pv6_auto_detected
+                                  state: 'off'
+                                - condition: state
+                                  entity: input_select.hpvc_pv6_control_method
+                                  state: Number entity
+                      row:
+                        entity: sensor.hpvc_inverter_limit_entity_display
                         name: Limit entity
-                    - entity: input_select.hpvc_pv6_limit_unit
-                      name: Limit unit
-                    - entity: input_number.hpvc_pv6_full_limit
-                      name: Max power
+                        icon: mdi:lock
+                        color: none
+                        secondary_info: pv6_limit_entity
+                        tap_action:
+                          action: none
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv6_auto_detected
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv6_auto_detected
+                        state_color: false
+                        attribute: limit_unit
+                        name: Unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv6_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv6_limit_unit
+                        name: Limit unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv6_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv6_max_power_locked
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv6_auto_detected
+                        state_color: false
+                        attribute: max_power
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv6_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv6_max_power_locked
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv6_full_limit
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv6_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv6_full_limit
+                        name: Max power
                     - entity: input_number.hpvc_pv6_low_limit
                       name: Min power
                     - type: conditional
@@ -3063,6 +3953,34 @@ views:
             card:
               type: vertical-stack
               cards:
+                - type: markdown
+                  text_only: true
+                  content: >-
+                    {% set raw =
+                    state_attr('sensor.hpvc_effective_inverter_runtime',
+                    'controller_ui_json') %} {% set rows = raw if raw is
+                    sequence and raw is not string and raw is not mapping else
+                    raw | from_json([]) %} {% set status = rows[6].status if
+                    rows is sequence and rows is not string and rows | count >=
+                    7 else '' %} {% set source = rows[6].source |
+                    default('manual') if rows is sequence and rows is not string
+                    and rows | count >= 7 else 'manual' %} {% set kind =
+                    rows[6].kind | default('') if rows is sequence and rows is
+                    not string and rows | count >= 7 else '' %} {% set
+                    display_status = 'Hoymiles detected' if status == 'Detected'
+                    and source == 'auto' and kind == 'opendtu' else 'Enphase
+                    detected' if status == 'Detected' and source == 'auto' and
+                    kind == 'enphase' else 'Hoymiles detected but incomplete' if
+                    status == 'Incomplete' and source == 'auto' and kind ==
+                    'opendtu' else 'Enphase detected but incomplete' if status
+                    == 'Incomplete' and source == 'auto' and kind == 'enphase'
+                    else 'Detected but incomplete' if status == 'Incomplete'
+                    else status %} {% if status %} <ha-alert alert-type="{{
+                    'success' if status in ['Detected','Configured'] else
+                    'warning' if status in ['Incomplete','Not configured'] else
+                    'error' }}">Inverter status: {{ display_status }}{% if
+                    rows[6].reason | default('') %} — {{ rows[6].reason }}{%
+                    endif %}</ha-alert> {% endif %}
                 - type: conditional
                   conditions:
                     - condition: state
@@ -3072,25 +3990,114 @@ views:
                     type: markdown
                     text_only: true
                     content: >-
-                      <ha-alert alert-type="warning">PV7 Min power must be lower
-                      than Max power.</ha-alert>
+                      <ha-alert alert-type="warning">PV7 Min power must be ≤ Max
+                      power. Correct it, then re-enable HPVC Control.</ha-alert>
                 - type: entities
                   show_header_toggle: false
                   entities:
-                    - entity: input_select.hpvc_pv7_control_method
-                      name: Control method
+                    - type: conditional
+                      conditions:
+                        - entity: switch.hpvc_pv7_control
+                          state_not: unavailable
+                        - entity: switch.hpvc_pv7_control
+                          state_not: unknown
+                      row:
+                        entity: switch.hpvc_pv7_control
+                        name: HPVC Control
                     - type: conditional
                       conditions:
                         - condition: state
-                          entity: input_select.hpvc_pv7_control_method
-                          state: Number entity
+                          entity: binary_sensor.hpvc_pv7_auto_detected
+                          state: 'on'
                       row:
-                        entity: input_text.hpvc_pv7_limit_number
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv7_auto_detected
+                        state_color: false
+                        attribute: control_method
+                        name: Method
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv7_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv7_control_method
+                        name: Control method
+                    - type: conditional
+                      conditions:
+                        - condition: or
+                          conditions:
+                            - condition: state
+                              entity: binary_sensor.hpvc_pv7_auto_detected
+                              state: 'on'
+                            - condition: and
+                              conditions:
+                                - condition: state
+                                  entity: binary_sensor.hpvc_pv7_auto_detected
+                                  state: 'off'
+                                - condition: state
+                                  entity: input_select.hpvc_pv7_control_method
+                                  state: Number entity
+                      row:
+                        entity: sensor.hpvc_inverter_limit_entity_display
                         name: Limit entity
-                    - entity: input_select.hpvc_pv7_limit_unit
-                      name: Limit unit
-                    - entity: input_number.hpvc_pv7_full_limit
-                      name: Max power
+                        icon: mdi:lock
+                        color: none
+                        secondary_info: pv7_limit_entity
+                        tap_action:
+                          action: none
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv7_auto_detected
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv7_auto_detected
+                        state_color: false
+                        attribute: limit_unit
+                        name: Unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv7_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv7_limit_unit
+                        name: Limit unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv7_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv7_max_power_locked
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv7_auto_detected
+                        state_color: false
+                        attribute: max_power
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv7_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv7_max_power_locked
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv7_full_limit
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv7_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv7_full_limit
+                        name: Max power
                     - entity: input_number.hpvc_pv7_low_limit
                       name: Min power
                     - type: conditional
@@ -3175,6 +4182,34 @@ views:
             card:
               type: vertical-stack
               cards:
+                - type: markdown
+                  text_only: true
+                  content: >-
+                    {% set raw =
+                    state_attr('sensor.hpvc_effective_inverter_runtime',
+                    'controller_ui_json') %} {% set rows = raw if raw is
+                    sequence and raw is not string and raw is not mapping else
+                    raw | from_json([]) %} {% set status = rows[7].status if
+                    rows is sequence and rows is not string and rows | count >=
+                    8 else '' %} {% set source = rows[7].source |
+                    default('manual') if rows is sequence and rows is not string
+                    and rows | count >= 8 else 'manual' %} {% set kind =
+                    rows[7].kind | default('') if rows is sequence and rows is
+                    not string and rows | count >= 8 else '' %} {% set
+                    display_status = 'Hoymiles detected' if status == 'Detected'
+                    and source == 'auto' and kind == 'opendtu' else 'Enphase
+                    detected' if status == 'Detected' and source == 'auto' and
+                    kind == 'enphase' else 'Hoymiles detected but incomplete' if
+                    status == 'Incomplete' and source == 'auto' and kind ==
+                    'opendtu' else 'Enphase detected but incomplete' if status
+                    == 'Incomplete' and source == 'auto' and kind == 'enphase'
+                    else 'Detected but incomplete' if status == 'Incomplete'
+                    else status %} {% if status %} <ha-alert alert-type="{{
+                    'success' if status in ['Detected','Configured'] else
+                    'warning' if status in ['Incomplete','Not configured'] else
+                    'error' }}">Inverter status: {{ display_status }}{% if
+                    rows[7].reason | default('') %} — {{ rows[7].reason }}{%
+                    endif %}</ha-alert> {% endif %}
                 - type: conditional
                   conditions:
                     - condition: state
@@ -3184,25 +4219,114 @@ views:
                     type: markdown
                     text_only: true
                     content: >-
-                      <ha-alert alert-type="warning">PV8 Min power must be lower
-                      than Max power.</ha-alert>
+                      <ha-alert alert-type="warning">PV8 Min power must be ≤ Max
+                      power. Correct it, then re-enable HPVC Control.</ha-alert>
                 - type: entities
                   show_header_toggle: false
                   entities:
-                    - entity: input_select.hpvc_pv8_control_method
-                      name: Control method
+                    - type: conditional
+                      conditions:
+                        - entity: switch.hpvc_pv8_control
+                          state_not: unavailable
+                        - entity: switch.hpvc_pv8_control
+                          state_not: unknown
+                      row:
+                        entity: switch.hpvc_pv8_control
+                        name: HPVC Control
                     - type: conditional
                       conditions:
                         - condition: state
-                          entity: input_select.hpvc_pv8_control_method
-                          state: Number entity
+                          entity: binary_sensor.hpvc_pv8_auto_detected
+                          state: 'on'
                       row:
-                        entity: input_text.hpvc_pv8_limit_number
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv8_auto_detected
+                        state_color: false
+                        attribute: control_method
+                        name: Method
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv8_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv8_control_method
+                        name: Control method
+                    - type: conditional
+                      conditions:
+                        - condition: or
+                          conditions:
+                            - condition: state
+                              entity: binary_sensor.hpvc_pv8_auto_detected
+                              state: 'on'
+                            - condition: and
+                              conditions:
+                                - condition: state
+                                  entity: binary_sensor.hpvc_pv8_auto_detected
+                                  state: 'off'
+                                - condition: state
+                                  entity: input_select.hpvc_pv8_control_method
+                                  state: Number entity
+                      row:
+                        entity: sensor.hpvc_inverter_limit_entity_display
                         name: Limit entity
-                    - entity: input_select.hpvc_pv8_limit_unit
-                      name: Limit unit
-                    - entity: input_number.hpvc_pv8_full_limit
-                      name: Max power
+                        icon: mdi:lock
+                        color: none
+                        secondary_info: pv8_limit_entity
+                        tap_action:
+                          action: none
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv8_auto_detected
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv8_auto_detected
+                        state_color: false
+                        attribute: limit_unit
+                        name: Unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv8_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv8_limit_unit
+                        name: Limit unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv8_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv8_max_power_locked
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv8_auto_detected
+                        state_color: false
+                        attribute: max_power
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv8_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv8_max_power_locked
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv8_full_limit
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv8_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv8_full_limit
+                        name: Max power
                     - entity: input_number.hpvc_pv8_low_limit
                       name: Min power
                     - type: conditional
@@ -3287,6 +4411,34 @@ views:
             card:
               type: vertical-stack
               cards:
+                - type: markdown
+                  text_only: true
+                  content: >-
+                    {% set raw =
+                    state_attr('sensor.hpvc_effective_inverter_runtime',
+                    'controller_ui_json') %} {% set rows = raw if raw is
+                    sequence and raw is not string and raw is not mapping else
+                    raw | from_json([]) %} {% set status = rows[8].status if
+                    rows is sequence and rows is not string and rows | count >=
+                    9 else '' %} {% set source = rows[8].source |
+                    default('manual') if rows is sequence and rows is not string
+                    and rows | count >= 9 else 'manual' %} {% set kind =
+                    rows[8].kind | default('') if rows is sequence and rows is
+                    not string and rows | count >= 9 else '' %} {% set
+                    display_status = 'Hoymiles detected' if status == 'Detected'
+                    and source == 'auto' and kind == 'opendtu' else 'Enphase
+                    detected' if status == 'Detected' and source == 'auto' and
+                    kind == 'enphase' else 'Hoymiles detected but incomplete' if
+                    status == 'Incomplete' and source == 'auto' and kind ==
+                    'opendtu' else 'Enphase detected but incomplete' if status
+                    == 'Incomplete' and source == 'auto' and kind == 'enphase'
+                    else 'Detected but incomplete' if status == 'Incomplete'
+                    else status %} {% if status %} <ha-alert alert-type="{{
+                    'success' if status in ['Detected','Configured'] else
+                    'warning' if status in ['Incomplete','Not configured'] else
+                    'error' }}">Inverter status: {{ display_status }}{% if
+                    rows[8].reason | default('') %} — {{ rows[8].reason }}{%
+                    endif %}</ha-alert> {% endif %}
                 - type: conditional
                   conditions:
                     - condition: state
@@ -3296,25 +4448,114 @@ views:
                     type: markdown
                     text_only: true
                     content: >-
-                      <ha-alert alert-type="warning">PV9 Min power must be lower
-                      than Max power.</ha-alert>
+                      <ha-alert alert-type="warning">PV9 Min power must be ≤ Max
+                      power. Correct it, then re-enable HPVC Control.</ha-alert>
                 - type: entities
                   show_header_toggle: false
                   entities:
-                    - entity: input_select.hpvc_pv9_control_method
-                      name: Control method
+                    - type: conditional
+                      conditions:
+                        - entity: switch.hpvc_pv9_control
+                          state_not: unavailable
+                        - entity: switch.hpvc_pv9_control
+                          state_not: unknown
+                      row:
+                        entity: switch.hpvc_pv9_control
+                        name: HPVC Control
                     - type: conditional
                       conditions:
                         - condition: state
-                          entity: input_select.hpvc_pv9_control_method
-                          state: Number entity
+                          entity: binary_sensor.hpvc_pv9_auto_detected
+                          state: 'on'
                       row:
-                        entity: input_text.hpvc_pv9_limit_number
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv9_auto_detected
+                        state_color: false
+                        attribute: control_method
+                        name: Method
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv9_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv9_control_method
+                        name: Control method
+                    - type: conditional
+                      conditions:
+                        - condition: or
+                          conditions:
+                            - condition: state
+                              entity: binary_sensor.hpvc_pv9_auto_detected
+                              state: 'on'
+                            - condition: and
+                              conditions:
+                                - condition: state
+                                  entity: binary_sensor.hpvc_pv9_auto_detected
+                                  state: 'off'
+                                - condition: state
+                                  entity: input_select.hpvc_pv9_control_method
+                                  state: Number entity
+                      row:
+                        entity: sensor.hpvc_inverter_limit_entity_display
                         name: Limit entity
-                    - entity: input_select.hpvc_pv9_limit_unit
-                      name: Limit unit
-                    - entity: input_number.hpvc_pv9_full_limit
-                      name: Max power
+                        icon: mdi:lock
+                        color: none
+                        secondary_info: pv9_limit_entity
+                        tap_action:
+                          action: none
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv9_auto_detected
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv9_auto_detected
+                        state_color: false
+                        attribute: limit_unit
+                        name: Unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv9_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv9_limit_unit
+                        name: Limit unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv9_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv9_max_power_locked
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv9_auto_detected
+                        state_color: false
+                        attribute: max_power
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv9_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv9_max_power_locked
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv9_full_limit
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv9_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv9_full_limit
+                        name: Max power
                     - entity: input_number.hpvc_pv9_low_limit
                       name: Min power
                     - type: conditional
@@ -3399,6 +4640,34 @@ views:
             card:
               type: vertical-stack
               cards:
+                - type: markdown
+                  text_only: true
+                  content: >-
+                    {% set raw =
+                    state_attr('sensor.hpvc_effective_inverter_runtime',
+                    'controller_ui_json') %} {% set rows = raw if raw is
+                    sequence and raw is not string and raw is not mapping else
+                    raw | from_json([]) %} {% set status = rows[9].status if
+                    rows is sequence and rows is not string and rows | count >=
+                    10 else '' %} {% set source = rows[9].source |
+                    default('manual') if rows is sequence and rows is not string
+                    and rows | count >= 10 else 'manual' %} {% set kind =
+                    rows[9].kind | default('') if rows is sequence and rows is
+                    not string and rows | count >= 10 else '' %} {% set
+                    display_status = 'Hoymiles detected' if status == 'Detected'
+                    and source == 'auto' and kind == 'opendtu' else 'Enphase
+                    detected' if status == 'Detected' and source == 'auto' and
+                    kind == 'enphase' else 'Hoymiles detected but incomplete' if
+                    status == 'Incomplete' and source == 'auto' and kind ==
+                    'opendtu' else 'Enphase detected but incomplete' if status
+                    == 'Incomplete' and source == 'auto' and kind == 'enphase'
+                    else 'Detected but incomplete' if status == 'Incomplete'
+                    else status %} {% if status %} <ha-alert alert-type="{{
+                    'success' if status in ['Detected','Configured'] else
+                    'warning' if status in ['Incomplete','Not configured'] else
+                    'error' }}">Inverter status: {{ display_status }}{% if
+                    rows[9].reason | default('') %} — {{ rows[9].reason }}{%
+                    endif %}</ha-alert> {% endif %}
                 - type: conditional
                   conditions:
                     - condition: state
@@ -3408,25 +4677,115 @@ views:
                     type: markdown
                     text_only: true
                     content: >-
-                      <ha-alert alert-type="warning">PV10 Min power must be
-                      lower than Max power.</ha-alert>
+                      <ha-alert alert-type="warning">PV10 Min power must be ≤
+                      Max power. Correct it, then re-enable HPVC
+                      Control.</ha-alert>
                 - type: entities
                   show_header_toggle: false
                   entities:
-                    - entity: input_select.hpvc_pv10_control_method
-                      name: Control method
+                    - type: conditional
+                      conditions:
+                        - entity: switch.hpvc_pv10_control
+                          state_not: unavailable
+                        - entity: switch.hpvc_pv10_control
+                          state_not: unknown
+                      row:
+                        entity: switch.hpvc_pv10_control
+                        name: HPVC Control
                     - type: conditional
                       conditions:
                         - condition: state
-                          entity: input_select.hpvc_pv10_control_method
-                          state: Number entity
+                          entity: binary_sensor.hpvc_pv10_auto_detected
+                          state: 'on'
                       row:
-                        entity: input_text.hpvc_pv10_limit_number
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv10_auto_detected
+                        state_color: false
+                        attribute: control_method
+                        name: Method
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv10_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv10_control_method
+                        name: Control method
+                    - type: conditional
+                      conditions:
+                        - condition: or
+                          conditions:
+                            - condition: state
+                              entity: binary_sensor.hpvc_pv10_auto_detected
+                              state: 'on'
+                            - condition: and
+                              conditions:
+                                - condition: state
+                                  entity: binary_sensor.hpvc_pv10_auto_detected
+                                  state: 'off'
+                                - condition: state
+                                  entity: input_select.hpvc_pv10_control_method
+                                  state: Number entity
+                      row:
+                        entity: sensor.hpvc_inverter_limit_entity_display
                         name: Limit entity
-                    - entity: input_select.hpvc_pv10_limit_unit
-                      name: Limit unit
-                    - entity: input_number.hpvc_pv10_full_limit
-                      name: Max power
+                        icon: mdi:lock
+                        color: none
+                        secondary_info: pv10_limit_entity
+                        tap_action:
+                          action: none
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv10_auto_detected
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv10_auto_detected
+                        state_color: false
+                        attribute: limit_unit
+                        name: Unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv10_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_select.hpvc_pv10_limit_unit
+                        name: Limit unit
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv10_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv10_max_power_locked
+                          state: 'on'
+                      row:
+                        type: attribute
+                        entity: binary_sensor.hpvc_pv10_auto_detected
+                        state_color: false
+                        attribute: max_power
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv10_auto_detected
+                          state: 'on'
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv10_max_power_locked
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv10_full_limit
+                        name: Max power
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: binary_sensor.hpvc_pv10_auto_detected
+                          state: 'off'
+                      row:
+                        entity: input_number.hpvc_pv10_full_limit
+                        name: Max power
                     - entity: input_number.hpvc_pv10_low_limit
                       name: Min power
                     - type: conditional
@@ -3501,6 +4860,16 @@ views:
                       row:
                         entity: input_text.hpvc_pv10_readback_entity
                         name: Readback entity
+          - type: markdown
+            text_only: true
+            content: >-
+              <ha-alert title="Negative price protection" alert-type="info">
+
+              When the all-in price is ≤ 0 €/kWh, PV is limited to the
+              configured minimum. Set it to <b>0 W</b> for full shutdown during
+              negative price.
+
+              </ha-alert>
         grid_options:
           columns: 6
           rows: auto
@@ -3603,6 +4972,13 @@ views:
               **Price hysteresis**: prevents rapid PV limiting changes when
               leaving the configured PV limit price zone. Not used for
               negative-price mode.
+          - type: entities
+            entities:
+              - entity: input_number.hpvc_pv_limiting_price
+                name: PV limit price
+              - entity: input_number.hpvc_battery_price_hysteresis
+                name: Price hysteresis
+            show_header_toggle: false
           - type: markdown
             text_only: true
             content: >-
@@ -3613,13 +4989,6 @@ views:
               rules.
 
               </ha-alert>
-          - type: entities
-            entities:
-              - entity: input_number.hpvc_pv_limiting_price
-                name: PV limit price
-              - entity: input_number.hpvc_battery_price_hysteresis
-                name: Price hysteresis
-            show_header_toggle: false
         grid_options:
           columns: 4
           rows: auto
@@ -3685,12 +5054,12 @@ views:
               content: >-
                 {% set affected =
                 state_attr('binary_sensor.hpvc_maintenance_inverter_warning',
-                'affected_inverters') %}
-                {% set verification =
+                'affected_inverters') %} {% set verification =
                 state_attr('binary_sensor.hpvc_maintenance_inverter_warning',
                 'verification_unavailable_inverters') %}
 
-                <ha-alert title="Maintenance verification unavailable" alert-type="warning">
+                <ha-alert title="Maintenance verification unavailable"
+                alert-type="warning">
 
                 An inverter is unavailable or cannot be verified at full output.
                 If Night Restore already confirmed full output, Maintenance can
@@ -3767,9 +5136,9 @@ views:
                   <ha-alert style="height:104px;box-sizing:border-box;"
                   title="Manual upgrade" alert-type="info">
 
-                  Remove only the HPVC Node-RED flows to make a manual upgrade easier.
-                  Then install the new flow and config, update the dashboard,
-                  reload Home Assistant, and re-enable HPVC.
+                  Remove only the HPVC Node-RED flows to make a manual upgrade
+                  easier. Then install the new flow and config, update the
+                  dashboard, reload Home Assistant, and re-enable HPVC.
 
                   </ha-alert>
               - type: markdown
@@ -3906,12 +5275,10 @@ views:
                       hide_state: true
                       tap_action:
                         action: url
-                        url_path: >-
-                          https://github.com/BioPC/home-pv-control/releases/latest
+                        url_path: https://github.com/BioPC/home-pv-control/releases/latest
                       icon_tap_action:
                         action: url
-                        url_path: >-
-                          https://github.com/BioPC/home-pv-control/releases/latest
+                        url_path: https://github.com/BioPC/home-pv-control/releases/latest
                       hold_action:
                         action: none
                       double_tap_action:
@@ -4013,12 +5380,12 @@ views:
               content: >-
                 {% set affected =
                 state_attr('binary_sensor.hpvc_maintenance_inverter_warning',
-                'affected_inverters') %}
-                {% set verification =
+                'affected_inverters') %} {% set verification =
                 state_attr('binary_sensor.hpvc_maintenance_inverter_warning',
                 'verification_unavailable_inverters') %}
 
-                <ha-alert title="Maintenance verification unavailable" alert-type="warning">
+                <ha-alert title="Maintenance verification unavailable"
+                alert-type="warning">
 
                 An inverter is unavailable or cannot be verified at full output.
                 If Night Restore already confirmed full output, Maintenance can
@@ -4051,7 +5418,7 @@ views:
               </ha-alert>
           - type: markdown
             text_only: true
-            content: '---'
+            content: ---
           - type: markdown
             text_only: true
             content: >-
@@ -4198,15 +5565,15 @@ views:
                 rows: 1
           - type: markdown
             text_only: true
-            content: '---'
+            content: ---
           - type: markdown
             text_only: true
             content: >-
               <ha-alert title="Manual upgrade" alert-type="info">
 
-              Remove only the HPVC Node-RED flows to make a manual upgrade easier.
-              Then install the new flow and config, update the dashboard,
-              reload Home Assistant, and re-enable HPVC. 
+              Remove only the HPVC Node-RED flows to make a manual upgrade
+              easier. Then install the new flow and config, update the
+              dashboard, reload Home Assistant, and re-enable HPVC. 
 
               </ha-alert>
           - type: tile
@@ -4252,7 +5619,7 @@ views:
               rows: 1
           - type: markdown
             text_only: true
-            content: '---'
+            content: ---
           - type: markdown
             text_only: true
             content: >-

@@ -253,6 +253,11 @@ class VersionedStore:
                 payload = raw["payload"]
                 if self.model is ExecutionLedger:
                     payload = migrate_execution_additions(payload)
+                elif (
+                    self.kind == "fake_dispatch"
+                    and self.model.__name__ == "DispatchJournal"
+                ):
+                    payload = migrate_dispatch_bindings(payload)
                 value = self.model.from_dict(payload)
                 if (
                     isinstance(value, ExecutionLedger)
@@ -605,3 +610,23 @@ def migrate_execution_additions(payload):
             },
         )
     return result
+
+
+def migrate_dispatch_bindings(payload):
+    """Read exact dev.5 registrations as non-executable archived bindings."""
+    from dataclasses import fields
+    from .execution.dispatcher import Registration
+
+    if not isinstance(payload, dict) or not isinstance(
+        payload.get("registrations"), list
+    ):
+        return payload
+    expected = {f.name for f in fields(Registration)}
+    rows = []
+    for row in payload["registrations"]:
+        rows.append(
+            {**row, "adapter_binding": None}
+            if isinstance(row, dict) and set(row) == expected - {"adapter_binding"}
+            else row
+        )
+    return {**payload, "registrations": rows}

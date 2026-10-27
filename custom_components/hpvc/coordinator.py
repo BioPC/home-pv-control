@@ -271,6 +271,9 @@ class HpvcCoordinator:
 
     @property
     def migration_state(self):
+        handoff = getattr(self, "handoff", None)
+        if handoff and handoff.current.stage.value != "unassessed":
+            return handoff.current.stage.value
         if any(
             item.stage.value == "config_committed_handoff_pending"
             for item in self.state.imports

@@ -2,8 +2,6 @@
 
 # Troubleshooting
 
-Use the generated support report first. **Executive summary**, **Decision evaluation**, **Sensor health**, **Inverters**, and **Today’s Insights** usually identify the blocking condition quickly.
-
 ## Contents
 
 - [Start here](#start-here)
@@ -122,7 +120,33 @@ When communication returns, HPVC marks the inverter **Recovered** and automatica
 
 ### Inverter targets look wrong
 
-Check inverter count, entity assignment, Full power, Minimum power, current limit, requested target, and Difference from target in the report. A total increase must never reduce an individual inverter, and a total decrease must never raise one.
+Check the effective controller count, slot/entity assignment, Full power, Minimum power, current limit, requested target, and Difference from target in the report. For auto-detected Enphase or OpenDTU/Hoymiles controllers, also inspect `sensor.hpvc_effective_inverter_runtime`. A total increase must never reduce an individual inverter, and a total decrease must never raise one.
+
+## OpenDTU / Hoymiles is not auto-detected
+
+Confirm OpenDTU has MQTT enabled and **Home Assistant MQTT Auto Discovery** enabled, and that Home Assistant's MQTT integration is connected to the same broker. On the Hoymiles inverter device, HPVC expects a writable number whose original role is `limit_nonpersistent_absolute` and whose unit is **W**. The entity may be renamed in Home Assistant; registry-based discovery follows the HA device relationship and original metadata rather than the editable entity ID.
+
+HPVC deliberately ignores `limit_nonpersistent_relative`, `limit_persistent_relative`, `limit_persistent_absolute`, power on/off controls and unrelated MQTT numbers. If Home Assistant registry metadata is unavailable, only the conservative `_limit_nonpersistent_absolute` Watt-number suffix fallback is accepted. Registry/device discovery refreshes every 60 seconds, so allow one refresh after enabling MQTT discovery or reloading OpenDTU.
+
+If ten effective controller slots are already occupied, an additional OpenDTU inverter is rejected instead of creating an eleventh slot. A manually configured instance of the same limit number is deduplicated rather than added again.
+
+If an auto-detected OpenDTU controller shows an unexpected Full/Max power, check whether the OpenDTU device URL is reachable from Node-RED and whether OpenDTU permits unauthenticated read-only API access. HPVC prefers `/api/limit/status` `max_power`; otherwise it uses a cached confirmed OpenDTU value, then the effective slot's manual **Full Limit**. It never uses the HA Number `max` as rated inverter power. If no trusted value exists, the controller shows **Detected — Full Limit required** and is excluded from limiting until you enter the rated Full Limit.
+
+OpenDTU absolute-limit MQTT/HA readback can lag the applied inverter command. HPVC therefore does not declare an OpenDTU write failed before at least 300 seconds. When the optional OpenDTU API is reachable, `limit_set_status = Ok` plus the reported relative limit can confirm the command earlier. Destructive maintenance uses the same API/cache/manual Full Limit source as normal control; if that rated power cannot be established, maintenance stops safely instead of using the HA Number range.
+
+## Enphase DPEL is detected but HPVC does not write a limit
+
+Confirm the Enphase Envoy Installer integration exposes all three entities for the same Envoy: `switch.envoy_*_dpel_enabled`, `number.envoy_*_dpel_limit`, and `select.envoy_*_dpel_mode`. HPVC intentionally refuses the Watt write while DPEL is off or the mode is `Export`; it first requests `on` + `Production` and waits for those states to be observed. If the mode never becomes `Production`, inspect the Enphase integration/Envoy rather than forcing an HPVC write. Version **0.10.2+** is recommended because 0.10.2 includes a DPEL-limit entity fix.
+
+For renamed Enphase entities, check `sensor.hpvc_enphase_registry` and allow the next 60-second refresh. The Node-RED connection needs access to `config/entity_registry/list` and `fire_event`. An unavailable registry retains its previous mapping; suffix-only discovery cannot identify arbitrary renames. Duplicate DPEL roles on a device are rejected. Check the per-slot HPVC Control switch if a discovered controller receives no commands.
+
+If ten HPVC controller slots are already occupied, an additional auto-detected Enphase controller is rejected and reported instead of silently exceeding the existing maximum.
+
+
+
+### DPEL support entity is `unknown` or `unavailable`
+
+HPVC does not send `switch.turn_on`, `select.select_option`, or a DPEL Watt write while the native Enphase enable switch or mode select is `unknown`/`unavailable`. The controller remains pending/resync and resumes naturally after Home Assistant reports valid states. The DPEL mode select must advertise both `Production` and `Export`; if that contract changes, HPVC isolates the controller instead of guessing.
 
 ## Percentage-controlled inverter does not follow the requested Watt target
 
@@ -176,13 +200,25 @@ This can be correct. Charge Priority is **Off** when HPVC intervention is not ne
 
 ## Dashboard and graphs
 
+### Inverter status or control row missing
+
+
+For every visible PV slot, the existing controller fields show the active values directly. Auto-detected Enphase/OpenDTU controllers have their Control method, Limit entity and unit mirrored into those fields while their runtime source remains explicitly auto-detected. Enphase Max/Min power remain manual and are not mirrored from DPEL metadata. For auto-detected controllers, Control method, Limit entity and Limit unit are intentionally read-only. For Enphase, Max power and Min power are always editable/manual. For OpenDTU/Hoymiles, Max power is read-only only when HPVC has a trusted detected maximum; otherwise enter the required rated power there. Min power remains editable. Manual Number controllers remain editable. A counted but unfilled manual slot shows amber **Inverter status: Not configured** and hides the HPVC Control row. Slots outside the effective count remain hidden. **Detected but incomplete** means a manual controller reference is present but needs configuration correction, such as a missing number/readback entity, invalid power range or malformed Action/service JSON. Auto-detected controllers preserve the detected brand as **Hoymiles detected but incomplete** or **Enphase detected but incomplete**. Internally these still use the runtime status `Incomplete`. **Unavailable** means the configured controller exists but its live state is unavailable; its control permission remains editable. For auto-detected controllers, the green `Detected` state is shown with the detected integration brand as **Hoymiles detected** or **Enphase detected**. A green status does not bypass runtime safety checks.
+
+After installing this dashboard revision, reload Home Assistant templates using the normal package update/reload procedure. The existing runtime sensor needs its new `controller_ui_json` attribute before the control rows can appear. JSON-string and native-list attributes are both supported. No new status helper should be created.
+
+Permission Insights appear only for observed changes while Insights is enabled. Initial observation, unchanged timer cycles and discovery/replacement do not create toggle-change messages.
+
+Use the generated support report first. **Executive summary**, **Decision evaluation**, **Sensor health**, **Inverters**, and **Today’s Insights** usually identify the blocking condition quickly.
+
+
 ### Insights card is empty
 
 Confirm that `input_text.hpvc_insight_1` through `input_text.hpvc_insight_10` exist, deploy the supplied flow, and wait for the next evaluation. The current-day journal is restored from `hpvc-data/runtime-history.json` when the supported Home Assistant configuration mount is writable.
 
 ### Live Inputs does not show inverter 6–10
 
-Rows appear only for slots included by `input_number.hpvc_inverter_count`.
+Rows follow the effective runtime slot map. Manual slots come from `input_number.hpvc_inverter_count`; complete auto-detected Enphase DPEL and OpenDTU/Hoymiles controllers can reuse empty Number slots or extend the displayed rows up to the shared ten-controller maximum. If expected rows are missing, check `sensor.hpvc_effective_inverter_runtime` and its `runtime_json` attribute, then verify the relevant limit/readback entity is numeric.
 
 ### Price Zones in older or custom dashboards
 
@@ -192,7 +228,7 @@ To have Smart Update manage the dashboard automatically, switch to the file-back
 
 ### Mobile report navigation buttons appear only after refresh
 
-Use the current v1.5.6 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
+Use the current v1.6.0 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
 
 ## Accuracy diagnostics
 
@@ -276,7 +312,7 @@ For deeper telemetry, cutoff, persistence, attribution, and report semantics, se
 
 ## Node-RED latency or heap growth
 
-v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test the current v1.5.6 build unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
+v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test the current v1.6.0 build unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
 
 The runtime stores bounded diagnostics in the Node-RED global context key `homePvControlPerformanceDiagnostics`. It contains the latest cycle total, maximum and rolling average evaluation time, expanded per-stage timings for cooldown gates, battery-capacity learning, HBC charge priority, final-target calculation, transition logging, inverter service-call preparation and Insights/diagnostics, and—when the Function sandbox permits it—a memory sample no more than once per minute. No per-cycle timing or heap history is retained by this diagnostic.
 
@@ -369,11 +405,11 @@ This mechanism is automatic for future HPVC-owned helpers and template entities 
 
 ### Update activation pending remains after the update already completed
 
-Update to v1.5.6 or later. v1.5.5 could leave the runtime gate stuck if the durable update transaction had already finalized but Home Assistant restored `input_boolean.hpvc_update_reload_required` / `input_boolean.hpvc_update_in_progress` stale, or Node-RED retained its local update latch. v1.5.6 detects that mismatch and reruns the idempotent finalizer, verifies both HA update booleans are Off, restores the saved HPVC enabled/disabled intent, and clears the local Node-RED update state. Do not delete recovery metadata or force-enable HPVC while a genuine incomplete transaction is still present.
+Update to v1.6.0 or later. v1.5.5 could leave the runtime gate stuck if the durable update transaction had already finalized but Home Assistant restored `input_boolean.hpvc_update_reload_required` / `input_boolean.hpvc_update_in_progress` stale, or Node-RED retained its local update latch. v1.6.0 detects that mismatch and reruns the idempotent finalizer, verifies both HA update booleans are Off, restores the saved HPVC enabled/disabled intent, and clears the local Node-RED update state. Do not delete recovery metadata or force-enable HPVC while a genuine incomplete transaction is still present.
 
-If the update helpers are still stale but `transaction.json` is missing, v1.5.6 also has a conservative orphan-recovery path. It clears the stale update helpers only when no local update/destructive phase is active, no updater/reclaim/fresh activation lock is present, and the managed `/config/packages/hpvc_config.yaml` independently verifies as v1.5.6. The in-progress helper is cleared first and the runtime activation gate last, then both are verified. If any of those safety checks fail, HPVC leaves the gate in place.
+If the update helpers are still stale but `transaction.json` is missing, v1.6.0 also has a conservative orphan-recovery path. It clears the stale update helpers only when no local update/destructive phase is active, no updater/reclaim/fresh activation lock is present, and the managed `/config/packages/hpvc_config.yaml` independently verifies as v1.6.0. The in-progress helper is cleared first and the runtime activation gate last, then both are verified. If any of those safety checks fail, HPVC leaves the gate in place.
 
-If v1.5.6 still remains pending after those checks, preserve `/config/hpvc-data/update-recovery/` and inspect `transaction.json`, `reload-readiness.json` and any update/activation lock before manual cleanup.
+If v1.6.0 still remains pending after those checks, preserve `/config/hpvc-data/update-recovery/` and inspect `transaction.json`, `reload-readiness.json` and any update/activation lock before manual cleanup.
 
 ## Manual upgrade / Node-RED flow removal
 
@@ -407,9 +443,9 @@ This can be normal while an inverter command or verification is still active.
 
 ### WebSocket error: request requires a `type`
 
-Current v1.5.6 rebuilds a clean `config/entity_registry/list` WebSocket payload immediately before the entity-registry API node and uses the live-proven per-entity removal payload for `config/entity_registry/remove`.
+Current v1.6.0 rebuilds a clean `config/entity_registry/list` WebSocket payload immediately before the entity-registry API node and uses the live-proven per-entity removal payload for `config/entity_registry/remove`.
 
-If this error appears with a modified/older flow, re-import the complete current v1.5.6 flow rather than rewriting the registry API node manually.
+If this error appears with a modified/older flow, re-import the complete current v1.6.0 flow rather than rewriting the registry API node manually.
 
 ### Node-RED Global Context Store is disabled
 
@@ -430,14 +466,14 @@ A Node-RED cleanup failure does not block deletion of HPVC-owned files/data. If 
 
 ### Reinstall restores old settings
 
-Current v1.5.6 full uninstall resets the complete HPVC helper set to fresh-install defaults and waits 15 seconds for RestoreEntity persistence before entity-registry removal.
+Current v1.6.0 full uninstall resets the complete HPVC helper set to fresh-install defaults and waits 15 seconds for RestoreEntity persistence before entity-registry removal.
 
 If an older or interrupted uninstall left stale values:
 
-1. install/deploy the current complete v1.5.6 package;
+1. install/deploy the current complete v1.6.0 package;
 2. run **Uninstall HPVC** again and let it complete;
 3. restart Home Assistant after the final Inputs tab disappears;
-4. reinstall v1.5.6.
+4. reinstall v1.6.0.
 
 A normal update intentionally preserves helper values; only the full uninstall performs the clean-reset sequence.
 
@@ -450,6 +486,22 @@ HPVC protects the handoff with a 45-second verification lease. While the externa
 HPVC checks communication freshness as well as numeric state. Power/inverter observations use `sensor.hpvc_source_freshness`, a Home Assistant template sensor that refreshes every 30 seconds and reads HA-core `last_reported` timestamps directly. Node-RED rejects the data if that snapshot itself stops updating, and it deliberately never uses `last_updated` as a heartbeat for constant valid values. Market/all-in price sensors have a longer scheduled-data window. Unknown freshness fails safe until Home Assistant supplies a valid report timestamp.
 
 
+### Disable remains pending after an inverter disappears
+
+v1.6.0 retains the original per-inverter restore obligations. Restore the missing inverter's numeric feedback and confirm its applied full-output limit; a healthy/full second inverter cannot prove that the missing one restored. Action/service adapters without independent readback remain unverified. If you intentionally replaced an obligated adapter, check the old physical device before re-enabling and starting a new disable attempt with the new configuration.
+
+### Inverter dispatch recovery required
+
+This status means retained dispatcher state cannot be tied to a live call in the current Node-RED process. HPVC deliberately holds both inverter writes and maintenance. A timeout, re-import or clearing an error notification does not establish that Home Assistant cancelled its action.
+
+1. Keep HPVC master control **off**. Inspect Home Assistant scripts, integration jobs and the Node-RED Action node. Stop and independently verify completion/cancellation of every outstanding HPVC inverter action. Check every configured inverter's actual applied limit through independent live readback; do not trust the HPVC command cache. If you cannot establish this, leave the dispatcher held.
+2. Only after those checks, use Node-RED's global context sidebar to remove **only** `homePvControlAdapterScheduler` from the configured context store. Do not reset dispatch/generation counters, the runtime journal, ownership metadata or update-recovery files.
+3. Deploy the complete corrected v1.6.0 flow and allow a fresh evaluation with master control still off. Confirm that any required full-limit restoration finishes and that fresh per-inverter readback proves completion before enabling control or retrying maintenance.
+
+A full restart with volatile context cannot retain evidence of HA work that survives Node-RED. Perform the same independent action and limit checks before resuming after an interrupted call. Test your context provider and adapter completion behavior in staging; service acknowledgement is not hardware confirmation.
+
+### An adapter sequence is waiting for a service call
+
+The v1.6.0 dispatcher waits for the current Home Assistant call's success/error callback before issuing another inverter call. This prevents an old delayed main action from overwriting a newer restore. Inspect the Action node and integration for the unresolved service. Do not add an overlapping bypass or assume an elapsed timeout cancels a command already accepted by the integration. Identical restore requests reuse the live sequence, so the normal control timer does not restart a slow pre-action. Smart Update, uninstall and flow removal wait for this work even if a verification timer expires or an older Night Restore proof exists. After a warm partial deployment, the current call must still drain before fresh work proceeds. If the live lease cannot be established after a restart or replacement, follow the recovery procedure below.
+
 [← README](../README.md) · [Installation](01-installation.md) · [Configuration](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
-
-

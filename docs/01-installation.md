@@ -110,13 +110,15 @@ Importing and deploying the flow **after** the Home Assistant restart is recomme
 
 ## Step 5 — Configure HPVC
 
-Open the always-visible **Settings** tab and configure the required control paths:
+Open the always-visible **Settings** tab and configure the required control inputs:
 
 - grid-power sensor;
 - market/export-price sensor;
 - all-in-price sensor;
 - PV-power sensor;
-- each configured inverter control path.
+- each manual Number-entity or Action/service inverter path.
+
+A complete supported Enphase DPEL triplet is discovered automatically; an Enphase-only installation does not need a placeholder/manual inverter entity. Supported Hoymiles/OpenDTU inverters can also be discovered automatically when OpenDTU MQTT and **Home Assistant MQTT Auto Discovery** are enabled and Home Assistant exposes the inverter's non-persistent absolute limit as a Watt `number.*`. Auto-detected Envoys and OpenDTU inverter devices share the same ten-controller maximum as manual slots.
 
 Review the shipped thresholds and optional HBC settings before enabling any behavior that depends on them.
 
@@ -136,9 +138,10 @@ Confirm that:
 - the **Home PV Control** dashboard opens;
 - Node-RED is deployed without missing HPVC helper/entity errors;
 - the configured live inputs are valid;
-- each inverter control path is valid.
+- each effective inverter control path is valid; for Enphase DPEL, confirm the native enable switch, Watt limit number and Production/Export mode select are all present.
+- for automatic OpenDTU/Hoymiles discovery, confirm OpenDTU MQTT Auto Discovery is enabled, the MQTT integration is connected, and the inverter device exposes a writable non-persistent absolute limit number in watts.
 
-HPVC enables automatically once all required live inputs and control settings are valid.
+HPVC enables automatically once all required live inputs and effective controller paths are valid.
 
 For additional verification, generate an HPVC support report from the dashboard and review the live status, sensor health, inverter status and current control settings.
 
@@ -171,7 +174,7 @@ Smart Update uses Node-RED API v2 revision checks and deploys modified flows. Co
 
 Private transaction metadata and original/intended files are kept in `/config/hpvc-data/update-recovery/`. If an update is interrupted or rollback cannot be verified, HPVC remains disabled and the backups remain available. Retrying Smart Update first attempts recovery of an unfinished transaction; after verified recovery, retry again to perform a fresh update. If the detached updater terminates after safe shutdown has authorized launch but before flow replacement, a later button press uses a recovery-only path. Repeated clicks while safe shutdown is still restoring/confirming PV or HBC state are ignored and cannot reach the installer. Recovery-only mode cannot start a fresh installation when no interrupted transaction exists. The launch guard reconciles terminal HA status with its local latch, and a filesystem process lock prevents a second updater writer from starting while another updater process is still active. If HPVC files/flows were changed outside the transaction, recovery refuses to overwrite them. Inspect the notification and backups before making a manual repair.
 
-If a manual reinstall or partial restore leaves the update helpers active but `transaction.json` is no longer present, v1.5.6 performs a separate conservative orphan-state check. It will clear those stale helpers only when no local destructive/update phase is active, no updater/reclaim/fresh activation lock is present, and the managed `/config/packages/hpvc_config.yaml` independently verifies as v1.5.6. Otherwise the activation gate remains in place for manual investigation.
+If a manual reinstall or partial restore leaves the update helpers active but `transaction.json` is no longer present, v1.6.0 performs a separate conservative orphan-state check. It will clear those stale helpers only when no local destructive/update phase is active, no updater/reclaim/fresh activation lock is present, and the managed `/config/packages/hpvc_config.yaml` independently verifies as v1.6.0. Otherwise the activation gate remains in place for manual investigation.
 
 
 ### Quick Reload package-entity readiness
@@ -182,7 +185,7 @@ After **Quick Reload Home Assistant**, HPVC waits for Home Assistant to expose t
 
 The readiness inventory is stored only in `/config/hpvc-data/update-recovery/reload-readiness.json`; no extra Home Assistant helper is created for this mechanism. HPVC template entities use explicit `default_entity_id` values so Smart Update never has to infer an entity ID from `unique_id`. Verified rollback deletes the pending readiness metadata so an aborted update cannot leave stale activation requirements behind.
 
-v1.5.6 also reconciles a completed transaction if Home Assistant restores `hpvc_update_reload_required` or `hpvc_update_in_progress` stale, or if Node-RED retains its local update latch. The durable transaction remains authoritative: HPVC reruns the existing idempotent finalizer only when a finalized transaction still has stale activation/update state, verifies both HA update booleans are Off, restores the saved master intent, and clears the local Node-RED update phase/timestamps. Genuine incomplete transactions and `awaiting_quick_reload` are not bypassed.
+v1.6.0 also reconciles a completed transaction if Home Assistant restores `hpvc_update_reload_required` or `hpvc_update_in_progress` stale, or if Node-RED retains its local update latch. The durable transaction remains authoritative: HPVC reruns the existing idempotent finalizer only when a finalized transaction still has stale activation/update state, verifies both HA update booleans are Off, restores the saved master intent, and clears the local Node-RED update phase/timestamps. Genuine incomplete transactions and `awaiting_quick_reload` are not bypassed.
 
 ### Smart Update trust model
 
@@ -296,7 +299,4 @@ If you installed `hpvc_config.yaml` anywhere other than `/config/packages/hpvc_c
 - [Understand the control sequence](03-how-it-works.md)
 - [Diagnose problems](04-troubleshooting.md)
 
-
 [← README](../README.md) · [Installation](01-installation.md) · [Configuration](02-configuration.md) · [How it works](03-how-it-works.md) · [Troubleshooting](04-troubleshooting.md) · [Inverter compatibility](05-inverter-compatibility.md)
-
-

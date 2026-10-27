@@ -279,16 +279,19 @@ class SafetyTests(unittest.TestCase):
             tree = ast.parse(path.read_text(encoding="utf-8"))
             for n in ast.walk(tree):
                 if isinstance(n, ast.Attribute):
+                    forbidden = {
+                        "services",
+                        "async_call",
+                        "post",
+                        "put",
+                        "delete",
+                        "send_command",
+                    }
+                    if path == base / "execution/ha_executor.py":
+                        forbidden -= {"services", "async_call"}
                     self.assertNotIn(
                         n.attr,
-                        (
-                            "services",
-                            "async_call",
-                            "post",
-                            "put",
-                            "delete",
-                            "send_command",
-                        ),
+                        forbidden,
                         str(path),
                     )
         tree = ast.parse((base / "execution/executor.py").read_text(encoding="utf-8"))
