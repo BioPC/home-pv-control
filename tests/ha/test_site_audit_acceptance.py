@@ -28,7 +28,7 @@ async def test_actual_HA_audit_cannot_mutate_any_installation_boundary(hass):
     before_states = {s.entity_id: s.as_dict() for s in hass.states.async_all()}
     before_er = dict(registry.entities)
     before_dr = dict(devices.devices)
-    before_cfg = copy.deepcopy(entry.data)
+    before_cfg = copy.deepcopy(dict(entry.data))
     before_handoff = runtime.handoff.current
     before_ledger = runtime.ledger.current
     before_manager = runtime.manager.current
@@ -139,6 +139,7 @@ async def test_external_collector_against_contained_actual_HA_server(
     hass, hass_client, hass_access_token
 ):
     assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, "websocket_api", {})
     hass.states.async_set("input_number.hpvc_inverter_count", "0")
     http = await hass_client()
     base = str(http.server.make_url("/")).rstrip("/")

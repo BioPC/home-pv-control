@@ -355,3 +355,15 @@ class OriginTests(unittest.TestCase):
         b["opendtu"][0]["payload"]["112233445566"]["limit_set_status"] = "success"
         r = audit_site(b, now=NOW)
         self.assertFalse(r["expected_controllers"][0]["verified"])
+
+
+class HelperCredentialTests(unittest.TestCase):
+    def test_token_named_helper_and_embedded_authenticated_URL_are_redacted(self):
+        data = {
+            "entity_id": "input_text.hpvc_access_token",
+            "state": "private-helper-value",
+            "note": "failure at http://user:password@host/path?secret=private-query",
+        }
+        text = json.dumps(redact(data))
+        for value in ("private-helper-value", "user:password", "private-query"):
+            self.assertNotIn(value, text)

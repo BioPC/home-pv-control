@@ -47,8 +47,26 @@ def render_report(r):
         ),
     )
     section(6, "HBC STATUS", r["hbc"])
-    section(7, "IMPORT PREVIEW", r["import_preview"])
-    section(8, "ENTITY-REGISTRY MIGRATION", r["registry_migration"])
+    section(
+        7,
+        "IMPORT PREVIEW",
+        dict(
+            stage=r["import_preview"]["stage"],
+            committed=False,
+            issues=r["import_preview"]["issues"],
+            setting_rows=len(r["import_preview"]["settings"]),
+            details="Every setting/value/disposition/collision is in import-preview.csv; no import is committed",
+        ),
+    )
+    section(
+        8,
+        "ENTITY-REGISTRY MIGRATION",
+        dict(
+            intended_entity_count=len(r["registry_migration"]),
+            collisions=[x for x in r["registry_migration"] if x["collision"]],
+            details="Exact proposal records are in registry-proposal.json; unoccupied intended IDs are not proof of ownership and no move is executed",
+        ),
+    )
     section(
         9,
         "EXTERNAL REFERENCES",

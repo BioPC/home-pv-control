@@ -62,6 +62,14 @@ def redact(value, *, path="", changes=None, depth=0):
             if not isinstance(k, str) or len(k) > 512:
                 raise SchemaError("Invalid audit key")
             target = path + "/" + k
+            if (
+                k == "state"
+                and isinstance(value.get("entity_id"), str)
+                and SECRET.search(value["entity_id"])
+            ):
+                result[k] = "[REDACTED]"
+                changes.append(target)
+                continue
             if k not in (
                 "authorization_design",
                 "production_transport_authorized",
@@ -99,8 +107,31 @@ def redact(value, *, path="", changes=None, depth=0):
             if cleaned != value:
                 changes.append(path)
             return cleaned
+
+        # Scrub credentials even when a URL is embedded in an error/helper string.
+        def scrub_uri(match):
+            raw = match.group(0)
+            if raw.startswith(("http://", "https://")):
+                return clean_url(raw)
+            try:
+                part = urlsplit(raw)
+                return (
+                    part.scheme + "://[REDACTED]@" + (part.hostname or "")
+                    if part.username or part.password
+                    else raw
+                )
+            except ValueError:
+                return "[REDACTED_URL]"
+
+        uri_cleaned = re.sub(
+            r"[a-zA-Z][a-zA-Z0-9+.-]*://[^\s\"'<>()]+", scrub_uri, value
+        )
+        if uri_cleaned != value:
+            changes.append(path)
         # Common embedded credentials in non-JSON free text never leave the audit.
-        cleaned = re.sub(r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]+", r"\1[REDACTED]", value)
+        cleaned = re.sub(
+            r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]+", r"\1[REDACTED]", uri_cleaned
+        )
         cleaned = re.sub(
             r"(?i)((?:password|token|secret|api_key)\s*[:=]\s*)[^\s,;]+",
             r"\1[REDACTED]",

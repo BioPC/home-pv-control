@@ -356,7 +356,7 @@ def audit_site(raw, *, now):
         v = row.view
         c = v.candidate
         er = reg_map.get(v.configuration.limit_number)
-        dm = device_meta.get(c.device_id, {}) if c else {}
+        dm = device_meta.get(c.device_id if c else er.device_id if er else "", {})
         api = api_identity.get(row.uid)
         ambiguity = []
         ownership = bool(
@@ -393,6 +393,12 @@ def audit_site(raw, *, now):
             )
             if len(serials) != 1 or c.serial not in serials:
                 ambiguity.append("Physical serial provenance is missing or ambiguous")
+        if not ownership and not (c and c.kind == "hoymiles"):
+            ambiguity.append(
+                "Manual/controller registry and physical ownership provenance is incomplete"
+            )
+        if not v.independently_verifiable:
+            ambiguity.append("Controller does not provide independent verification")
         if not v.valid or not v.available:
             ambiguity.append(
                 "Controller is invalid, unavailable or stale under the native adapter"
@@ -424,7 +430,7 @@ def audit_site(raw, *, now):
             writable_entity=v.configuration.limit_number,
             device_id=c.device_id if c else v.configuration.identity.device_id,
             serial=c.serial if c else None,
-            metadata_verified=bool(c and c.metadata_verified and ownership),
+            metadata_verified=bool(ownership and (c.metadata_verified if c else True)),
             readback_source=v.current_source.value,
             available=v.available,
             opted_out=not row.participating,
@@ -453,6 +459,23 @@ def audit_site(raw, *, now):
                 "Fresh exact registry, device/config-entry and independent OpenDTU capture",
                 item["writable_entity"],
             )
+    if fleet.faults or fleet.overflow_uids:
+        issue(
+            "BLOCKED",
+            "fleet_ambiguity",
+            "Native fleet faults/overflow: "
+            + str(fleet.faults)
+            + " "
+            + str(fleet.overflow_uids),
+            "Resolve every effective controller binding and native fleet fault",
+        )
+    if legacy_values.get("input_boolean.hpvc_enabled") not in ("on", "off"):
+        issue(
+            "UNKNOWN",
+            "legacy_master_intent",
+            "Current legacy master intent is unobserved",
+            "Current input_boolean.hpvc_enabled state",
+        )
     expected = []
     for entity in EXPECTED:
         matches = [
@@ -625,6 +648,15 @@ def audit_site(raw, *, now):
     hbc["negative_price_permission"] = legacy_values.get(
         "input_boolean.hpvc_negative_price_hbc_charge"
     )
+    if hbc["permission"] not in ("on", "off") or hbc[
+        "negative_price_permission"
+    ] not in ("on", "off"):
+        issue(
+            "UNKNOWN",
+            "HBC_permissions",
+            "Legacy HBC permission intent is not fully observed",
+            "Both current HPVC HBC permission helpers",
+        )
     hbc["override_ownership"] = (
         bridge.get("hbc_override_owned") if bridge.get("complete") is True else None
     )
@@ -732,6 +764,8 @@ def audit_site(raw, *, now):
             physical_write_sensor_observed=auth_state,
         ),
         legacy=dict(
+            user_reported_version=legacy.get("user_reported_version"),
+            user_reported_runtime=legacy.get("user_reported_runtime"),
             version=version,
             fingerprint=legacy.get("fingerprint"),
             identity_verified=flow_ok,
