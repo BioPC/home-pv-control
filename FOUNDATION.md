@@ -1,6 +1,6 @@
-# HPVC 2.0 fake dispatcher — 2.0.0-dev.5
+# HPVC 2.0 guarded HA executor — 2.0.0-dev.6
 
-This development build extends the accepted dev.1 foundation with read-only controller discovery, immutable command-plan representation, independent evidence interpretation, recovery classification and fleet diagnostics. Native inverter and HBC writes do not exist. The physical-write authorization sensor is always Off, including after enable, configuration edits, import, restart and reload.
+This development build extends the accepted dev.1 foundation with read-only controller discovery, immutable command-plan representation, independent evidence interpretation, recovery classification and fleet diagnostics. Actuator-capable HA transport exists behind a permanently false production admission gate. The physical-write authorization sensor is always Off, including after enable, configuration edits, import, restart and reload.
 
 ## Installation and scope
 
@@ -26,7 +26,7 @@ Each envelope contains kind, schema version, revision, payload and SHA-256 paylo
 
 Commits serialize under an async lock, validate before writing, fsync a same-directory temporary file, atomically replace the destination and sync the parent directory on POSIX. Windows testing covers file fsync and replacement; it does not prove universal power-loss durability. A commit failure poisons the store until a validated reload. Cancellation drains outstanding filesystem work before returning.
 
-Execution transitions are data representation only: there is no service executor. Armed/in-flight work becomes unknown after continuity loss; restore obligations survive removal from active configuration. Unknown execution blocks conflicting armed work. Referenced proof cannot be evicted to satisfy evidence retention. Evidence is capped at 128; terminal operation retention is bounded. Command-cache/startup assumptions cannot be verified evidence.
+The dispatcher can use the guarded HA executor only through explicit test injection; ordinary runtime remains non-actuating. Armed/in-flight work becomes unknown after continuity loss; restore obligations survive removal from active configuration. Unknown execution blocks conflicting armed work. Referenced proof cannot be evicted to satisfy evidence retention. Evidence is capped at 128; terminal operation retention is bounded. Command-cache/startup assumptions cannot be verified evidence.
 
 - `_policy.json`: `policy_memory` envelope; accepted policy/HBC memory, generation, boot clock and consumed probe-event identities.
 - `_accepted_commands.json`: `accepted_commands` envelope; execution-owned simulated events only. Runtime policy evaluation never creates accepted commands. Missing companion files and corruption fail closed.
@@ -73,3 +73,14 @@ The dev.4 raw HBC evaluator, durable memory adapter, authoritative execution sna
 - https://developers.home-assistant.io/docs/config_entries_index/
 - https://contributors.home-assistant.io/core/integrations/config-entries/
 - https://github.com/home-assistant/core/blob/dev/homeassistant/helpers/entity_platform.py
+
+
+## Dev.6 guarded Home Assistant transport
+
+`execution/ha_executor.py` contains the sole ServiceRegistry invocation. The dispatcher registers immutable compiled adapter plans; the executor never re-templates data or rebuilds commands. Ordinary construction has no test capability and `production_transport_admitted()` always returns false independently of enabled intent. Physical-write authorization stays Off. No ownership transfer or legacy fencing is implemented.
+
+Dedicated Python tests inject a non-serializable capability that maps every logical service to `hpvc_transport_test`. Even this capability cannot route to real actuator domains. No state, flow, YAML, import, service or event installs a capability.
+
+The executor supports approved Number, Action/service, Enphase and four ordered HBC selector steps. Before invocation it rechecks owner, plan, operation, sequence, live adapter/configuration, opt-out, maintenance, target availability and admission. Service return records transport completion only. Independent observations remain required for verification. Timeout and unload preserve possibly issued work without cancelling its service handler or replaying it. A per-owner transport journal retains issued timestamps, payloads and result/exception details; late callbacks cannot authorize a new owner.
+
+All HBC source files remain byte-identical to approved dev.5. Production cutover, legacy fencing, ownership commit and live hardware tests remain deferred.

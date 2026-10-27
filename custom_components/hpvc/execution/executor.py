@@ -23,6 +23,7 @@ class ExecutionRequest(Record):
 class IssueReceipt(Record):
     request: ExecutionRequest
     simulated: bool = True
+    issued: Clock | None = None
 
 
 @dataclass(frozen=True)
@@ -30,6 +31,8 @@ class Completion(Record):
     request: ExecutionRequest
     result: str
     observed: Clock
+    exception_type: str = ""
+    exception_message: str = ""
 
     def __post_init__(self):
         if self.result not in ("success", "transport_failure", "outcome_unknown"):

@@ -228,9 +228,17 @@ class SafetySourceTests(unittest.TestCase):
             tree = ast.parse(path.read_text(encoding="utf-8"))
             for node in ast.walk(tree):
                 if isinstance(node, ast.Attribute):
+                    forbidden = {
+                        "services",
+                        "async_call",
+                        "call_service",
+                        "mqtt_publish",
+                    }
+                    if path == base / "execution/ha_executor.py":
+                        forbidden -= {"services", "async_call"}
                     self.assertNotIn(
                         node.attr,
-                        {"services", "async_call", "call_service", "mqtt_publish"},
+                        forbidden,
                         str(path),
                     )
                 if isinstance(node, (ast.Import, ast.ImportFrom)):
@@ -255,7 +263,10 @@ class SafetySourceTests(unittest.TestCase):
         # bans above remain unchanged and apply to every new execution module.
         dispatchers = list(base.rglob("dispatcher.py"))
         self.assertEqual(dispatchers, [base / "execution/dispatcher.py"])
-        self.assertIn("type(executor) is not FakeExecutor", dispatchers[0].read_text(encoding="utf-8"))
+        self.assertIn(
+            "type(executor) is not FakeExecutor",
+            dispatchers[0].read_text(encoding="utf-8"),
+        )
         # Concrete adapters may construct immutable plans, but have no execution methods.
         forbidden_methods = {
             "execute",

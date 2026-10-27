@@ -42,7 +42,11 @@ class OperationState(StrEnum):
 
 OPERATION_TRANSITIONS = {
     OperationState.PREPARED: {OperationState.ARMED, OperationState.SUPERSEDED},
-    OperationState.ARMED: {OperationState.IN_FLIGHT, OperationState.UNKNOWN},
+    OperationState.ARMED: {
+        OperationState.IN_FLIGHT,
+        OperationState.UNKNOWN,
+        OperationState.SUPERSEDED,
+    },
     OperationState.IN_FLIGHT: {
         OperationState.SERVICE_COMPLETED,
         OperationState.SERVICE_FAILED,
@@ -203,6 +207,14 @@ class PhysicalOperation(Record):
             and self.transport != TransportStatus.NOT_SENT
         ):
             raise SchemaError("Only unsent work can be superseded")
+        if (
+            self.state == OperationState.SUPERSEDED
+            and self.armed_at_utc is not None
+            and not (self.reason or "").startswith("executor_confirmed_not_issued:")
+        ):
+            raise SchemaError(
+                "Armed supersession requires executor evidence of no invocation"
+            )
 
 
 @dataclass(frozen=True)

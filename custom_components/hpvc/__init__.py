@@ -210,6 +210,11 @@ async def async_setup_entry(hass, entry):
             http_session_factory=http_session_factory,
             policy_runtime=policy_runtime,
         )
+        from .execution.ha_executor import HaServiceExecutor
+
+        coordinator.service_executor = HaServiceExecutor(hass)
+        owner.add_cleanup(coordinator.service_executor.revoke_admission)
+        owner.add_async_cleanup(coordinator.service_executor.close)
         entry.runtime_data = coordinator
         registry[entry.entry_id] = coordinator
         current_unsub = [None]
