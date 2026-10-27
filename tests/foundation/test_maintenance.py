@@ -254,3 +254,17 @@ class MaintenanceTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(
             (await h.maintenance.evaluate(h.clock(182), new_token)).authorized
         )
+
+    async def test_unknown_plant_ownership_cannot_authorize_even_empty_maintenance(
+        self,
+    ):
+        from custom_components.hpvc.execution.models import HandoffRecord
+
+        h = self.h
+        await h.proposal(controllers=[])
+        token = await self.request(views=[])
+        await self.disabled(token, controllers=[])
+        await h.ledger.update(lambda l: replace(l, ownership=HandoffRecord()))
+        decision = await h.maintenance.evaluate(h.clock(2), token)
+        self.assertFalse(decision.authorized)
+        self.assertIn("plant_ownership_unresolved", decision.reasons)

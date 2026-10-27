@@ -469,3 +469,20 @@ class AdapterDispatchTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(q.hbc.override.actions)
         self.assertEqual(q.hbc.memory.override.previous_strategy, owned.saved_strategy)
         self.assertFalse(q.hbc.memory.override.forced_write_issued)
+
+    async def test_safe_disable_drains_remaining_steps_of_an_issued_batch(self):
+        h = self.h
+        await self.prepare_action()
+        pre = await h.dispatch.pump_lane(Lane.INVERTER, h.clock())
+        await h.maintenance.request("disable", True, h.views, h.clock(1))
+        same_batch = [
+            o
+            for o in h.ledger.current.operations
+            if o.batch_id == h.dispatch._op(pre.operation_id).batch_id
+        ]
+        self.assertTrue(
+            any(o.step_phase == "post" and o.state == S.PREPARED for o in same_batch)
+        )
+        self.assertTrue(
+            any(o.step_phase == "main" and o.state == S.PREPARED for o in same_batch)
+        )

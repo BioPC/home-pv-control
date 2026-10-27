@@ -21,6 +21,7 @@ from .models import (
     RestoreObligation,
     ObligationState,
     VerificationEvidence,
+    OwnershipState,
 )
 from .executor import FakeExecutor, ExecutionRequest, QuiescenceReceipt
 from .facts import AcceptedCommand, AcceptedController, CommandOutcome
@@ -552,6 +553,12 @@ class Dispatcher:
         try:
             async with self._lanes[lane]:
                 self._healthy()
+                if self.ledger.current.ownership.state not in (
+                    OwnershipState.READY_DISABLED,
+                    OwnershipState.NATIVE_OWNER_COMMITTED,
+                    OwnershipState.NATIVE_ACTIVE,
+                ):
+                    return None
                 if self._lane_busy(lane):
                     return None
                 item = self._next(lane)

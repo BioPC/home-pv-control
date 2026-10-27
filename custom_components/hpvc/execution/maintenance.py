@@ -14,6 +14,7 @@ from .models import (
     OperationState as S,
     Lane,
     TransportStatus as T,
+    OwnershipState,
 )
 from .settling import SettlingOutcome
 
@@ -119,8 +120,17 @@ class Maintenance:
             lambda l: replace(l, maintenance=m, restore_obligations=tuple(obligations))
         )
         # Unsent normal-control work cannot run after a safe-disable transaction.
+        started = {
+            o.batch_id
+            for o in self.ledger.current.operations
+            if o.state not in (S.PREPARED, S.SUPERSEDED)
+        }
         for op in tuple(self.ledger.current.operations):
-            if op.state == S.PREPARED and op.lane == Lane.INVERTER:
+            if (
+                op.state == S.PREPARED
+                and op.lane == Lane.INVERTER
+                and op.batch_id not in started
+            ):
                 await self.ledger.transition_operation(
                     op.operation_id, S.SUPERSEDED, reason="maintenance_safe_disable"
                 )
@@ -377,6 +387,12 @@ class Maintenance:
                 )
             )
             return MaintenanceDecision(M.BLOCKED, False, tuple(reasons))
+        if self.ledger.current.ownership.state not in (
+            OwnershipState.READY_DISABLED,
+            OwnershipState.NATIVE_OWNER_COMMITTED,
+            OwnershipState.NATIVE_ACTIVE,
+        ):
+            reasons.append("plant_ownership_unresolved")
         if not m.post_disable_evaluation_id:
             reasons.append("post_disable_evaluation_required")
         if (
