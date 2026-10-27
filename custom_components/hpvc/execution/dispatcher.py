@@ -1052,6 +1052,11 @@ class Dispatcher:
             op.configuration_reference,
             "unresolved_simulated_operation",
             reg.full_w,
+            state=ObligationState.FAILED
+            if op.state in (S.SERVICE_FAILED, S.VERIFICATION_FAILED)
+            else ObligationState.UNKNOWN
+            if op.state in (S.UNKNOWN, S.RECOVERY_REQUIRED)
+            else ObligationState.UNRESOLVED,
             operation_ids=(op.operation_id,),
             established_at_utc=clock.utc,
             owner_epoch=op.owner_epoch,

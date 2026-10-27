@@ -475,3 +475,50 @@ class Maintenance:
             and not self._conflicting(o, proof.received_at_utc)
             for o in l.restore_obligations
         )
+
+    async def recover_request(self, old_owner_token, proposal, clock):
+        """Explicit new request after BLOCKED; never resume an old authorization.
+
+        It retains every obligation and saved intent. A caller must explicitly
+        request recovery with the existing transaction token and a fresh accepted
+        disabled observation. Transport uncertainty still needs separate proof.
+        """
+        self.dispatcher._healthy()
+        old = self.ledger.current.maintenance
+        if (
+            old.state != M.BLOCKED
+            or old.owner_token != old_owner_token
+            or not old_owner_token
+        ):
+            raise SchemaError("Only the blocked transaction token can request recovery")
+        age = clock.age(proposal.clock)
+        if (
+            proposal != self.dispatcher.runtime.last_proposal
+            or proposal.enabled_intent
+            or age is None
+            or age > 10
+        ):
+            raise SchemaError("Recovery needs a fresh accepted disabled observation")
+        token = uuid.uuid4().hex
+        new = MaintenanceRecord(
+            "maintenance:" + token,
+            token,
+            M.RESTORING,
+            old.requested_action,
+            old.saved_enable_intent,
+            tuple(
+                o.obligation_id
+                for o in self.ledger.current.restore_obligations
+                if o.state != O.VERIFIED
+            ),
+            requested_at_utc=clock.utc,
+            post_disable_evaluation_id=proposal.policy.intent.evaluation_id,
+            owner_epoch=self.dispatcher.owner_epoch,
+            requested_monotonic=clock.monotonic,
+            boot_id=clock.boot_id,
+        )
+        await self.ledger.update(lambda l: replace(l, maintenance=new))
+        await self.dispatcher._audit(
+            old.transaction_id or "", "explicit_maintenance_recovery_request", clock
+        )
+        return token
