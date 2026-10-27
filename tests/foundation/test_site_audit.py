@@ -486,3 +486,22 @@ class IndependentHelperHoldTests(unittest.TestCase):
             r = audit_site(b, now=NOW)
             self.assertEqual(r["overall_verdict"], "BLOCKED")
             self.assertEqual(r["legacy"]["helper_indicators"][name], "on")
+
+
+class RetiredReferenceTests(unittest.TestCase):
+    def test_retired_and_unknown_HPVC_references_still_require_manual_review(self):
+        import tempfile
+        from audit_tools.site_audit import references
+
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "user-script.yaml"
+            path.write_text(
+                "entity_id: input_button.hpvc_update\nother: sensor.hpvc_unrecognized_user_entity\n",
+                encoding="utf-8",
+            )
+            rows = references(path)["references"]
+        self.assertTrue(all(r["requires_review"] for r in rows))
+        retired = next(
+            r for r in rows if r["old_entity_id"] == "input_button.hpvc_update"
+        )
+        self.assertEqual(retired["disposition"], "retired_no_native_replacement")

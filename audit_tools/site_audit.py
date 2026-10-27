@@ -38,7 +38,10 @@ def references(path):
             dict(
                 old_entity_id=e,
                 proposed_native_entity=mapping.get(e),
-                requires_review=bool(mapping.get(e) and mapping[e] != e),
+                requires_review=e not in mapping or mapping[e] != e,
+                disposition="retired_no_native_replacement"
+                if e in mapping and mapping[e] is None
+                else "mapping_review",
             )
             for e in found
             if e in mapping or ".hpvc_" in e
@@ -48,7 +51,8 @@ def references(path):
 
 
 def package_ownership(path, bundle):
-    if path.stat().st_size>MAX_BYTES:raise SchemaError('Package copy exceeds bound')
+    if path.stat().st_size > MAX_BYTES:
+        raise SchemaError("Package copy exceeds bound")
     data = path.read_bytes().replace(b"\r\n", b"\n")
     approved = (
         (ROOT / "home assistant/hpvc_config.yaml").read_bytes().replace(b"\r\n", b"\n")
