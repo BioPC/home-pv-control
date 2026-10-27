@@ -1,4 +1,4 @@
-name: Validate native HPVC foundation
+name: Validate native HPVC read-only stages
 on:
   push:
     branches:
@@ -35,9 +35,9 @@ jobs:
       - name: Record installed environment
         run: python -m pip freeze
       - name: Real Home Assistant acceptance
-        run: python -m pytest tests/ha -v --junitxml=phase-a-results.xml
+        run: python -m pytest tests/ha -v --junitxml=acceptance-results.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: phase-a-ha-${{ matrix.ha }}
-          path: phase-a-results.xml
+          name: acceptance-ha-${{ matrix.ha }}
+          path: acceptance-results.xml

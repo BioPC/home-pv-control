@@ -281,6 +281,20 @@ class ExecutionSnapshot(Record):
     unresolved_obligation_ids: tuple[str, ...] = ()
     recovery_required: bool = False
     blocked_reason: str = "foundation_phase_no_actuator_implementation"
+    pending_verification: bool = False
+    settling: bool = False
+    settling_timed_out: bool = False
+    frozen_controller_uids: tuple[str, ...] = ()
+    write_eligible_uids: tuple[str, ...] | None = None
+    maintenance_active: bool = False
+    hbc_restore_pending: bool = False
+    cooldown_until_utc: float = 0.0
+    last_command_delta_w: float | None = None
+    last_command_at_utc: float | None = None
+    last_command_verification_failed: bool = False
+    pending_action: str | None = None
+    pending_since_utc: float | None = None
+    write_lock_reason: str = ""
 
     @property
     def physical_writes_authorized(self) -> bool:

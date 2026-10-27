@@ -1,7 +1,7 @@
 """Foundation constants; there is deliberately no actuator capability."""
 
 DOMAIN = "hpvc"
-VERSION = "2.0.0-dev.2"
+VERSION = "2.0.0-dev.3"
 PLATFORMS = ("sensor", "binary_sensor", "switch", "number", "select", "text")
 MAIN_INTERVAL = 10.0
 STARTUP_DELAY = 5.0

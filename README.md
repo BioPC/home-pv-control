@@ -1,4 +1,4 @@
-> **HPVC 2.0 read-only architecture (2.0.0-dev.2):** This tree includes a native integration for observation, representation and recovery diagnostics.
+> **HPVC 2.0 pure policy/allocation (2.0.0-dev.3):** This tree includes a native integration for observation, recovery diagnostics and a separately callable pure policy/allocation pipeline.
 > Native inverter/HBC writes are hard-disabled. Legacy Node-RED and YAML below remain unchanged as the v1.6.0 reference.
 > Read [FOUNDATION.md](FOUNDATION.md) for installation, scope, storage and validation limits before use.
 
