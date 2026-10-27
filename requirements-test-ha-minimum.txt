@@ -1,0 +1,3 @@
+# HA 2025.12.0 / Python 3.13. aiodns 3.5.0 uses the pycares 4.x result API.
+pytest-homeassistant-custom-component==0.13.298
+pycares==4.11.0
