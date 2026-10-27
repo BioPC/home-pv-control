@@ -382,6 +382,20 @@ class ActionTests(unittest.TestCase):
                     ).valid
                 )
 
+    def test_embedded_numeric_strings_follow_javascript_exponent_thresholds(self):
+        for value, expected in [
+            (0.000001, "0.000001"),
+            (0.0000001, "1e-7"),
+            (1e20, "100000000000000000000"),
+            (1e21, "1e+21"),
+            (-0.0, "0"),
+            (1.25, "1.25"),
+        ]:
+            with self.subTest(value=value):
+                self.assertEqual(
+                    substitute("{{value}} W", {"value": value}), expected + " W"
+                )
+
     def test_recursive_substitution_keeps_unknown(self):
         self.assertEqual(
             substitute(

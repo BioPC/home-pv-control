@@ -1,6 +1,7 @@
 """Generic Action/service DATA plans. This module has no execution interface."""
 
 import re
+from decimal import Decimal
 from ..codec import SchemaError
 from ..control.models import ControllerObservation, LimitUnit, Quality
 from ..storage import strict_json
@@ -24,10 +25,23 @@ TOKEN = re.compile(r"\{\{([a-z_]+)\}\}")
 def js_string(value):
     if value is None:
         return "null"
-    if isinstance(value, float) and value.is_integer():
-        return str(int(value))
     if isinstance(value, bool):
         return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        if value == 0:
+            return "0"
+        if 1e-6 <= abs(value) < 1e21:
+            return (
+                format(Decimal(str(value)), "f").rstrip("0").rstrip(".")
+                if isinstance(value, float) and not value.is_integer()
+                else str(int(value))
+            )
+        raw = str(float(value)).lower()
+        if "e" in raw:
+            mantissa, exponent = raw.split("e")
+            mantissa = mantissa.rstrip("0").rstrip(".") if "." in mantissa else mantissa
+            power = int(exponent)
+            return mantissa + "e" + ("+" if power >= 0 else "-") + str(abs(power))
     return str(value)
 
 
