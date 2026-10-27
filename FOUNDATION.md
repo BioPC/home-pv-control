@@ -1,4 +1,4 @@
-# HPVC 2.0 dry-run legacy handoff — 2.0.0-dev.7
+# HPVC 2.0 read-only site audit — 2.0.0-dev.8
 
 This development build extends the accepted dev.1 foundation with read-only controller discovery, immutable command-plan representation, independent evidence interpretation, recovery classification and fleet diagnostics. Actuator-capable HA transport exists behind a permanently false production admission gate. The physical-write authorization sensor is always Off, including after enable, configuration edits, import, restart and reload.
 
@@ -91,3 +91,10 @@ All HBC source files remain byte-identical to approved dev.5. Production cutover
 The durable migration transaction is implemented separately from production execution ownership. Normal setup loads its record but supplies no mutation driver. Dedicated contained tests exercise detection, safe-disable requests, restoration/quiescence, exact-flow fencing and post-fence validation. Owner-ready is stored separately from the permanently false transport authorization. Restart revokes the in-memory ready claim and requires a fresh challenge-bound source attestation and physical checks.
 
 See [migration-stage7.md](docs/migration-stage7.md). The native dashboard artifact is `home assistant/hpvc_native_dashboard.json`, generated from the actual entity mapping using `scripts/build_native_dashboard.py`. Historical v1.6 release records and flow behavior remain the reference; `DEVELOPMENT.json` identifies the v2 development build. No live migration or production cutover is performed in dev.7.
+
+
+## Dev.8 site-specific audit
+
+The audit is a standalone local export consumer, with an optional strictly read-only HA collector for a separate computer. It is not registered in production HA and requires no native HPVC installation. The production system remains legacy v1.6 / Node-RED. Missing production observations yield UNKNOWN, with no fabricated controller selection or command target.
+
+See [site-audit-stage8.md](docs/site-audit-stage8.md) for exact data requirements, credential redaction, the local collector, authenticated-browser export alternative and report generation. The actual importer and controller discovery run against copied data without store commits. Production admission, HBC/inverter code, ownership engine and all prior tests are unchanged.

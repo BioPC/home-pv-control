@@ -1,3 +1,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Site captures stay local; never publish production exports with development code.
+production-exports/
+site-audit-output/
+ha-site-export*.json
+ha-raw-read*.json

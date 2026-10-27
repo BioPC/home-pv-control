@@ -30,6 +30,8 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Validate v2 development metadata
         run: python scripts/validate_development.py
+      - name: Site audit read-only export and scanner
+        run: node scripts/test_site_audit_tools.cjs
       - name: Legacy migration bridge and contained fencing
         run: node scripts/test_migration_bridge.cjs
       - name: Original v1.6 dispatcher fake characterization

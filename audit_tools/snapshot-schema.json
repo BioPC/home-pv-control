@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hpvc-site-audit-1",
+  "title": "Bounded redacted HPVC site observation export",
+  "type": "object",
+  "required": [
+    "schema",
+    "source",
+    "collected_at_utc"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "hpvc-site-audit/1"
+    },
+    "source": {
+      "enum": [
+        "production_export",
+        "no_production_observations"
+      ]
+    },
+    "collected_at_utc": {
+      "type": "number"
+    },
+    "states": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "type": "object"
+      }
+    },
+    "entity_registry": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "type": "object"
+      }
+    },
+    "device_registry": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "type": "object"
+      }
+    },
+    "config_entries": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "type": "object"
+      }
+    },
+    "opendtu": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "type": "object"
+      }
+    },
+    "references": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "type": "object"
+      }
+    },
+    "collection_errors": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "type": "object"
+      }
+    },
+    "ha": {
+      "type": "object"
+    },
+    "native_runtime": {
+      "type": "object"
+    },
+    "legacy": {
+      "type": "object"
+    },
+    "coverage": {
+      "type": "object"
+    },
+    "native_configuration": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "redactions": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "description": "Runtime validator additionally rejects duplicate identities, non-finite numbers, depth >20, text >262144 characters and total input >8 MiB; unknown evidence does not authorize production."
+}

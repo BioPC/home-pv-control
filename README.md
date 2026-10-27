@@ -1,4 +1,4 @@
-> Native development stage: **2.0.0-dev.7**, dry-run legacy ownership and fencing architecture. Ordinary runtime cannot actuate; physical-write authorization remains Off. See [FOUNDATION.md](FOUNDATION.md) and [dev.7 migration architecture](docs/migration-stage7.md). No production cutover or ownership transfer has occurred.
+> Native development stage: **2.0.0-dev.8**, read-only site readiness audit tooling. Ordinary runtime cannot actuate; physical-write authorization remains Off. See [FOUNDATION.md](FOUNDATION.md) and [site audit/export instructions](docs/site-audit-stage8.md). No production cutover or ownership transfer has occurred.
 
 > **HPVC 2.0 fake dispatcher (2.0.0-dev.5):** This tree includes a native integration for observation, recovery diagnostics and a pure policy/HBC pipeline and authoritative dispatcher tested only with a fake executor.
 > Native inverter/HBC writes are hard-disabled. Legacy Node-RED and YAML below remain unchanged as the v1.6.0 reference.
