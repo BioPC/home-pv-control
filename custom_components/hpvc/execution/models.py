@@ -288,6 +288,7 @@ class MaintenanceRecord(Record):
 @dataclass(frozen=True)
 class ExecutionSnapshot(Record):
     unresolved_operation_ids: tuple[str, ...] = ()
+    unresolved_hbc_operation_ids: tuple[str, ...] = ()
     unresolved_obligation_ids: tuple[str, ...] = ()
     recovery_required: bool = False
     blocked_reason: str = "foundation_phase_no_actuator_implementation"

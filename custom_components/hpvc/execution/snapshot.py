@@ -2,6 +2,7 @@
 
 from .models import (
     ExecutionSnapshot,
+    Lane,
     OperationState,
     ObligationState,
     MaintenanceState,
@@ -60,14 +61,16 @@ def build_execution_snapshot(
         or maintenance
         or unknown
         or override_recovery
-        or bool(ledger.hbc_override.phase.value != "inactive")
+        or ledger.hbc_override.phase.value == "recovery_unknown_previous"
+        or ledger.hbc_override.phase.value != "inactive"
+        and ledger.hbc_override.forced_write_issued is None
     )
     settling_active = bool(
         settling
         and settling.outcome in (SettlingOutcome.WAITING, SettlingOutcome.UNKNOWN)
     )
     timed_out = bool(settling and settling.outcome == SettlingOutcome.TIMED_OUT)
-    frozen = {op.controller_uid for op in operations} | {
+    frozen = {op.controller_uid for op in operations if op.lane == Lane.INVERTER} | {
         o.controller_uid for o in obligations
     }
     if settling_active:
@@ -95,6 +98,7 @@ def build_execution_snapshot(
             != op.configuration_signature
         )
         for op in operations
+        if op.lane == Lane.INVERTER
     )
     if replaced_or_removed:
         recovery = True
@@ -141,7 +145,8 @@ def build_execution_snapshot(
             and o.kind in ("service_failed", "verification_failed", "outcome_unknown")
             for o in facts.outcomes
         )
-    pending = bool(operations)
+    pending = any(op.lane == Lane.INVERTER for op in operations)
+    hbc_pending = any(op.lane == Lane.HBC for op in operations)
     reasons = ["physical_writes_hard_off"]
     if not ownership_known:
         reasons.append("ownership_unresolved")
@@ -156,7 +161,12 @@ def build_execution_snapshot(
     if pending:
         reasons.append("pending_verification")
     return ExecutionSnapshot(
-        unresolved_operation_ids=tuple(op.operation_id for op in operations),
+        unresolved_operation_ids=tuple(
+            op.operation_id for op in operations if op.lane == Lane.INVERTER
+        ),
+        unresolved_hbc_operation_ids=tuple(
+            op.operation_id for op in operations if op.lane == Lane.HBC
+        ),
         unresolved_obligation_ids=tuple(o.obligation_id for o in obligations),
         recovery_required=bool(recovery),
         blocked_reason=";".join(reasons),
@@ -167,6 +177,7 @@ def build_execution_snapshot(
         write_eligible_uids=eligible,
         maintenance_active=maintenance,
         hbc_restore_pending=hbc_restore_pending
+        or hbc_pending
         or ledger.hbc_override.phase.value != "inactive",
         cooldown_until_utc=cooldown,
         last_command_delta_w=delta,

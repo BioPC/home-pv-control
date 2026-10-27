@@ -292,6 +292,8 @@ class AdapterDispatchTests(unittest.IsolatedAsyncioTestCase):
             steps, ["enter_strategy", "enter_goal", "restore_goal", "restore_strategy"]
         )
         self.assertEqual(q.hbc.override.memory.phase, "inactive")
+        self.assertTrue(await h.dispatch.confirm_hbc_restored(q, entities, h.clock(25)))
+        self.assertEqual(h.ledger.current.hbc_override.phase.value, "inactive")
 
     async def test_raw_hbc_priority_acceptance_updates_probe_and_memory_next_cycle(
         self,
@@ -416,3 +418,54 @@ class AdapterDispatchTests(unittest.IsolatedAsyncioTestCase):
         await h.verify(req)
         await h.settle(req)
         self.assertFalse(h.dispatch.physical_writes_authorized)
+
+    async def test_pending_hbc_verification_does_not_freeze_inverter_policy_lane(self):
+        h = self.h
+        row = next(
+            s for s in HBC["sequences"] if s["name"] == "negative-override-entry-exit"
+        )["cycles"][0]["input"]
+        raw = tuple(RawEntity.from_dict(e) for e in row["entities"])
+        await h.proposal(entities=raw, permission=True, all_in=-0.1)
+        q = await h.proposal(1, entities=raw, permission=True, all_in=-0.1)
+        await h.dispatch.submit_hbc(q, h.clock(1))
+        hb = await h.dispatch.pump_lane(Lane.HBC, h.clock(1))
+        await h.dispatch.receive_completion(h.completion(hb, 2))
+        q = await h.proposal(3, entities=raw, permission=True, all_in=-0.1)
+        snapshot = h.dispatch.execution_snapshot(q.controller_provenance, h.clock(3))
+        self.assertFalse(snapshot.pending_verification)
+        self.assertFalse(snapshot.recovery_required)
+        self.assertTrue(snapshot.unresolved_hbc_operation_ids)
+        await h.dispatch.submit(q, h.views, h.clock(3))
+        self.assertIsNotNone(await h.dispatch.pump_lane(Lane.INVERTER, h.clock(3)))
+
+    async def test_hbc_crash_before_acceptance_keeps_original_capture_without_issued_fact(
+        self,
+    ):
+        h = self.h
+        row = next(
+            s for s in HBC["sequences"] if s["name"] == "negative-override-entry-exit"
+        )["cycles"][0]["input"]
+        raw = tuple(RawEntity.from_dict(e) for e in row["entities"])
+        await h.proposal(entities=raw, permission=True, all_in=-0.1)
+        q = await h.proposal(1, entities=raw, permission=True, all_in=-0.1)
+        await h.dispatch.submit_hbc(q, h.clock(1))
+
+        class Crash(Exception):
+            pass
+
+        async def checkpoint(name, op):
+            if name == "after_executor_call_before_inflight":
+                raise Crash()
+
+        h.dispatch.checkpoint = checkpoint
+        with self.assertRaises(Crash):
+            await h.dispatch.pump_lane(Lane.HBC, h.clock(1))
+        self.assertFalse(h.runtime.event_recorder.current.events)
+        owned = h.ledger.current.hbc_override
+        self.assertIsNotNone(owned.saved_strategy)
+        self.assertIsNone(owned.forced_write_issued)
+        q = await h.proposal(2, entities=raw, permission=True, all_in=0.1)
+        self.assertTrue(q.hbc.override.recovery_required)
+        self.assertFalse(q.hbc.override.actions)
+        self.assertEqual(q.hbc.memory.override.previous_strategy, owned.saved_strategy)
+        self.assertFalse(q.hbc.memory.override.forced_write_issued)

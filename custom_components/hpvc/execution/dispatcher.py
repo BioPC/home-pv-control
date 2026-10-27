@@ -7,6 +7,7 @@ from ..codec import Record, SchemaError
 from ..storage import VersionedStore, StorageError
 from ..policy_runtime import EvaluationProposal
 from ..hbc.state import Clock
+from ..hbc.models import HbcOverrideRecovery, OverridePhase
 from ..control.engine import command_batches
 from ..inverter.base import fingerprint
 from .models import (
@@ -579,12 +580,40 @@ class Dispatcher:
                         dispatch_id=dispatch_id,
                         dispatch_started_at_utc=clock.utc,
                     )
+                    override = l.hbc_override
+                    if lane == Lane.HBC and reg.hbc_step in (
+                        "enter_strategy",
+                        "enter_goal",
+                        "restore_goal",
+                        "restore_strategy",
+                    ):
+                        saved = reg.proposal.hbc.override.memory
+                        if (
+                            override.phase != OverridePhase.INACTIVE
+                            and override.persistence_token != reg.capture_token
+                        ):
+                            raise SchemaError("Conflicting HBC capture ownership")
+                        override = HbcOverrideRecovery(
+                            OverridePhase(saved.phase),
+                            saved.previous_strategy,
+                            saved.previous_goal,
+                            override.forced_write_issued
+                            if override.phase != OverridePhase.INACTIVE
+                            else None,
+                            reg.capture_token,
+                            tuple(
+                                dict.fromkeys(
+                                    (*override.operation_ids, op.operation_id)
+                                )
+                            ),
+                        )
                     return replace(
                         l,
                         operations=tuple(
                             armed if o.operation_id == op.operation_id else o
                             for o in l.operations
                         ),
+                        hbc_override=override,
                     )
 
                 try:
@@ -674,6 +703,12 @@ class Dispatcher:
             owner_epoch=self.owner_epoch,
         )
         await self.runtime.event_recorder.record_simulated_acceptance(event)
+        if op.lane == Lane.HBC and reg.hbc_step in ("enter_strategy", "enter_goal"):
+            await self.ledger.update(
+                lambda l: replace(
+                    l, hbc_override=replace(l.hbc_override, forced_write_issued=True)
+                )
+            )
         if op.lane == Lane.INVERTER:
             older = tuple(
                 s.operation_id
@@ -1214,3 +1249,52 @@ class Dispatcher:
         await self.ledger.transition_operation(
             op_id, S.AWAITING_VERIFICATION, verification=V.PENDING
         )
+
+    @owned_work
+    async def confirm_hbc_restored(self, proposal, entities, clock):
+        old = self.ledger.current.hbc_override
+        if old.phase == OverridePhase.INACTIVE:
+            return True
+        if (
+            proposal != self.runtime.last_proposal
+            or proposal.hbc.override.memory.phase != "inactive"
+        ):
+            return False
+        raw = {e.entity_id: e for e in entities}
+        expected = {
+            "input_select.house_battery_strategy": old.saved_strategy,
+            "input_select.house_battery_strategy_charge_goal": old.saved_charge_goal,
+        }
+        for entity, value in expected.items():
+            sample = raw.get(entity)
+            operations = [
+                o
+                for o in self.ledger.current.operations
+                if o.operation_id in old.operation_ids
+                and json.loads(
+                    self._reg(o.batch_id).batch.steps[o.step_index].target_json
+                ).get("entity_id")
+                == entity
+            ]
+            if (
+                sample is None
+                or not value
+                or sample.state != value
+                or sample.updated_at_utc is None
+                or not -60 <= clock.utc - sample.updated_at_utc <= 180
+            ):
+                return False
+            if any(
+                o.transport not in (T.COMPLETED, T.FAILED)
+                or o.dispatch_started_at_utc is not None
+                and sample.updated_at_utc < o.dispatch_started_at_utc
+                for o in operations
+            ):
+                return False
+        await self.ledger.update(
+            lambda l: replace(l, hbc_override=HbcOverrideRecovery())
+        )
+        await self._audit(
+            "hbc", "original_strategy_and_goal_independently_restored", clock
+        )
+        return True
