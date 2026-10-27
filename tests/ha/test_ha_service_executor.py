@@ -460,12 +460,17 @@ async def test_unload_before_registry_boundary_prevents_the_call(hass):
     assert h.runtime.ledger.current.operations[-1].state in (S.SUPERSEDED, S.UNKNOWN)
 
 
-async def test_opaque_action_transport_cannot_supply_physical_or_maintenance_proof(hass):
+async def test_opaque_action_transport_cannot_supply_physical_or_maintenance_proof(
+    hass,
+):
     h = await start_transport(hass)
     cfg = ControllerConfiguration(
         ControllerIdentity("opaque_action", 1, AdapterKind.ACTION),
-        "sig", method=ControlMethod.ACTION, full_limit_w=3000,
-        action="script.apply_limit", value_field="payload.limit",
+        "sig",
+        method=ControlMethod.ACTION,
+        full_limit_w=3000,
+        action="script.apply_limit",
+        value_field="payload.limit",
     )
     h.custom_views = lambda: (
         GenericActionAdapter().normalize(cfg, None, h.clock().utc),
@@ -477,6 +482,21 @@ async def test_opaque_action_transport_cannot_supply_physical_or_maintenance_pro
     op = h.dispatch._op(request.operation_id)
     assert op.state == S.OPEN_LOOP
     assert not op.evidence_ids
+    assert (
+        await h.dispatch.finalize_evidence(
+            request.operation_id, h.evidence(request), h.clock()
+        )
+        is None
+    )
+    from custom_components.hpvc.execution.maintenance import Maintenance
+
+    maintenance = Maintenance(h.dispatch)
+    await maintenance.request("disable", True, h.views(), h.clock())
+    decision = await maintenance.evaluate(
+        h.clock(), h.runtime.ledger.current.maintenance.owner_token
+    )
+    assert not decision.authorized
     assert h.runtime.ledger.current.restore_obligations
     assert not h.runtime.physical_writes_authorized
     await h.unload()
+
