@@ -56,7 +56,7 @@ async def collect(base, token, *, read_opendtu=False):
             entries = await client.read("config_entries/get")
             # List payloads are partial. Read full records only for the scoped IDs
             # selected by the same projection, preserving original unique-ID metadata.
-            first = project_observations(
+            project_observations(
                 states=states,
                 entities=entities,
                 devices=devices,
@@ -64,16 +64,7 @@ async def collect(base, token, *, read_opendtu=False):
                 ha_version=config.get("version") or hello.get("ha_version"),
                 now=time.time(),
             )
-            ids = sorted(
-                {r["entity_id"] for r in first["entity_registry"]}
-                | {
-                    r["entity_id"]
-                    for r in entities
-                    if r.get("entity_id", "").split(".")[0]
-                    in ("number", "select", "switch")
-                    or r.get("platform") == "hpvc"
-                }
-            )
+            ids = sorted(r["entity_id"] for r in entities)
             full = []
             for i in range(0, len(ids), 100):
                 got = await client.read(

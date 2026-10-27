@@ -396,3 +396,70 @@ class NativeRepresentationTests(unittest.TestCase):
         result = audit_site(b, now=NOW)
         self.assertEqual(result["first_hardware_test"]["controller"], EXPECTED[1])
         self.assertEqual(result["first_hardware_test"]["proposed_test_limit_w"], 984)
+
+
+class UniquePhysicalIdentityTests(unittest.TestCase):
+    def test_two_entity_devices_with_same_serial_cannot_prove_two_inverters(self):
+        b = sample()
+        serial = "112233445566"
+        b["entity_registry"][1]["unique_id"] = serial + "_limit_nonpersistent_absolute"
+        b["device_registry"][1]["identifiers"] = [["mqtt", serial]]
+        row = b["opendtu"][1]["payload"].pop("223344556677")
+        b["opendtu"][1]["payload"][serial] = row
+        r = audit_site(b, now=NOW)
+        self.assertEqual(r["overall_verdict"], "BLOCKED")
+        self.assertIsNone(r["first_hardware_test"]["controller"])
+
+
+class PackageOwnershipTests(unittest.TestCase):
+    def test_renamed_template_uses_exact_source_unique_ID_not_object_name(self):
+        from audit_tools.site_audit import package_ownership
+
+        b = sample()
+        b["entity_registry"].append(
+            {
+                "entity_id": "sensor.user_renamed_status",
+                "unique_id": "hpvc_installed_version",
+                "platform": "template",
+                "config_entry_id": None,
+            }
+        )
+        proof = package_ownership(Path("home assistant/hpvc_config.yaml"), b)
+        self.assertTrue(proof["approved_v16_package_match"])
+        self.assertTrue(
+            any(
+                r["entity_id"] == "sensor.user_renamed_status"
+                for r in proof["registry_ownership"]
+            )
+        )
+        b["entity_registry"][-1]["config_entry_id"] = "unrelated-template-entry"
+        self.assertFalse(
+            package_ownership(Path("home assistant/hpvc_config.yaml"), b)[
+                "registry_ownership"
+            ]
+        )
+
+    def test_projection_keeps_renamed_HPVC_template_provenance(self):
+        b = sample()
+        b["entity_registry"].append(
+            dict(
+                entity_id="sensor.user_renamed_status",
+                unique_id="hpvc_installed_version",
+                platform="template",
+                config_entry_id=None,
+            )
+        )
+        r = project_observations(
+            states=b["states"],
+            entities=b["entity_registry"],
+            devices=b["device_registry"],
+            entries=b["config_entries"],
+            ha_version="2026.10.4",
+            now=NOW,
+        )
+        self.assertTrue(
+            any(
+                e["entity_id"] == "sensor.user_renamed_status"
+                for e in r["entity_registry"]
+            )
+        )

@@ -11,7 +11,7 @@ from test_policy_acceptance import start
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "foundation"))
 from site_audit_fixture import sample
-from custom_components.hpvc.site_audit.capture import capture_hass
+from custom_components.hpvc.site_audit.capture import capture_hass, read_device_entries
 from custom_components.hpvc.site_audit.engine import audit_site
 from custom_components.hpvc.site_audit.schema import EXPECTED
 from audit_tools.protocol import ReadOnlyHAClient
@@ -27,7 +27,7 @@ async def test_actual_HA_audit_cannot_mutate_any_installation_boundary(hass):
     devices = dr.async_get(hass)
     before_states = {s.entity_id: s.as_dict() for s in hass.states.async_all()}
     before_er = dict(registry.entities)
-    before_dr = dict(devices.devices)
+    before_dr = {r.id: r for r in read_device_entries(devices)}
     before_cfg = copy.deepcopy(dict(entry.data))
     before_handoff = runtime.handoff.current
     before_ledger = runtime.ledger.current
@@ -68,7 +68,10 @@ async def test_actual_HA_audit_cannot_mutate_any_installation_boundary(hass):
         bundle = capture_hass(hass, ha_version="test-pinned", now=time.time())
         result = audit_site(bundle, now=time.time())
     assert not mutations
-    assert dict(registry.entities) == before_er and dict(devices.devices) == before_dr
+    assert (
+        dict(registry.entities) == before_er
+        and {r.id: r for r in read_device_entries(devices)} == before_dr
+    )
     assert {s.entity_id: s.as_dict() for s in hass.states.async_all()} == before_states
     assert entry.data == before_cfg
     assert (

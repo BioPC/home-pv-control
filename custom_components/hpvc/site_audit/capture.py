@@ -97,6 +97,8 @@ def project_observations(
         if (
             ".hpvc_" in name
             or e.platform == "hpvc"
+            or e.platform == "template"
+            and e.unique_id.startswith("hpvc_")
             or enphase_role(e)
             or opendtu_role(e)
             and looks_opendtu(device_models.get(e.device_id), e)
@@ -180,6 +182,15 @@ def project_observations(
     return result
 
 
+def read_device_entries(registry):
+    # 2025 iteration yields IDs; 2026 iteration yields entries. Both paths use
+    # supported read APIs and avoid the deprecated 2026 mapping facade.
+    return tuple(
+        registry.async_get(item) if isinstance(item, str) else item
+        for item in registry.devices
+    )
+
+
 def capture_hass(hass, *, ha_version, now):
     """In-process read adapter for acceptance; never registers itself in HA.
 
@@ -209,7 +220,7 @@ def capture_hass(hass, *, ha_version, now):
             )
         )
     entities = [row(r, REGISTRY_FIELDS) for r in er.async_get(hass).entities.values()]
-    devices = [row(r, DEVICE_FIELDS) for r in dr.async_get(hass).devices.values()]
+    devices = [row(r, DEVICE_FIELDS) for r in read_device_entries(dr.async_get(hass))]
     entries = [row(r, ENTRY_FIELDS) for r in hass.config_entries.async_entries()]
     return project_observations(
         states=states,

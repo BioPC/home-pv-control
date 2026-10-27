@@ -477,6 +477,20 @@ def audit_site(raw, *, now):
             "Current legacy master intent is unobserved",
             "Current input_boolean.hpvc_enabled state",
         )
+    physical_serials = {r.get("serial") for r in inventory if r.get("serial")}
+    for serial in physical_serials:
+        same = [r for r in inventory if r.get("serial") == serial]
+        if len(same) > 1:
+            for row in same:
+                row["ambiguity"].append(
+                    "Multiple effective controllers share one physical serial"
+                )
+            issue(
+                "BLOCKED",
+                "duplicate_physical_identity",
+                "Multiple registry/device entries resolve to the same physical inverter serial",
+                "Resolve aliases/replacement identity; two entity IDs do not establish two inverters",
+            )
     expected = []
     for entity in EXPECTED:
         matches = [

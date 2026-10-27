@@ -58,7 +58,7 @@ This offline projection keeps relevant helper/controller/collision/HBC observati
 Node.js 22+ is needed only for the pinned pure flow scanner. It reads JSON without evaluating Function code or modifying flows.
 
 ```powershell
-py -3.13 audit_tools\site_audit.py --input '..\ha-site-export.json' --flows '..\current-node-red-flows.json' --full-flow-export --legacy-context '..\legacy-context-readonly.json' --reference-file '..\installed-hpvc-dashboard.yaml' --reference-file '..\installed-hpvc-package.yaml' --output-directory '..\site-audit-output'
+py -3.13 audit_tools\site_audit.py --input '..\ha-site-export.json' --flows '..\current-node-red-flows.json' --full-flow-export --legacy-context '..\legacy-context-readonly.json' --reference-file '..\installed-hpvc-dashboard.yaml' --hpvc-package '..\installed-hpvc-package.yaml' --output-directory '..\site-audit-output'
 ```
 
 Omit any unavailable optional input. Use `--raw-ha-export` instead of `--input` for the browser alternative. Repeat `--reference-file` for explicitly selected additional files. A manually saved OpenDTU wrapper can be supplied with repeatable `--opendtu-capture`. Do not supply both a collector capture and a duplicate wrapper for the same device; ambiguous duplicate API evidence is rejected. The scanner reports partial flow inventory if `--full-flow-export` is omitted.
@@ -87,6 +87,8 @@ The context wrapper has an explicit capture timestamp and runtime reachability/o
 ## Freshness and review
 
 An archive is useful inventory, not permanent live readiness. A readiness assessment requires a coherent export no older than 120 seconds, current controller states, matching API captures no older than 15 seconds with at most five seconds of poll latency, and current runtime/bridge observations. Old/future/missing timestamps are not replaced with the collection time. Manual asynchronous exports may remain UNKNOWN; that is the correct result when simultaneity cannot be established. Fresh execution-time observations are mandatory again in a later hardware stage.
+
+A `--hpvc-package` read copy is compared byte-for-byte (CRLF normalized) with the approved v1.6 package. Only exact unique-ID literals from that package, matching actual YAML-template platform and no config-entry provenance, are proposed as legacy HPVC-owned; renamed entries are matched by unique ID. A custom/different package stays unproven and needs review. Config-entry-owned or unrelated templates are never reclaimed by object name. No proposal is applied.
 
 The import is the actual legacy importer in preview only. All imported values, issues, domain changes, collisions, ownership and review requirements are reported. No store commit occurs. Registry proposals use the dev.7 pure planner only when exact old and native ownership tuples exist; no registry apply API is available to the audit. A same-name template entity is not assumed HPVC-owned. User-created content is never exhaustively claimed to be checked.
 

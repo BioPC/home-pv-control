@@ -1,5 +1,6 @@
 """Consume local production exports and write review artifacts locally only."""
 
+import hashlib
 import argparse, csv, json, re, subprocess, sys, time
 from pathlib import Path
 
@@ -46,6 +47,49 @@ def references(path):
     )
 
 
+def package_ownership(path, bundle):
+    if path.stat().st_size>MAX_BYTES:raise SchemaError('Package copy exceeds bound')
+    data = path.read_bytes().replace(b"\r\n", b"\n")
+    approved = (
+        (ROOT / "home assistant/hpvc_config.yaml").read_bytes().replace(b"\r\n", b"\n")
+    )
+    if len(data) > MAX_BYTES:
+        raise SchemaError("Package copy exceeds bound")
+    same = hashlib.sha256(data).digest() == hashlib.sha256(approved).digest()
+    # Match domain + unique-ID from adjacent explicit source declarations.
+    # A sensor with a switch's unique ID is not the same template identity.
+    literal_ids = (
+        set(
+            re.findall(
+                r"(?m)^\s+default_entity_id:\s*([a-z0-9_]+)\.[a-z0-9_]+\s*\n\s+unique_id:\s*(hpvc_[a-z0-9_]+)\s*$",
+                data.decode("utf-8-sig"),
+            )
+        )
+        if same
+        else set()
+    )
+    rows = []
+    for r in bundle.get("entity_registry", []):
+        if (
+            r.get("platform") == "template"
+            and r.get("config_entry_id") is None
+            and (r.get("entity_id", "").split(".")[0], r.get("unique_id"))
+            in literal_ids
+        ):
+            rows.append(
+                {
+                    k: r.get(k)
+                    for k in ("entity_id", "unique_id", "platform", "config_entry_id")
+                }
+            )
+    return dict(
+        approved_v16_package_match=same,
+        source_sha256=hashlib.sha256(data).hexdigest(),
+        registry_ownership=rows,
+        limitation="Read-copy provenance only; actual deployment and each move still require later verification; custom/unproven entries are not reclaimed",
+    )
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--input", type=Path)
@@ -61,6 +105,11 @@ def main():
     )
     p.add_argument("--output-directory", type=Path, required=True)
     p.add_argument("--flows", type=Path)
+    p.add_argument(
+        "--hpvc-package",
+        type=Path,
+        help="Installed package read copy; exact approved source and unique-ID/platform provenance only",
+    )
     p.add_argument("--legacy-context", type=Path)
     p.add_argument(
         "--full-flow-export",
@@ -102,6 +151,7 @@ def main():
             a.input,
             a.raw_ha_export,
             a.flows,
+            a.hpvc_package,
             a.legacy_context,
             a.native_configuration,
             *a.reference_file,
@@ -143,6 +193,9 @@ def main():
                 "Read-only flow inspection failed; raw flow/error content is not exported"
             )
         bundle["legacy"] = json.loads(result.stdout)
+    if a.hpvc_package:
+        proof = package_ownership(a.hpvc_package, bundle)
+        bundle.setdefault("legacy", {}).update(proof)
     if a.native_configuration:
         bundle["native_configuration"] = read_json(a.native_configuration)
     for path in a.opendtu_capture:
@@ -150,6 +203,8 @@ def main():
     refs = [references(q) for q in a.reference_file]
     if a.flows:
         refs.append(references(a.flows))
+    if a.hpvc_package:
+        refs.append(references(a.hpvc_package))
     bundle["references"] = refs
     bundle.setdefault("coverage", {})["reference_files"] = [
         r["source_file"] for r in refs
