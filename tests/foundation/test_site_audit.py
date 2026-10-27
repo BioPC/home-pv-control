@@ -367,3 +367,32 @@ class HelperCredentialTests(unittest.TestCase):
         text = json.dumps(redact(data))
         for value in ("private-helper-value", "user:password", "private-query"):
             self.assertNotIn(value, text)
+
+
+class NativeRepresentationTests(unittest.TestCase):
+    def test_first_target_uses_native_step_origin_instead_of_manual_low_origin(self):
+        b = sample()
+        b["states"].extend(
+            [
+                dict(
+                    entity_id="input_number.hpvc_pv2_full_limit",
+                    state="1000",
+                    last_reported=NOW,
+                    last_updated=NOW,
+                    attributes={},
+                ),
+                dict(
+                    entity_id="input_number.hpvc_pv2_low_limit",
+                    state="10",
+                    last_reported=NOW,
+                    last_updated=NOW,
+                    attributes={},
+                ),
+            ]
+        )
+        next(r for r in b["states"] if r["entity_id"] == EXPECTED[1])["attributes"][
+            "step"
+        ] = 6
+        result = audit_site(b, now=NOW)
+        self.assertEqual(result["first_hardware_test"]["controller"], EXPECTED[1])
+        self.assertEqual(result["first_hardware_test"]["proposed_test_limit_w"], 984)

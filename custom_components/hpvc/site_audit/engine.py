@@ -12,6 +12,7 @@ from ..migration.registry import RegistryIdentity, plan_registry_migration
 from ..inverter.base import EntityRecord, RegistryEntity, RegistryDevice, finite
 from ..inverter.manager import InverterManager
 from ..inverter.hoymiles import parse_status, status_url
+from ..inverter.generic_number import represent_target
 from ..control.models import PlantConfiguration
 from .schema import EXPECTED, NATIVE_IDS, validate_export, redact, digest
 
@@ -733,7 +734,13 @@ def audit_site(raw, *, now):
         if problems
         else "READY_FOR_CONTROLLED_HANDOFF"
     )
-    plan = select_first_test(inventory, states, now, telemetry=telemetry)
+    plan = select_first_test(
+        inventory,
+        states,
+        now,
+        telemetry=telemetry,
+        views={r.uid: r.view for r in fleet.effective},
+    )
     auth_state = states.get("binary_sensor.hpvc_physical_writes_authorized", {}).get(
         "state"
     )
@@ -807,7 +814,7 @@ def audit_site(raw, *, now):
     return redact(report)
 
 
-def select_first_test(inventory, states, now, *, telemetry=None):
+def select_first_test(inventory, states, now, *, telemetry=None, views=None):
     eligible = []
     for r in inventory:
         if (
@@ -842,11 +849,27 @@ def select_first_test(inventory, states, now, *, telemetry=None):
         delta = math.floor(desired / step) * step
         if delta <= 0:
             continue
-        target = (
-            r["minimum_w"]
-            + math.floor((original - delta - r["minimum_w"]) / step) * step
-        )
-        if target < r["minimum_w"] or not 0 < original - target <= 25:
+        view = (views or {}).get(r["controller_uid"])
+        if view is None:
+            continue
+        target = None
+        # Use the actual native representer, including its native step origin.
+        # A rounded result outside the small-change budget is not proposed.
+        for allocated in (original - delta, original - max(0, delta - step)):
+            try:
+                represented = represent_target(
+                    view.configuration,
+                    allocated,
+                    view.capabilities,
+                    view.operating_range,
+                )
+            except SchemaError:
+                continue
+            possible = represented.native_value
+            if r["minimum_w"] <= possible and 0 < original - possible <= desired:
+                target = possible
+                break
+        if target is None:
             continue
         if original - target <= max(1, full * 0.01 + 0.5, step * 0.51):
             continue  # The test change must be distinguishable from unchanged/full API readback.
