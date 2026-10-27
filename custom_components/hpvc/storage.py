@@ -250,7 +250,10 @@ class VersionedStore:
                 ).hexdigest()
                 if raw["sha256"] != expected:
                     raise SchemaError("Store checksum mismatch")
-                value = self.model.from_dict(raw["payload"])
+                payload = raw["payload"]
+                if self.model is ExecutionLedger:
+                    payload = migrate_execution_additions(payload)
+                value = self.model.from_dict(payload)
                 if (
                     isinstance(value, ExecutionLedger)
                     and value.revision != raw["revision"]
@@ -551,3 +554,54 @@ class LedgerRepository:
             or ledger.ownership.state
             in (OwnershipState.LEGACY_UNKNOWN, OwnershipState.BLOCKED)
         )
+
+
+def migrate_execution_additions(payload):
+    """Explicit additive dev.4 migration after verifying the original checksum.
+
+    Only the complete old field set or complete new set is accepted per record.
+    This does not relax the strict codec for arbitrary missing/extra fields.
+    """
+    from dataclasses import fields
+    from .execution.models import (
+        PhysicalOperation,
+        VerificationEvidence,
+        RestoreObligation,
+        MaintenanceRecord,
+    )
+
+    additions = (
+        ("operations", PhysicalOperation, {"expected_native_value": None}),
+        ("evidence", VerificationEvidence, {"observed_native_value": None}),
+        (
+            "restore_obligations",
+            RestoreObligation,
+            {"established_at_utc": None, "owner_epoch": None},
+        ),
+    )
+    if not isinstance(payload, dict):
+        raise SchemaError("Invalid execution payload")
+    result = dict(payload)
+
+    def upgrade(row, model, defaults):
+        if not isinstance(row, dict):
+            raise SchemaError("Invalid execution record")
+        expected = {f.name for f in fields(model)}
+        return {**row, **defaults} if set(row) == expected - set(defaults) else row
+
+    for key, model, defaults in additions:
+        if key in result and isinstance(result[key], list):
+            result[key] = [upgrade(row, model, defaults) for row in result[key]]
+    if "maintenance" in result:
+        result["maintenance"] = upgrade(
+            result["maintenance"],
+            MaintenanceRecord,
+            {
+                "requested_at_utc": None,
+                "post_disable_evaluation_id": None,
+                "owner_epoch": None,
+                "requested_monotonic": None,
+                "boot_id": None,
+            },
+        )
+    return result

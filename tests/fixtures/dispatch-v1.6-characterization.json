@@ -1,0 +1,19 @@
+{
+  "source_driver_sha256": "6fd5d638ab1dbd935a848a2650dfdf60a7b654d1d506f67625edc95e56f5e8e3",
+  "source_flow_sha256": "b83d0ceaedc66cce7a6be870dc9a376f053b9b831717e4649d80bc8e8fe35ba7",
+  "source_tests": [
+    "slow identical restore completes without timer starvation",
+    "lost pre-dispatch output replays original identity and duplicate batches do not duplicate calls",
+    "two inverter slow restore coalesces independently and drains both groups",
+    "maintenance waits beyond verification age while a limiting call remains live",
+    "registered unsent requests block maintenance and nighttime proof",
+    "maintenance resumes after old limiting call drains and fresh full restoration completes",
+    "a full readback predating a completed limiting call cannot authorize maintenance",
+    "warm partial redeploy preserves in-flight main barrier before newer full target",
+    "warm pre-action redeploy cancels unsent old main and dispatches current restore",
+    "cold persisted lease is visibly held and neither late callback nor time clears it",
+    "reconciled cold lease retains counters and rejects pre-recovery callbacks",
+    "fresh startup without retained lease still dispatches normally"
+  ],
+  "notes": "Original Function nodes with fake callbacks. Native tests characterize corresponding invariants; native accepted timing, restart, preflight evidence and maintenance provenance intentionally strengthen source behavior."
+}

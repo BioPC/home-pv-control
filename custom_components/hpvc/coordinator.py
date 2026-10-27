@@ -11,11 +11,19 @@ from .const import (
     MAIN_INTERVAL,
     STARTUP_DELAY,
     FORCED_FULL_INTERVAL,
-    FOUNDATION_WRITE_BLOCK,
 )
 from .codec import SchemaError
 from .control.models import PlantSnapshot, Observation, Quality
-from .execution.models import ExecutionSnapshot, OperationState, ObligationState
+
+from .inverter.manager import InverterManager
+from .inverter.hoymiles import async_read_status, parse_status
+from .execution.verification import (
+    verify_operation,
+    readback_candidate,
+    opendtu_candidate,
+    VerificationOutcome,
+)
+from .execution.recovery import assess_recovery
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +35,7 @@ class LifecycleOwner:
         self.closed = False
         self.tasks = set()
         self.cleanups = []
+        self.async_cleanups = []
         self.task_factory = task_factory or (
             lambda coro, name: asyncio.create_task(coro, name=name)
         )
@@ -53,6 +62,12 @@ class LifecycleOwner:
         self.cleanups.append(callback)
         return callback
 
+    def add_async_cleanup(self, callback):
+        if self.closed:
+            raise RuntimeError("Entry runtime is closed")
+        self.async_cleanups.append(callback)
+        return callback
+
     async def close(self):
         if self.closed:
             return
@@ -69,6 +84,12 @@ class LifecycleOwner:
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
         self.tasks.clear()
+        for cleanup in reversed(self.async_cleanups):
+            try:
+                await cleanup()
+            except Exception:
+                _LOGGER.exception("HPVC async cleanup failed")
+        self.async_cleanups.clear()
 
 
 class EvaluationScheduler:
@@ -206,6 +227,11 @@ class HpvcCoordinator:
         configuration_state,
         owner,
         state_reader=None,
+        *,
+        states_snapshot_reader=None,
+        registry_reader=None,
+        http_session_factory=None,
+        policy_runtime=None,
     ):
         self.config_store = config_store
         self.history_store = history_store
@@ -224,6 +250,16 @@ class HpvcCoordinator:
             lambda: self.ledger.recovery_required,
         )
         self.storage_fault = None
+        self.manager = InverterManager()
+        self.states_snapshot_reader = states_snapshot_reader
+        self.registry_reader = registry_reader
+        self.http_session_factory = http_session_factory
+        self.readonly_states = ()
+        self.readonly_faults = ()
+        self.verification_results = ()
+        self.registry_refreshed_at_utc = None
+        self.policy_runtime = policy_runtime
+        self.policy_proposal = None
 
     @property
     def configuration(self):
@@ -244,11 +280,19 @@ class HpvcCoordinator:
 
     @property
     def recovery_required(self):
-        return bool(self.storage_fault or self.ledger.recovery_required)
+        return bool(
+            self.storage_fault
+            or self.ledger.recovery_required
+            or (self.policy_runtime and self.policy_runtime.fault)
+            or (
+                self.policy_proposal
+                and self.policy_proposal.hbc.override.recovery_required
+            )
+        )
 
     @property
     def required_inputs_ready(self):
-        return False  # no effective fleet/control implementation in this phase
+        return False  # The final control engine and ownership cutover remain disabled.
 
     def add_listener(self, callback):
         self.listeners.add(callback)
@@ -260,8 +304,138 @@ class HpvcCoordinator:
 
     def start(self):
         self.scheduler.start()
+        if self.states_snapshot_reader and self.registry_reader:
+            self.owner.create_task(
+                self._registry_worker(), "hpvc-readonly-registry-worker"
+            )
+        if self.http_session_factory:
+            self.owner.create_task(
+                self._opendtu_worker(), "hpvc-readonly-opendtu-worker"
+            )
+
+    async def _registry_worker(self):
+        await asyncio.sleep(2)
+        while not self.owner.closed:
+            try:
+                await self.refresh_fleet(registry=True)
+            except asyncio.CancelledError:
+                raise
+            except Exception as error:
+                self.readonly_faults = (
+                    *self.readonly_faults,
+                    "registry: " + str(error),
+                )[-32:]
+            await asyncio.sleep(60)
+
+    async def _opendtu_worker(self):
+        await asyncio.sleep(8)
+        while not self.owner.closed:
+            await self.poll_opendtu_status()
+            await asyncio.sleep(30)
+
+    async def poll_opendtu_status(self):
+        if not self.http_session_factory or self.owner.closed:
+            return
+        groups = {}
+        for row in self.manager.current.effective:
+            candidate = row.view.candidate
+            if (
+                candidate
+                and candidate.kind == "hoymiles"
+                and candidate.configuration_url
+            ):
+                groups.setdefault(candidate.configuration_url, []).append(candidate)
+        for url, candidates in groups.items():
+            if self.owner.closed:
+                return
+            polled = time.time()
+            try:
+                payload = await async_read_status(self.http_session_factory(), url)
+                records = parse_status(
+                    payload,
+                    tuple(candidates),
+                    poll_started_at_utc=polled,
+                    received_at_utc=time.time(),
+                )
+                for record in records:
+                    self.manager.status_cache.accept(record)
+            except asyncio.CancelledError:
+                raise
+            except Exception as error:
+                self.readonly_faults = (
+                    *self.readonly_faults,
+                    "OpenDTU read-only status: " + str(error),
+                )[-32:]
+        if groups:
+            await self.refresh_fleet()
+
+    async def refresh_fleet(self, *, registry=False):
+        if self.owner.closed or not self.states_snapshot_reader:
+            return self.manager.current
+        registry_rows = devices = None
+        if registry and self.registry_reader:
+            registry_rows, devices = self.registry_reader()
+            self.registry_refreshed_at_utc = time.time()
+        self.readonly_states = tuple(self.states_snapshot_reader(registry))
+        fleet = self.manager.refresh(
+            self.configuration,
+            self.readonly_states,
+            registry_rows,
+            devices,
+            now=time.time(),
+        )
+        outcomes = []
+        for operation in self.ledger.current.operations:
+            row = next(
+                (
+                    item
+                    for item in fleet.effective
+                    if item.uid == operation.controller_uid
+                ),
+                None,
+            )
+            if row is None:
+                continue
+            view = row.view
+            step = view.capabilities.step
+            if step is not None and view.configuration.unit.value == "Percent":
+                step = step / 100 * view.operating_range.full_w
+            result = verify_operation(
+                operation,
+                readback_candidate(operation, view),
+                now=time.time(),
+                full_power_w=view.operating_range.full_w,
+                step_w=step,
+                deadband_w=self.configuration.settings.pv_adjust_deadband,
+            )
+            status = self.manager.status_cache.status.get(row.uid)
+            if status and result.outcome != VerificationOutcome.CONFIRMED:
+                candidate = view.candidate
+                api = verify_operation(
+                    operation,
+                    opendtu_candidate(operation, view, status),
+                    now=time.time(),
+                    full_power_w=view.operating_range.full_w,
+                    step_w=step,
+                    expected_device_id=candidate.device_id if candidate else None,
+                    expected_serial=candidate.serial if candidate else None,
+                    deadband_w=self.configuration.settings.pv_adjust_deadband,
+                )
+                if api.outcome == VerificationOutcome.CONFIRMED:
+                    result = api
+            outcomes.append((operation.operation_id, result))
+        self.verification_results = tuple(outcomes)
+        # Evidence is diagnostic only. Unknown execution occupancy is NOT cleared.
+        self.publish()
+        return fleet
+
+    @property
+    def recovery_assessment(self):
+        return assess_recovery(self.ledger.current)
 
     async def refresh(self):
+        await self.refresh_fleet()
+
         observations = []
         for role in (
             "grid_power_sensor",
@@ -326,8 +500,51 @@ class HpvcCoordinator:
         return False
 
     async def evaluate(self, snapshot):
-        # Foundation publishes observations only: no policy engine, commands or dispatch.
         self.snapshot = snapshot
+        if self.policy_runtime:
+            from .control.decisions import PolicySnapshot
+            from .control.engine import controllers_from_fleet
+            from .hbc.state import Clock
+            from .policy_runtime import capture_entities
+
+            by_role = {value.source: value for value in snapshot.observations}
+            unknown = lambda role: by_role.get(role, Observation(role))
+            now = time.time()
+            clock = Clock(
+                now, time.monotonic(), self.policy_runtime.accepted.hbc.boot_id
+            )
+            sun = self.state_reader("sun.sun")
+            config = self.configuration
+            policy = PolicySnapshot(
+                snapshot.snapshot_id,
+                now,
+                unknown("grid_power_sensor"),
+                unknown("pv_power_sensor"),
+                unknown("market_price_sensor"),
+                unknown("all_in_price_sensor"),
+                controllers_from_fleet(self.manager.current),
+                config.settings,
+                enabled=config.enabled_intent,
+                external_release=config.external_release_request,
+                sun_below_horizon=bool(sun and sun.state == "below_horizon"),
+                rebalance_pending=bool(self.manager.current.rebalance_uids),
+                negative_price_hbc_charge=config.negative_price_hbc_charge,
+            )
+            try:
+                self.policy_proposal = await self.policy_runtime.evaluate_readonly(
+                    policy,
+                    capture_entities(self.state_reader),
+                    clock,
+                    views=tuple(row.view for row in self.manager.current.effective),
+                    permission=config.control_hbc_strategy,
+                    negative_charge_permission=config.negative_price_hbc_charge,
+                )
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                self.storage_fault = "policy_memory_or_execution_snapshot_failed"
+                raise
+        # Proposed memory is durable; no plan is accepted or dispatched here.
         self.publish()
 
     async def async_set_configuration(self, configuration):
@@ -364,22 +581,13 @@ class HpvcCoordinator:
 
 
 def execution_snapshot(ledger):
-    return ExecutionSnapshot(
-        tuple(
-            item.operation_id
-            for item in ledger.current.operations
-            if item.state
-            not in (
-                OperationState.VERIFIED,
-                OperationState.RETIRED,
-                OperationState.SUPERSEDED,
-            )
-        ),
-        tuple(
-            item.obligation_id
-            for item in ledger.current.restore_obligations
-            if item.state != ObligationState.VERIFIED
-        ),
-        ledger.recovery_required,
-        FOUNDATION_WRITE_BLOCK,
+    from .execution.snapshot import build_execution_snapshot
+    from .execution.facts import ExecutionFacts
+    from .hbc.state import Clock
+
+    return build_execution_snapshot(
+        ledger.current,
+        (),
+        Clock(time.time(), time.monotonic(), "snapshot-only"),
+        ExecutionFacts(ledger.current.plant_uid),
     )

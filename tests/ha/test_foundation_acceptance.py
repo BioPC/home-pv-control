@@ -1,7 +1,5 @@
 """Additional real-HA acceptance invariants required before adapter expansion."""
 
-import asyncio
-from dataclasses import replace
 from pathlib import Path
 from unittest.mock import Mock
 import pytest
@@ -51,8 +49,8 @@ async def test_all_native_unique_ids_stable_across_reload(hass):
         (item.domain, item.unique_id): item.entity_id
         for item in er.async_entries_for_config_entry(registry, entry.entry_id)
     }
-    assert len(before) == 178
-    assert len(set(before.values())) == 178
+    assert len(before) == 282
+    assert len(set(before.values())) == 282
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     after = {

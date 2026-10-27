@@ -1,7 +1,6 @@
 """Importer and bounded scheduler behavior against production code."""
 
 import asyncio
-from dataclasses import replace
 from pathlib import Path
 import tempfile
 import unittest

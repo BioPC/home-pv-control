@@ -1,9 +1,13 @@
+> **HPVC 2.0 fake dispatcher (2.0.0-dev.5):** This tree includes a native integration for observation, recovery diagnostics and a pure policy/HBC pipeline and authoritative dispatcher tested only with a fake executor.
+> Native inverter/HBC writes are hard-disabled. Legacy Node-RED and YAML below remain unchanged as the v1.6.0 reference.
+> Read [FOUNDATION.md](FOUNDATION.md) for installation, scope, storage and validation limits before use.
+
 <p align="center">
   <img src="assets/banner.png" alt="Home PV Control banner">
 </p>
 
 <p align="center">
-  <a href="releases/v1.5.6/release.md"><img src="https://img.shields.io/badge/release-v1.5.6-blue" alt="Release v1.5.6"></a>
+  <a href="releases/v1.6.0/release.md"><img src="https://img.shields.io/badge/release-v1.6.0-blue" alt="Release v1.6.0"></a>
   <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant ready"></a>
   <a href="https://nodered.org/"><img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED flow"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="GPL-3.0-or-later"></a>
@@ -26,7 +30,7 @@ Home PV Control (HPVC) dynamically controls, limits and restores PV inverter out
 - Protect against negative all-in prices with minimum-PV control and optional HBC grid charging.
 
 > [!IMPORTANT]
-> HPVC requires at least one configured inverter control path: either a writable Home Assistant `number` entity or a stable Home Assistant action/service adapter. Limits can use Watts or Percent. HPVC controls through Home Assistant integrations; it does not communicate with inverter hardware directly.
+> HPVC requires at least one usable inverter controller. Controllers can be configured manually through a writable Home Assistant `number` entity or a stable Home Assistant Action/service adapter, or discovered automatically for supported Enphase DPEL and Hoymiles/OpenDTU integrations. Limits can use Watts or Percent where the adapter supports them. HPVC controls through Home Assistant integrations; it does not communicate with inverter hardware directly.
 
 See [Inverter compatibility](docs/05-inverter-compatibility.md) and [Configuration](docs/02-configuration.md) for the four compatibility statuses, current brand/integration matrix and configuration.
 
@@ -37,14 +41,14 @@ See [Inverter compatibility](docs/05-inverter-compatibility.md) and [Configurati
 ## Contents
 
 - [Main features](#main-features)
+- [Safety](#safety)
 - [Requirements](#requirements)
 - [Quick install](#quick-install)
 - [How HPVC works](#how-hpvc-works)
 - [Architecture](#architecture)
-- [Dashboard](#dashboard)
 - [Home Battery Control integration](#home-battery-control-integration)
+- [Dashboard](#dashboard)
 - [Shipped defaults](#shipped-defaults)
-- [Safety](#safety)
 - [Accuracy, Insights and reports](#accuracy-insights-and-reports)
 - [Screenshots](#screenshots)
 - [Upgrading](#upgrading)
@@ -65,16 +69,10 @@ See [Inverter compatibility](docs/05-inverter-compatibility.md) and [Configurati
 - Multi-inverter support with per-inverter minimum and maximum limits
 - Per-inverter Watt or percentage limits
 - Generic Home Assistant Number entity and Action/service adapters
+- Automatic Enphase Envoy DPEL discovery (Enphase Envoy Installer 0.10.2+)
+- Automatic Hoymiles/OpenDTU discovery
 - Negative all-in-price minimum-PV protection
 - Night Restore with PV recovery hysteresis
-
-### 🔋 Battery integration
-- Optional Home Battery Control (HBC) integration
-- Charge Priority for `Charge` and `Charge PV`
-- Optional HBC grid charging during negative prices
-- HBC multi-battery support for 1–6 batteries
-- Battery eligibility, headroom and taper-aware control
-
 ### 🧠 Reliability
 - Healthy inverters continue operating when another configured inverter becomes unavailable
 - Degraded-mode grid-target correction uses only currently controllable inverter capacity
@@ -84,24 +82,34 @@ See [Inverter compatibility](docs/05-inverter-compatibility.md) and [Configurati
 - Routine `Unconfirmed → Healthy` write confirmations are suppressed from Insights
 - Automatic safety recovery can re-enable HPVC after the required inputs remain healthy for the confirmation window
 - Safe shutdown, restore and bounded recovery behavior
-
+### 🔋 Battery integration
+- Optional Home Battery Control (HBC) integration
+- Charge Priority for `Charge` and `Charge PV`
+- Optional HBC grid charging during negative prices
+- HBC multi-battery support for 1–6 batteries
+- Battery eligibility, headroom and taper-aware control
 ### 📊 Visibility and diagnostics
 - Today’s Insights and Power Control history
 - Daily Control Accuracy with four loss factors
 - On-demand HTML and TXT support reports
 - Ready-to-import Home Assistant dashboard
-
 ### 🔄 Maintenance
 - Smart Update from the HPVC dashboard
 - Installed Home Assistant websocket dependency verification through Node-RED `/nodes`
 - Transaction-safe update, rollback and recovery handling
 - Manual upgrade and safe uninstall workflows
 
+## Safety
+
+HPVC validates required inputs, inverter control paths and configuration before sending writes, and uses bounded recovery, telemetry freshness checks and safe shutdown/restore behavior.
+
+See [How HPVC works](docs/03-how-it-works.md) for the safety model and [Troubleshooting](docs/04-troubleshooting.md) for recovery cases.
+
 ## Requirements
 
 - Home Assistant Core **2025.12 or newer** with package support. Earlier versions may work but are outside the documented support baseline.
 - A currently supported Node-RED runtime. Node-RED 4.x requires Node.js 18.2.0 or newer for the declared Home Assistant websocket 0.80.3 baseline; Node-RED 5.x requires Node.js 22.9.0 or newer. Home Assistant add-on users should use the runtime bundled by the supported Node-RED add-on rather than pinning a separate JavaScript-runtime minimum.
-- One or more PV inverters with either a writable `number.*` active-power limit or a stable Home Assistant action/service that can apply an active-power limit.
+- One or more usable PV controllers. HPVC supports manually configured writable `number.*` active-power limits and Home Assistant Action/service adapters, plus auto-detected Enphase Envoy DPEL controllers (Enphase Envoy Installer 0.10.2+) and Hoymiles/OpenDTU controllers exposed through MQTT Auto Discovery.
 - A valid grid-power sensor, market/export-price sensor, all-in-price sensor and PV-power sensor.
 - ApexCharts Card for the supplied dashboard graphs.
 - Home Battery Control only for optional HBC execution tracking and Charge Priority.
@@ -135,9 +143,9 @@ See [Inverter compatibility](docs/05-inverter-compatibility.md) and [Configurati
 
 4. Import `node-red/hpvc_flow.json` into Node-RED and deploy it.
 
-5. Open **Home PV Control → Settings** and configure the required sensors and inverter control paths.
+5. Open **Home PV Control → Settings** and configure the required sensors. Configure manual inverter slots for Number entity or Action/service controllers. A complete Enphase DPEL controller or supported OpenDTU/Hoymiles absolute-Watt limiter is discovered automatically and does not require a placeholder/manual inverter entity. OpenDTU rated power is preferably read from `/api/limit/status` `max_power`. If no live or cached API value exists, enter that slot's **Full Limit** manually; HPVC never treats the HA Number entity's `max` attribute as rated inverter power. For auto-detected **Enphase DPEL**, detection stays automatic but **Max power and Min power are always configured manually in the HPVC slot**; DPEL number `min`/`max` metadata is treated only as a command capability range, never as the installation's rated power.
 
-HPVC enables automatically when the required configuration and live inputs are valid.
+HPVC enables automatically when the required configuration and live inputs are valid. Auto-detected Enphase and OpenDTU/Hoymiles controllers share the same maximum of ten effective controller slots as manual controllers.
 
 For dependencies, existing `homeassistant:` / `lovelace:` sections, custom dashboards and first-run verification, see the [full installation guide](docs/01-installation.md).
 
@@ -187,6 +195,12 @@ Node-RED runs the HPVC control engine while Home Assistant provides live sensors
 
 See [How HPVC works → Node-RED flow architecture](docs/03-how-it-works.md#node-red-flow-architecture) for the detailed control architecture, recovery behavior and runtime model.
 
+## Home Battery Control integration
+
+HPVC can optionally coordinate PV control with Home Battery Control (HBC), including Charge Priority, negative-price charging, multi-battery eligibility, taper handling and degraded HBC operation.
+
+See [Configuration → HBC integration](docs/02-configuration.md#hbc-integration) for setup and [How HPVC works → HBC battery charge priority](docs/03-how-it-works.md#hbc-battery-charge-priority) for runtime behavior.
+
 ## Dashboard
 
 The supplied dashboard provides three main working areas:
@@ -197,23 +211,11 @@ The supplied dashboard provides three main working areas:
 
 See [Installation](docs/01-installation.md) and [Configuration](docs/02-configuration.md) for setup details.
 
-## Home Battery Control integration
-
-HPVC can optionally coordinate PV control with Home Battery Control (HBC), including Charge Priority, negative-price charging, multi-battery eligibility, taper handling and degraded HBC operation.
-
-See [Configuration → HBC integration](docs/02-configuration.md#hbc-integration) for setup and [How HPVC works → HBC battery charge priority](docs/03-how-it-works.md#hbc-battery-charge-priority) for runtime behavior.
-
 ## Shipped defaults
 
 HPVC ships with conservative starting values for price control, grid thresholds, cooldown, deadband and HBC behavior. They are starting points rather than universal recommendations.
 
 See [Configuration → Shipped defaults](docs/02-configuration.md#shipped-defaults) for the authoritative defaults table, price-sensor guidance and adjustment notes.
-
-## Safety
-
-HPVC validates required inputs, inverter control paths and configuration before sending writes, and uses bounded recovery, telemetry freshness checks and safe shutdown/restore behavior.
-
-See [How HPVC works](docs/03-how-it-works.md) for the safety model and [Troubleshooting](docs/04-troubleshooting.md) for recovery cases.
 
 ## Accuracy, Insights and reports
 
@@ -223,7 +225,7 @@ See [How HPVC works → Accuracy and factor attribution](docs/03-how-it-works.md
 
 ## Screenshots
 
-The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.5.6 YAML and Node-RED flow are authoritative.
+The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.6.0 YAML and Node-RED flow are authoritative.
 
 ### Settings
 
@@ -255,11 +257,21 @@ Smart Update preserves HPVC configuration, helper values and saved data, validat
 
 For the authoritative update lifecycle, rollback/recovery behavior, trust model and manual upgrade procedure, see [Installation → Smart update from v1.5.3 onward](docs/01-installation.md#smart-update-from-v153-onward).
 
-### v1.5.6 upgrade notes
+### v1.6.0 upgrade notes
 
-v1.5.6 fixes a Smart Update recovery edge case where an already-completed transaction could remain stuck on **Update activation pending** because Home Assistant or Node-RED retained stale update latches. Finalized transactions now reconcile that stale state idempotently while genuine unfinished updates and the user-authorized Quick Reload boundary remain protected.
+When upgrading to v1.6.0, replace the Home Assistant package, Node-RED flow and managed dashboard together so the runtime, templates and UI remain aligned. Smart Update remains preferred on supported Home Assistant OS / Supervised Node-RED add-on installations.
 
-See the [v1.5.6 release notes](releases/v1.5.6/release.md) for the full release summary.
+Priority checks after upgrade:
+
+1. Verify each effective inverter/controller is detected or configured and that **HPVC Control** has the intended state.
+2. For auto-detected OpenDTU/Hoymiles, confirm **Max power** comes from trusted OpenDTU `max_power`/cache or enter the slot’s manual **Full Limit** when required. Do not use the HA Number entity `max` attribute as rated inverter power.
+3. Confirm the editable **Min power** value for every controller; automatic Enphase slots use manually configured Max/Min power, while OpenDTU slots honor the configured minimum within native/trusted-full-power bounds.
+4. If HPVC reports inverter dispatch recovery required after a partial deployment or interrupted update, follow [Troubleshooting](docs/04-troubleshooting.md#inverter-dispatch-recovery-required) before resuming control or maintenance.
+5. Confirm the zero-inverter state behaves as intended: HPVC remains OFF/non-operational until at least one usable controller exists.
+
+The release also fixes stale-PV Night Restore entry, dispatch-policy mismatch, superseded adapter sequencing, downward import recovery, cooldown rounding, dispatch-time verification, contradictory OpenDTU serial fallback and false manual-disable completion.
+
+See the [v1.6.0 release notes](releases/v1.6.0/release.md) for the full release summary.
 
 ## Uninstalling
 
@@ -276,7 +288,7 @@ See [Installation → Full uninstall](docs/01-installation.md#full-uninstall) fo
 - [Inverter compatibility](docs/05-inverter-compatibility.md)
 - [Documentation index](docs/README.md)
 - [Changelog](CHANGELOG.md)
-- [v1.5.6 release notes](releases/v1.5.6/release.md)
+- [v1.6.0 release notes](releases/v1.6.0/release.md)
 
 For Home Battery Control itself, see the [HBC documentation](https://docs.homebatterycontrol.com/).
 
@@ -304,7 +316,8 @@ node-red/
   hpvc_flow.json        # Importable Node-RED flow with four functional tabs
 
 examples/
-  hoymiles-opendtu-2-inverters.reference.json
+  hoymiles-opendtu.reference.json
+  enphase-envoy-dpel.reference.json
 
 assets/
   banner.png
@@ -326,7 +339,7 @@ docs/
 releases/
   v1.0.0/
   ...
-  v1.5.6/
+  v1.6.0/
 ```
 
 ## Support the project
