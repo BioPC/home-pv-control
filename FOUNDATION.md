@@ -35,7 +35,7 @@ The dispatcher can use the guarded HA executor only through explicit test inject
 
 One entry-owned scheduler worker uses bounded settings/timer flags, five-second startup delay, ten-second main wake and thirty-second forced full evaluation. Telemetry events mark dirty state without immediate evaluations. Power significance uses the source's strict >20 W AND >2% comparison against the last full snapshot. This phase evaluates and publishes observations only; HBC/final policy-specific rate-limiter bypasses belong to the later engine stage.
 
-Listeners are rebound when configured sensor references change and are removed on unload. Owned workers/timers are cancelled and awaited; filesystem commits drain. Entry-owned registry refresh runs initially after two seconds and every 60 seconds; OpenDTU status refresh runs initially after eight seconds and every 30 seconds. The HTTP worker uses only GET of /api/limit/status with redirects forbidden. No report worker is installed. Setup-failure cleanup is tested. No task is allowed to grant write authorization.
+Listeners are rebound when configured sensor references change and are removed on unload. Owned unissued workers/timers are cancelled and awaited; filesystem commits drain. Issued HA service tasks survive unload, retaining uncertainty. Entry-owned registry refresh runs initially after two seconds and every 60 seconds; OpenDTU status refresh runs initially after eight seconds and every 30 seconds. The HTTP worker uses only GET of /api/limit/status with redirects forbidden. No report worker is installed. Setup-failure cleanup is tested. No task is allowed to grant write authorization.
 
 ## Legacy import framework
 
@@ -58,7 +58,7 @@ These test actual model/storage/scheduler/entity-wrapper code, but the HA contra
 
 Real Linux acceptance runs on the isolated codex/hpvc-readonly-acceptance branch. The matrix pins HA 2025.12.0 / Python 3.13 and HA 2026.10.4 / Python 3.14. Phase A passed 14 real HA and 70 foundation tests per environment before adapter expansion. See docs/phase-a-accepted.md and docs/readonly-stage2.md for the staged scope and evidence.
 
-The safety suite rejects actuator service access and HTTP/MQTT actuator transports anywhere in native integration source. A runtime service-call trap is exercised across setup, entity edits, import, evaluation, reload and unload. The concrete adapters have observation, representation and immutable plan-building interfaces only. The source has no dispatcher or HBC writer. The new pure engine is callable with immutable inputs and returns decisions/allocation/plan data; it is not connected to live scheduler dispatch. The only HTTP transport is a constrained OpenDTU status GET.
+The safety suite permits ServiceRegistry access only in the guarded executor and rejects HTTP/MQTT actuator transports throughout native integration source. A runtime service-call trap is exercised across setup, entity edits, import, evaluation, reload and unload. The concrete adapters have observation, representation and immutable plan-building interfaces only. The dispatcher supports fake execution and guarded HA transport; HBC modules contain no service calls. The new pure engine is callable with immutable inputs and returns decisions/allocation/plan data; it is not connected to live scheduler dispatch. The only HTTP transport is a constrained OpenDTU status GET.
 
 ## Dev.5 fake dispatcher
 
@@ -66,7 +66,7 @@ The dispatcher, maintenance transactions and fake-only transport boundary are im
 
 ## Next stage
 
-The dev.4 raw HBC evaluator, durable memory adapter, authoritative execution snapshot and fake lifecycle acceptance are documented in docs/hbc-stage4.md. Live dispatcher implementation remains a separately scoped later stage. Do not enable actuation, fence legacy, remove old assets or perform production cutover without a separately scoped stage.
+The dev.4 raw HBC evaluator, durable memory adapter, authoritative execution snapshot and fake lifecycle acceptance are documented in docs/hbc-stage4.md. Production admission and ownership handoff remain separately scoped later stages. Do not enable actuation, fence legacy, remove old assets or perform production cutover without a separately scoped stage.
 
 ## API references checked
 

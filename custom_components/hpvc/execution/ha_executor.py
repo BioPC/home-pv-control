@@ -354,20 +354,32 @@ class HaServiceExecutor:
             attempt["result"] = "success"
             completion = Completion(request, "success", self.now())
         except TransportRefused as error:
-            attempt["result"] = "not_issued"
-            self._refusals[request.dispatch_id] = (request, error.reason)
-            if not attempt["started"].done():
-                attempt["started"].set_exception(error)
-            await self._audit(
-                replace(
-                    row,
-                    result="not_issued",
-                    completed=self.now(),
-                    exception_type=type(error).__name__,
-                    exception_message=str(error)[:512],
+            if attempt["invoked"]:
+                # A service handler may raise this exception too. Once invoked,
+                # its exception is transport failure, never evidence of non-issue.
+                attempt["result"] = "transport_failure"
+                completion = Completion(
+                    request,
+                    "transport_failure",
+                    self.now(),
+                    type(error).__name__,
+                    str(error)[:512],
                 )
-            )
-            return
+            else:
+                attempt["result"] = "not_issued"
+                self._refusals[request.dispatch_id] = (request, error.reason)
+                if not attempt["started"].done():
+                    attempt["started"].set_exception(error)
+                await self._audit(
+                    replace(
+                        row,
+                        result="not_issued",
+                        completed=self.now(),
+                        exception_type=type(error).__name__,
+                        exception_message=str(error)[:512],
+                    )
+                )
+                return
         except asyncio.CancelledError:
             if not attempt["invoked"]:
                 attempt["result"] = "not_issued"

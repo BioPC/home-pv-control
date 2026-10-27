@@ -4,12 +4,11 @@ import asyncio, json
 from dataclasses import replace
 from unittest.mock import patch
 import pytest
-from ha_transport_support import start_transport, entity, ACTIONS, TEST_DOMAIN
+from ha_transport_support import start_transport, entity, TEST_DOMAIN
 from test_policy_acceptance import start
 from custom_components.hpvc.execution.models import Lane, OperationState as S
 from custom_components.hpvc.execution.verification import (
     VerificationOutcome,
-    EvidenceKind,
 )
 from custom_components.hpvc.control.models import (
     ControllerConfiguration,
@@ -62,7 +61,7 @@ async def test_number_registry_invocation_receipt_cooldown_and_no_physical_proof
         return await original(registry, domain, service, *args, **kwargs)
 
     with patch.object(type(hass.services), "async_call", guard):
-        q = await h.proposal(register=True)
+        await h.proposal(register=True)
         assert not h.runtime.policy_runtime.event_recorder.current.events
         request = await h.dispatch.pump_lane(Lane.INVERTER, h.clock())
         assert request
@@ -459,3 +458,25 @@ async def test_unload_before_registry_boundary_prevents_the_call(hass):
     assert not h.calls
     assert not h.runtime.policy_runtime.event_recorder.current.events
     assert h.runtime.ledger.current.operations[-1].state in (S.SUPERSEDED, S.UNKNOWN)
+
+
+async def test_opaque_action_transport_cannot_supply_physical_or_maintenance_proof(hass):
+    h = await start_transport(hass)
+    cfg = ControllerConfiguration(
+        ControllerIdentity("opaque_action", 1, AdapterKind.ACTION),
+        "sig", method=ControlMethod.ACTION, full_limit_w=3000,
+        action="script.apply_limit", value_field="payload.limit",
+    )
+    h.custom_views = lambda: (
+        GenericActionAdapter().normalize(cfg, None, h.clock().utc),
+    )
+    await h.proposal(register=True)
+    request = await h.dispatch.pump_lane(Lane.INVERTER, h.clock())
+    assert request
+    await h.finish()
+    op = h.dispatch._op(request.operation_id)
+    assert op.state == S.OPEN_LOOP
+    assert not op.evidence_ids
+    assert h.runtime.ledger.current.restore_obligations
+    assert not h.runtime.physical_writes_authorized
+    await h.unload()

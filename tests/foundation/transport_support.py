@@ -1,7 +1,6 @@
 """Dedicated test injection. Never imported by native runtime code."""
 
 import asyncio
-from dataclasses import replace
 from types import SimpleNamespace
 from dispatch_support import Harness
 from custom_components.hpvc.execution.dispatcher import Dispatcher
@@ -13,7 +12,6 @@ from custom_components.hpvc.execution.ha_executor import (
 )
 from custom_components.hpvc.execution.service_plan import (
     InvocationBindings,
-    NativeBinding,
 )
 
 ALIASES = {

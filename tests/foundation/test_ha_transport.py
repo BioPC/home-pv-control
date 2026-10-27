@@ -1,9 +1,8 @@
 """HA transport receipt/admission/identity/error semantics with isolated test registry."""
 
-import asyncio, ast, json, pickle
+import asyncio, ast, pickle
 from dataclasses import replace
 from pathlib import Path
-from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 from transport_support import TransportHarness, test_admission
@@ -13,16 +12,13 @@ from custom_components.hpvc.execution.models import (
     OperationState as S,
     MaintenanceRecord,
     MaintenanceState,
-    TransportStatus,
 )
 from custom_components.hpvc.execution.ha_executor import (
-    HaServiceExecutor,
     TransportRefused,
     production_transport_admitted,
     TEST_DOMAIN,
     _TransportTestAdmission,
 )
-from custom_components.hpvc.execution.service_plan import thaw
 
 
 class HaTransportTests(unittest.IsolatedAsyncioTestCase):
@@ -379,3 +375,26 @@ class AdditionalTransportIdentityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(h.registry.calls), 1)
         self.assertFalse(h.runtime.event_recorder.current.events)
         self.assertEqual(h.ledger.current.operations[0].state, S.UNKNOWN)
+
+
+class IssuedRefusalExceptionTests(unittest.IsolatedAsyncioTestCase):
+    async def test_handler_refusal_exception_does_not_prove_nonissue(self):
+        h = await TransportHarness().start()
+        try:
+
+            async def handler(*args):
+                raise TransportRefused("handler_has_already_been_invoked")
+
+            h.registry.handler = handler
+            await h.submit()
+            request = await h.dispatch.pump_lane(Lane.INVERTER, h.clock())
+            await h.finish_transport()
+            self.assertFalse(h.executor.knows_not_issued(request.dispatch_id))
+            self.assertEqual(
+                h.dispatch._op(request.operation_id).state, S.SERVICE_FAILED
+            )
+            self.assertEqual(
+                h.executor.current.attempts[-1].result, "transport_failure"
+            )
+        finally:
+            await h.stop()
