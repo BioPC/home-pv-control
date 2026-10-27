@@ -1,6 +1,7 @@
 """Behavioral acceptance of production read-only adapters, fleet and evidence."""
 
 import json
+from pathlib import Path
 import unittest
 from dataclasses import replace, FrozenInstanceError
 from custom_components.hpvc.codec import SchemaError
@@ -229,6 +230,32 @@ class NumberTests(unittest.TestCase):
             ),
             (505, 51, 510),
         )
+
+    def test_528_source_javascript_quantization_oracles(self):
+        fixture = json.loads(
+            (
+                Path(__file__).parents[1] / "fixtures" / "readonly-v1.6-oracle.json"
+            ).read_text()
+        )
+        for case in fixture["cases"]:
+            with self.subTest(case=case):
+                cfg = config(
+                    full_limit_w=case["full"],
+                    low_limit_w=case["minimum"],
+                    unit=LimitUnit(case["unit"]),
+                )
+                entity = number(
+                    max=9999 if case["unit"] == "Watts" else 100, step=case["step"]
+                )
+                adapter = GenericNumberAdapter()
+                view = adapter.normalize(cfg, entity, NOW)
+                represented = adapter.represent(
+                    view, case["desired"], import_floor_w=case["floor"]
+                )
+                self.assertEqual(represented.native_value, case["expected_native"])
+                self.assertEqual(
+                    represented.representable_target_w, case["expected_effective"]
+                )
 
     def test_plan_is_frozen_data_and_disabled_optout(self):
         adapter = GenericNumberAdapter()
@@ -654,6 +681,50 @@ class FleetTests(unittest.TestCase):
         returned = manager.refresh(plant, states, registry, devices, now=NOW)
         self.assertEqual(returned.recovered_uids, (uid,))
         self.assertEqual(returned.rebalance_uids, (uid,))
+
+    def test_auto_optout_follows_identity_after_slot_move(self):
+        manager = InverterManager()
+        a = state(
+            "number.a_limit_nonpersistent_absolute",
+            "500",
+            min=0,
+            max=1000,
+            unit_of_measurement="W",
+        )
+        b = state(
+            "number.b_limit_nonpersistent_absolute",
+            "500",
+            min=0,
+            max=1000,
+            unit_of_measurement="W",
+        )
+        first = manager.refresh(PlantConfiguration("plant"), (a, b), (), (), now=NOW)
+        old = first.effective[0]
+        bound = config(
+            identity=ControllerIdentity(old.uid, 1),
+            auto_managed=True,
+            auto_identity=old.uid,
+            limit_number=a.entity_id,
+            control_enabled=False,
+        )
+        # Manual slot 1 forces the same automatic controller to another slot.
+        manual = config(
+            identity=ControllerIdentity("manual", 1), limit_number="number.limit"
+        )
+        bound = replace(bound, identity=replace(bound.identity, slot=2))
+        plant = PlantConfiguration(
+            "plant", inverter_count=2, controllers=(manual, bound)
+        )
+        moved = manager.refresh(plant, (number(), a, b), (), (), now=NOW)
+        row = next(row for row in moved.effective if row.uid == old.uid)
+        self.assertFalse(row.participating)
+        self.assertTrue(
+            next(
+                row
+                for row in moved.effective
+                if row.uid != old.uid and row.origin == "auto"
+            ).participating
+        )
 
     def test_mixed_fleet_and_availability_dimensions(self):
         registry, devices, states = enphase()

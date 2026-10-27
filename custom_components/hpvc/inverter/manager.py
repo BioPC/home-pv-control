@@ -150,8 +150,12 @@ class InverterManager:
             entity_id = self._resolve_entity(config.limit_number, registry)
             candidate = by_entity.get(entity_id)
             if config.auto_managed:
-                # Disappeared auto controls must not turn into optimistic generic controls.
-                if candidate is None:
+                # Disappeared/replaced auto controls cannot inherit the old identity's settings.
+                if candidate is None or (
+                    config.auto_identity
+                    and config.auto_identity
+                    not in (candidate.uid, "enphase|" + candidate.limit_entity)
+                ):
                     continue
             if config.method == ControlMethod.NUMBER and not entity_id:
                 continue
@@ -191,10 +195,28 @@ class InverterManager:
             if slot is None:
                 overflow.append(candidate.uid)
                 continue
-            config = configs.get(slot) or ControllerConfiguration(
-                ControllerIdentity(f"{configuration.plant_uid}:slot:{slot}", slot),
-                signature="unconfigured",
+            matching = next(
+                (
+                    item
+                    for item in configs.values()
+                    if item.auto_managed and item.auto_identity == candidate.uid
+                ),
+                None,
             )
+            config = matching or configs.get(slot)
+            if (
+                config is not None
+                and config.auto_identity
+                and config.auto_identity != candidate.uid
+            ):
+                config = None
+            if config is None:
+                config = ControllerConfiguration(
+                    ControllerIdentity(f"{configuration.plant_uid}:slot:{slot}", slot),
+                    signature="unconfigured",
+                )
+            elif config.identity.slot != slot:
+                config = replace(config, identity=replace(config.identity, slot=slot))
             # Auto identity does not inherit a different controller's editable range.
             selected.append((config, candidate, "auto", candidate.limit_entity))
             occupied.add(slot)

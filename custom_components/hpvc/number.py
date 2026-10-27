@@ -45,6 +45,11 @@ class HpvcInverters(HpvcNumber):
     """Legacy count facade: max(auto slot count, configured count), bounded to ten."""
 
     @property
+    def value(self):
+        # HA 2025.12 still probes the legacy NumberEntity.value property.
+        return self.native_value
+
+    @property
     def native_min_value(self):
         return sum(
             row.origin == "auto" for row in self.coordinator.manager.current.effective

@@ -243,16 +243,19 @@ class HpvcEntity(Entity):
                 raise SchemaError(
                     "Full power is locked to trusted OpenDTU API/cache rating"
                 )
-            if (
+            if effective and effective.origin == "auto":
+                controller = replace(
+                    controller,
+                    auto_identity=effective.uid,
+                    auto_managed=True,
+                    limit_number=effective.view.configuration.limit_number,
+                )
+            elif (
                 effective
                 and effective.view.configuration.identity.adapter.value == "enphase"
                 and self.setting.field in ("full_limit_w", "low_limit_w")
             ):
-                controller = replace(
-                    controller,
-                    auto_identity=effective.uid,
-                    auto_managed=effective.origin == "auto",
-                )
+                controller = replace(controller, auto_identity=effective.uid)
             if self.setting.field == "method":
                 value = ControlMethod(value)
             if self.setting.field == "unit":

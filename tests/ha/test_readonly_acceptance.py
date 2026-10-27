@@ -280,7 +280,7 @@ async def test_real_manual_optout_changes_participation_not_authorization(hass):
 
 
 async def test_real_registry_rename_and_identity_replacement(hass):
-    external = source(hass, "number")
+    external = source(hass)
     registry = er.async_get(hass)
     row = registry.async_get_or_create(
         "number",
@@ -323,4 +323,48 @@ async def test_real_registry_rename_and_identity_replacement(hass):
     await runtime.refresh_fleet(registry=True)
     assert runtime.manager.current.effective[0].uid != uid
     assert not runtime.physical_writes_authorized
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_real_restart_preserves_unknown_operation_and_restore_obligation(hass):
+    from custom_components.hpvc.execution.models import (
+        PhysicalOperation,
+        OperationState,
+    )
+    import time
+
+    entry = await start(hass)
+    old = entry.runtime_data
+    operation = PhysicalOperation(
+        "unresolved",
+        "batch",
+        "main",
+        "old-owner",
+        "removed-device",
+        "generic_number",
+        "old-config",
+        "old-config-reference",
+    )
+    await old.ledger.register_operation(operation)
+    await old.ledger.transition_operation(
+        "unresolved", OperationState.ARMED, armed_at_utc=time.time()
+    )
+    with patch.object(
+        type(hass.services),
+        "async_call",
+        new_callable=AsyncMock,
+        side_effect=AssertionError("Restart cannot dispatch"),
+    ) as services:
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+        runtime = entry.runtime_data
+        retained = runtime.ledger.current.operations[0]
+        assert retained.state == OperationState.UNKNOWN
+        obligation = runtime.ledger.current.restore_obligations[0]
+        assert obligation.controller_uid == "removed-device"
+        assert obligation.required_target_w is None
+        assert runtime.recovery_required
+        assert hass.states.get("binary_sensor.hpvc_recovery_required").state == "on"
+        assert not runtime.physical_writes_authorized
+        services.assert_not_called()
     assert await hass.config_entries.async_unload(entry.entry_id)
