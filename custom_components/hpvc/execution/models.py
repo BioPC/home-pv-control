@@ -61,6 +61,7 @@ OPERATION_TRANSITIONS = {
     OperationState.VERIFIED: {OperationState.RETIRED},
     OperationState.OPEN_LOOP: {OperationState.UNKNOWN},
     OperationState.UNKNOWN: {OperationState.RECOVERY_REQUIRED},
+    OperationState.RECOVERY_REQUIRED: {OperationState.AWAITING_VERIFICATION},
 }
 
 
@@ -155,6 +156,7 @@ class PhysicalOperation(Record):
     service_completed_at_utc: float | None = None
     evidence_ids: tuple[str, ...] = ()
     reason: str | None = None
+    expected_native_value: str | None = None
 
     def __post_init__(self):
         if not all(
@@ -217,6 +219,7 @@ class VerificationEvidence(Record):
     received_at_utc: float | None = None
     provenance: str = ""
     tolerance_w: float = 0.0
+    observed_native_value: str | None = None
 
     def __post_init__(self):
         if (
@@ -239,6 +242,8 @@ class RestoreObligation(Record):
     state: ObligationState = ObligationState.UNRESOLVED
     operation_ids: tuple[str, ...] = ()
     evidence_ids: tuple[str, ...] = ()
+    established_at_utc: float | None = None
+    owner_epoch: str | None = None
 
     def __post_init__(self):
         if not all(
@@ -273,6 +278,11 @@ class MaintenanceRecord(Record):
     saved_enable_intent: bool | None = None
     obligation_ids: tuple[str, ...] = ()
     authorization_revision: int | None = None
+    requested_at_utc: float | None = None
+    post_disable_evaluation_id: str | None = None
+    owner_epoch: str | None = None
+    requested_monotonic: float | None = None
+    boot_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -354,6 +364,28 @@ class ExecutionLedger(Record):
                     if isinstance(item, PhysicalOperation)
                     else item.required_target_w
                 )
+                if (
+                    isinstance(item, PhysicalOperation)
+                    and item.expected_native_value is not None
+                ):
+                    if (
+                        proof.kind != "independent_native_state"
+                        or proof.observed_native_value != item.expected_native_value
+                        or proof.received_at_utc is None
+                        or proof.reported_at_utc is None
+                        or item.dispatch_started_at_utc is None
+                        or min(proof.reported_at_utc, proof.received_at_utc)
+                        < item.dispatch_started_at_utc
+                        or proof.provenance
+                        != "owner="
+                        + item.owner_epoch
+                        + ";dispatch="
+                        + str(item.dispatch_id)
+                    ):
+                        raise SchemaError(
+                            "Native step proof does not match dispatched identity/value"
+                        )
+                    continue
                 if (
                     target is None
                     or proof.observed_value_w is None

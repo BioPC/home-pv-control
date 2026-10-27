@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 from ..codec import Record
 from .models import (
     OperationState,
+    Lane,
     TransportStatus,
     ObligationState,
     RestoreObligation,
@@ -87,6 +88,8 @@ def reconstruct_restore_obligations(ledger, configuration_archive=None):
     archive = configuration_archive or {}
     obligations = list(ledger.restore_obligations)
     for operation in ledger.operations:
+        if operation.lane == Lane.HBC:
+            continue
         if operation.state in (
             OperationState.PREPARED,
             OperationState.SUPERSEDED,

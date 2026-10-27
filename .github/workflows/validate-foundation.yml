@@ -28,6 +28,8 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
+      - name: Original v1.6 dispatcher fake characterization
+        run: node scripts/build_dispatch_characterization.cjs
       - name: Foundation behavior and no-actuation safety tests
         run: python -B scripts/test_foundation.py
       - name: Install exact Home Assistant test environment

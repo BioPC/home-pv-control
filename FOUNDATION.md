@@ -1,4 +1,4 @@
-# HPVC 2.0 HBC and runtime memory — 2.0.0-dev.4
+# HPVC 2.0 fake dispatcher — 2.0.0-dev.5
 
 This development build extends the accepted dev.1 foundation with read-only controller discovery, immutable command-plan representation, independent evidence interpretation, recovery classification and fleet diagnostics. Native inverter and HBC writes do not exist. The physical-write authorization sensor is always Off, including after enable, configuration edits, import, restart and reload.
 
@@ -59,6 +59,10 @@ These test actual model/storage/scheduler/entity-wrapper code, but the HA contra
 Real Linux acceptance runs on the isolated codex/hpvc-readonly-acceptance branch. The matrix pins HA 2025.12.0 / Python 3.13 and HA 2026.10.4 / Python 3.14. Phase A passed 14 real HA and 70 foundation tests per environment before adapter expansion. See docs/phase-a-accepted.md and docs/readonly-stage2.md for the staged scope and evidence.
 
 The safety suite rejects actuator service access and HTTP/MQTT actuator transports anywhere in native integration source. A runtime service-call trap is exercised across setup, entity edits, import, evaluation, reload and unload. The concrete adapters have observation, representation and immutable plan-building interfaces only. The source has no dispatcher or HBC writer. The new pure engine is callable with immutable inputs and returns decisions/allocation/plan data; it is not connected to live scheduler dispatch. The only HTTP transport is a constrained OpenDTU status GET.
+
+## Dev.5 fake dispatcher
+
+The dispatcher, maintenance transactions and fake-only transport boundary are implemented in dev.5; see docs/dispatcher-stage5.md. Explicit simulations create a sixth `_dispatch.json` companion. Live setup keeps read-only scheduling and does not create simulated command facts. Physical authorization remains Off.
 
 ## Next stage
 

@@ -35,6 +35,7 @@ class LifecycleOwner:
         self.closed = False
         self.tasks = set()
         self.cleanups = []
+        self.async_cleanups = []
         self.task_factory = task_factory or (
             lambda coro, name: asyncio.create_task(coro, name=name)
         )
@@ -61,6 +62,12 @@ class LifecycleOwner:
         self.cleanups.append(callback)
         return callback
 
+    def add_async_cleanup(self, callback):
+        if self.closed:
+            raise RuntimeError("Entry runtime is closed")
+        self.async_cleanups.append(callback)
+        return callback
+
     async def close(self):
         if self.closed:
             return
@@ -77,6 +84,12 @@ class LifecycleOwner:
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
         self.tasks.clear()
+        for cleanup in reversed(self.async_cleanups):
+            try:
+                await cleanup()
+            except Exception:
+                _LOGGER.exception("HPVC async cleanup failed")
+        self.async_cleanups.clear()
 
 
 class EvaluationScheduler:

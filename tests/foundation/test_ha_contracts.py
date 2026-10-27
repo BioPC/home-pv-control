@@ -251,9 +251,11 @@ class SafetySourceTests(unittest.TestCase):
                             ),
                             str(path),
                         )
-        self.assertFalse(
-            any(base.rglob("dispatcher.py")), "No service dispatcher in read-only phase"
-        )
+        # dev.5 permits a fake-only dispatcher, while the actuator/transport AST
+        # bans above remain unchanged and apply to every new execution module.
+        dispatchers = list(base.rglob("dispatcher.py"))
+        self.assertEqual(dispatchers, [base / "execution/dispatcher.py"])
+        self.assertIn("type(executor) is not FakeExecutor", dispatchers[0].read_text(encoding="utf-8"))
         # Concrete adapters may construct immutable plans, but have no execution methods.
         forbidden_methods = {
             "execute",

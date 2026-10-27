@@ -55,6 +55,8 @@ class EvaluationProposal(Record):
     source_digest: str
     cooldown_seconds: float = 30.0
     controller_provenance: tuple[PolicyController, ...] = ()
+    pv_before_w: float = 0.0
+    enabled_intent: bool = True
 
 
 def align_policy(memory, last_clock, clock):
@@ -104,8 +106,8 @@ class PolicyRuntimeAdapter:
         self.event_recorder.plan_validator = self._validate_simulated_plan
         self.closed = False
 
-    def _validate_simulated_plan(self, event):
-        proposal = self.last_proposal
+    def _validate_simulated_plan(self, event, proposal=None):
+        proposal = proposal or self.last_proposal
         if (
             proposal is None
             or event.evaluation_id != proposal.policy.intent.evaluation_id
@@ -379,6 +381,8 @@ class PolicyRuntimeAdapter:
             digest,
             policy.settings.cooldown_seconds,
             policy.controllers,
+            policy.pv.value or 0.0,
+            policy.enabled,
         )
 
     async def accept_proposal(self, proposal, *, durable=True):

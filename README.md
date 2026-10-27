@@ -1,4 +1,4 @@
-> **HPVC 2.0 HBC and runtime memory (2.0.0-dev.4):** This tree includes a native integration for observation, recovery diagnostics and a pure policy/allocation and raw HBC pipeline with durable runtime memory.
+> **HPVC 2.0 fake dispatcher (2.0.0-dev.5):** This tree includes a native integration for observation, recovery diagnostics and a pure policy/HBC pipeline and authoritative dispatcher tested only with a fake executor.
 > Native inverter/HBC writes are hard-disabled. Legacy Node-RED and YAML below remain unchanged as the v1.6.0 reference.
 > Read [FOUNDATION.md](FOUNDATION.md) for installation, scope, storage and validation limits before use.
 
