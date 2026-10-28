@@ -4,5 +4,7 @@
   "legacy_reference": "1.6.0",
   "production_transport_authorized": false,
   "release": false,
-  "baseline": "hpvc-2.0.0-dev.7-dry-run-handoff"
+  "baseline": "hpvc-2.0.0-dev.7-dry-run-handoff",
+  "revision": "audit-fixes.1",
+  "patch_baseline": "hpvc-2.0.0-dev.8-site-readiness-audit"
 }

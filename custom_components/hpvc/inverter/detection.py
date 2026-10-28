@@ -8,6 +8,42 @@ def normalize(value):
     return re.sub(r"[^a-z0-9]+", "_", str(value or "").lower()).strip("_")
 
 
+TEST_TRANSPORT_TARGETS = frozenset(
+    {
+        "number.external_limit",
+        "number.dev6_target",
+        "number.dev6_enphase",
+        "switch.dev6_pre",
+        "switch.dev6_post",
+        "switch.dev6_enphase",
+        "select.dev6_enphase",
+    }
+)
+
+
+def is_hpvc_test_entity(entity_id, entry=None, state=None):
+    """Exclude reserved HPVC fixtures, not arbitrary names containing 'hpvc'.
+
+    Check original registry identities as well, so renaming a fixture does not
+    make it a production candidate. Explicit markers must be literal booleans.
+    This filter only affects auto-discovery, never a manual binding or execution.
+    """
+    identities = [entity_id]
+    if entry is not None:
+        identities.extend((entry.original_entity_id, entry.unique_id))
+    if any(
+        value in TEST_TRANSPORT_TARGETS
+        or value.split(".", 1)[-1].startswith("hpvc_fake_")
+        for value in identities
+    ):
+        return True
+    attrs = state.attributes if state is not None else {}
+    return (
+        attrs.get("hpvc_test_fixture") is True
+        or attrs.get("hpvc_test_transport") is True
+    )
+
+
 def enphase_role(entry):
     domain = entry.entity_id.split(".", 1)[0]
     for value in entry.metadata_values:
@@ -79,7 +115,13 @@ def discover_controllers(registry, devices, states):
     groups = {}
     od_groups = {}
     for entry in registry:
-        if entry.disabled or not entry.device_id:
+        if (
+            entry.disabled
+            or not entry.device_id
+            or is_hpvc_test_entity(
+                entry.entity_id, entry, state_map.get(entry.entity_id)
+            )
+        ):
             continue
         role = enphase_role(entry)
         if role:
@@ -155,6 +197,8 @@ def discover_controllers(registry, devices, states):
     detected = {item.limit_entity for item in found}
     for entity_id, state in sorted(state_map.items()):
         entry = metadata.get(entity_id)
+        if is_hpvc_test_entity(entity_id, entry, state):
+            continue
         if entity_id in detected or (
             entry is not None and (entry.device_id or entry.disabled)
         ):
@@ -163,6 +207,11 @@ def discover_controllers(registry, devices, states):
             stem = entity_id.removeprefix("number.").removesuffix("_dpel_limit")
             enable = "switch." + stem + "_dpel_enabled"
             mode = "select." + stem + "_dpel_mode"
+            if any(
+                is_hpvc_test_entity(e, metadata.get(e), state_map.get(e))
+                for e in (enable, mode)
+            ):
+                continue
             if any(
                 e in metadata and (metadata[e].device_id or metadata[e].disabled)
                 for e in (enable, mode)

@@ -1,0 +1,606 @@
+{
+  "reference": "home assistant/hpvc_config.yaml",
+  "sha256": "aeccabe1fd95809fd0afcc239c9919812bea129e880e4c24d9ee71f6fd03c08b",
+  "entities": [
+    {
+      "unique_id": "hpvc_pv1_control",
+      "domain": "switch",
+      "platform": "template",
+      "reference_entity_id": "switch.hpvc_pv1_control"
+    },
+    {
+      "unique_id": "hpvc_pv2_control",
+      "domain": "switch",
+      "platform": "template",
+      "reference_entity_id": "switch.hpvc_pv2_control"
+    },
+    {
+      "unique_id": "hpvc_pv3_control",
+      "domain": "switch",
+      "platform": "template",
+      "reference_entity_id": "switch.hpvc_pv3_control"
+    },
+    {
+      "unique_id": "hpvc_pv4_control",
+      "domain": "switch",
+      "platform": "template",
+      "reference_entity_id": "switch.hpvc_pv4_control"
+    },
+    {
+      "unique_id": "hpvc_pv5_control",
+      "domain": "switch",
+      "platform": "template",
+      "reference_entity_id": "switch.hpvc_pv5_control"
+    },
+    {
+      "unique_id": "hpvc_pv6_control",
+      "domain": "switch",
+      "platform": "template",
+      "reference_entity_id": "switch.hpvc_pv6_control"
+    },
+    {
+      "unique_id": "hpvc_pv7_control",
+      "domain": "switch",
+      "platform": "template",
+      "reference_entity_id": "switch.hpvc_pv7_control"
+    },
+    {
+      "unique_id": "hpvc_pv8_control",
+      "domain": "switch",
+      "platform": "template",
+      "reference_entity_id": "switch.hpvc_pv8_control"
+    },
+    {
+      "unique_id": "hpvc_pv9_control",
+      "domain": "switch",
+      "platform": "template",
+      "reference_entity_id": "switch.hpvc_pv9_control"
+    },
+    {
+      "unique_id": "hpvc_pv10_control",
+      "domain": "switch",
+      "platform": "template",
+      "reference_entity_id": "switch.hpvc_pv10_control"
+    },
+    {
+      "unique_id": "hpvc_source_freshness",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_source_freshness"
+    },
+    {
+      "unique_id": "hpvc_enphase_registry",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_enphase_registry"
+    },
+    {
+      "unique_id": "hpvc_inverters",
+      "domain": "number",
+      "platform": "template",
+      "reference_entity_id": "number.hpvc_inverters"
+    },
+    {
+      "unique_id": "hpvc_effective_inverter_runtime",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_effective_inverter_runtime"
+    },
+    {
+      "unique_id": "hpvc_installed_version",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_installed_version"
+    },
+    {
+      "unique_id": "hpvc_diag_market_export_price",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_diag_market_export_price"
+    },
+    {
+      "unique_id": "hpvc_diag_all_in_price",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_diag_all_in_price"
+    },
+    {
+      "unique_id": "hpvc_diag_grid_power",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_diag_grid_power"
+    },
+    {
+      "unique_id": "hpvc_diag_pv_power",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_diag_pv_power"
+    },
+    {
+      "unique_id": "hpvc_diag_hbc_strategy",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_diag_hbc_strategy"
+    },
+    {
+      "unique_id": "hpvc_total_hbc_charging_power",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_total_hbc_charging_power"
+    },
+    {
+      "unique_id": "hpvc_daily_target_accuracy",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_daily_target_accuracy"
+    },
+    {
+      "unique_id": "hpvc_daily_target_accuracy_samples",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_daily_target_accuracy_samples"
+    },
+    {
+      "unique_id": "hpvc_daily_band_excursions",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_daily_band_excursions"
+    },
+    {
+      "unique_id": "hpvc_daily_rms_control_error",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_daily_rms_control_error"
+    },
+    {
+      "unique_id": "hpvc_daily_mae_control_error",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_daily_mae_control_error"
+    },
+    {
+      "unique_id": "hpvc_daily_time_outside_target_deadband",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_daily_time_outside_target_deadband"
+    },
+    {
+      "unique_id": "hpvc_deadband_exceedance_rms_mae_ratio",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_deadband_exceedance_rms_mae_ratio"
+    },
+    {
+      "unique_id": "hpvc_tracking_error_attribution_coverage",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_tracking_error_attribution_coverage"
+    },
+    {
+      "unique_id": "hpvc_tracking_error_no_action_excluded",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_tracking_error_no_action_excluded"
+    },
+    {
+      "unique_id": "hpvc_tracking_error_continuity_gap_excluded",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_tracking_error_continuity_gap_excluded"
+    },
+    {
+      "unique_id": "hpvc_tracking_error_factor_state",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_tracking_error_factor_state"
+    },
+    {
+      "unique_id": "hpvc_target_control_response_impact",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_target_control_response_impact"
+    },
+    {
+      "unique_id": "hpvc_target_other_impact",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_target_other_impact"
+    },
+    {
+      "unique_id": "hpvc_target_pv_availability_impact",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_target_pv_availability_impact"
+    },
+    {
+      "unique_id": "hpvc_target_house_load_changes_impact",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_target_house_load_changes_impact"
+    },
+    {
+      "unique_id": "hpvc_pv1_actual_limit",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_pv1_actual_limit"
+    },
+    {
+      "unique_id": "hpvc_pv2_actual_limit",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_pv2_actual_limit"
+    },
+    {
+      "unique_id": "hpvc_pv3_actual_limit",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_pv3_actual_limit"
+    },
+    {
+      "unique_id": "hpvc_pv4_actual_limit",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_pv4_actual_limit"
+    },
+    {
+      "unique_id": "hpvc_pv5_actual_limit",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_pv5_actual_limit"
+    },
+    {
+      "unique_id": "hpvc_pv6_actual_limit",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_pv6_actual_limit"
+    },
+    {
+      "unique_id": "hpvc_pv7_actual_limit",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_pv7_actual_limit"
+    },
+    {
+      "unique_id": "hpvc_pv8_actual_limit",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_pv8_actual_limit"
+    },
+    {
+      "unique_id": "hpvc_pv9_actual_limit",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_pv9_actual_limit"
+    },
+    {
+      "unique_id": "hpvc_pv10_actual_limit",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_pv10_actual_limit"
+    },
+    {
+      "unique_id": "hpvc_inverter_limit_validation",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_inverter_limit_validation"
+    },
+    {
+      "unique_id": "hpvc_show_inverter_slot_2",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_show_inverter_slot_2"
+    },
+    {
+      "unique_id": "hpvc_show_inverter_slot_3",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_show_inverter_slot_3"
+    },
+    {
+      "unique_id": "hpvc_show_inverter_slot_4",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_show_inverter_slot_4"
+    },
+    {
+      "unique_id": "hpvc_show_inverter_slot_5",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_show_inverter_slot_5"
+    },
+    {
+      "unique_id": "hpvc_show_inverter_slot_6",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_show_inverter_slot_6"
+    },
+    {
+      "unique_id": "hpvc_show_inverter_slot_7",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_show_inverter_slot_7"
+    },
+    {
+      "unique_id": "hpvc_show_inverter_slot_8",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_show_inverter_slot_8"
+    },
+    {
+      "unique_id": "hpvc_show_inverter_slot_9",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_show_inverter_slot_9"
+    },
+    {
+      "unique_id": "hpvc_show_inverter_slot_10",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_show_inverter_slot_10"
+    },
+    {
+      "unique_id": "hpvc_pv1_auto_detected",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv1_auto_detected"
+    },
+    {
+      "unique_id": "hpvc_pv2_auto_detected",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv2_auto_detected"
+    },
+    {
+      "unique_id": "hpvc_pv3_auto_detected",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv3_auto_detected"
+    },
+    {
+      "unique_id": "hpvc_pv4_auto_detected",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv4_auto_detected"
+    },
+    {
+      "unique_id": "hpvc_pv5_auto_detected",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv5_auto_detected"
+    },
+    {
+      "unique_id": "hpvc_pv6_auto_detected",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv6_auto_detected"
+    },
+    {
+      "unique_id": "hpvc_pv7_auto_detected",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv7_auto_detected"
+    },
+    {
+      "unique_id": "hpvc_pv8_auto_detected",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv8_auto_detected"
+    },
+    {
+      "unique_id": "hpvc_pv9_auto_detected",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv9_auto_detected"
+    },
+    {
+      "unique_id": "hpvc_pv10_auto_detected",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv10_auto_detected"
+    },
+    {
+      "unique_id": "hpvc_pv1_limit_range_invalid",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv1_limit_range_invalid"
+    },
+    {
+      "unique_id": "hpvc_pv2_limit_range_invalid",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv2_limit_range_invalid"
+    },
+    {
+      "unique_id": "hpvc_pv3_limit_range_invalid",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv3_limit_range_invalid"
+    },
+    {
+      "unique_id": "hpvc_pv4_limit_range_invalid",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv4_limit_range_invalid"
+    },
+    {
+      "unique_id": "hpvc_pv5_limit_range_invalid",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv5_limit_range_invalid"
+    },
+    {
+      "unique_id": "hpvc_pv6_limit_range_invalid",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv6_limit_range_invalid"
+    },
+    {
+      "unique_id": "hpvc_pv7_limit_range_invalid",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv7_limit_range_invalid"
+    },
+    {
+      "unique_id": "hpvc_pv8_limit_range_invalid",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv8_limit_range_invalid"
+    },
+    {
+      "unique_id": "hpvc_pv9_limit_range_invalid",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv9_limit_range_invalid"
+    },
+    {
+      "unique_id": "hpvc_pv10_limit_range_invalid",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv10_limit_range_invalid"
+    },
+    {
+      "unique_id": "hpvc_export_threshold_range_invalid",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_export_threshold_range_invalid"
+    },
+    {
+      "unique_id": "hpvc_configuration_valid",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_configuration_valid"
+    },
+    {
+      "unique_id": "hpvc_core_inputs_ready",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_core_inputs_ready"
+    },
+    {
+      "unique_id": "hpvc_required_inputs_ready",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_required_inputs_ready"
+    },
+    {
+      "unique_id": "hpvc_maintenance_inverter_warning",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_maintenance_inverter_warning"
+    },
+    {
+      "unique_id": "hpvc_pv1_max_power_locked",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv1_max_power_locked"
+    },
+    {
+      "unique_id": "hpvc_pv2_max_power_locked",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv2_max_power_locked"
+    },
+    {
+      "unique_id": "hpvc_pv3_max_power_locked",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv3_max_power_locked"
+    },
+    {
+      "unique_id": "hpvc_pv4_max_power_locked",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv4_max_power_locked"
+    },
+    {
+      "unique_id": "hpvc_pv5_max_power_locked",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv5_max_power_locked"
+    },
+    {
+      "unique_id": "hpvc_pv6_max_power_locked",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv6_max_power_locked"
+    },
+    {
+      "unique_id": "hpvc_pv7_max_power_locked",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv7_max_power_locked"
+    },
+    {
+      "unique_id": "hpvc_pv8_max_power_locked",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv8_max_power_locked"
+    },
+    {
+      "unique_id": "hpvc_pv9_max_power_locked",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv9_max_power_locked"
+    },
+    {
+      "unique_id": "hpvc_pv10_max_power_locked",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv10_max_power_locked"
+    },
+    {
+      "unique_id": "hpvc_hbc_available",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_hbc_available"
+    },
+    {
+      "unique_id": "hpvc_external_release_active",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_external_release_active"
+    },
+    {
+      "unique_id": "hpvc_pv_limited",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_pv_limited"
+    },
+    {
+      "unique_id": "hpvc_charge_priority_active",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_charge_priority_active"
+    },
+    {
+      "unique_id": "hpvc_cooldown_active",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_cooldown_active"
+    },
+    {
+      "unique_id": "hpvc_negative_price_mode",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_negative_price_mode"
+    },
+    {
+      "unique_id": "hpvc_at_minimum_pv",
+      "domain": "binary_sensor",
+      "platform": "template",
+      "reference_entity_id": "binary_sensor.hpvc_at_minimum_pv"
+    },
+    {
+      "unique_id": "hpvc_inverter_limit_entity_display",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_inverter_limit_entity_display"
+    },
+    {
+      "unique_id": "hpvc_charge_priority_state",
+      "domain": "sensor",
+      "platform": "template",
+      "reference_entity_id": "sensor.hpvc_charge_priority_state"
+    }
+  ]
+}

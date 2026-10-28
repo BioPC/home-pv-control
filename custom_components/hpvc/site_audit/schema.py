@@ -29,6 +29,8 @@ ATTRIBUTES = {
     "options",
     "installed_version",
     "version",
+    "hpvc_test_fixture",
+    "hpvc_test_transport",
 }
 NATIVE_IDS = tuple(
     json.loads(

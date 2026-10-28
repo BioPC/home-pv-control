@@ -64,6 +64,7 @@ def render_report(r):
         dict(
             intended_entity_count=len(r["registry_migration"]),
             collisions=[x for x in r["registry_migration"] if x["collision"]],
+            ownership_inventory=r.get("registry_ownership", []),
             details="Exact proposal records are in registry-proposal.json; unoccupied intended IDs are not proof of ownership and no move is executed",
         ),
     )

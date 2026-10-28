@@ -192,6 +192,11 @@ def build_preview(values: dict[str, str | None], plant_uid: str) -> ImportTransa
                 ("post_actions_json", list),
             ):
                 try:
+                    # An unused optional helper is exported by HA as an empty
+                    # string, whereas an absent helper already uses this default.
+                    # Normalize only blank text; populated payloads stay strict.
+                    if not kw[key].strip():
+                        kw[key] = "{}" if typ is dict else "[]"
                     parsed = strict_json(kw[key])
                     if not isinstance(parsed, typ):
                         raise SchemaError("wrong JSON shape")

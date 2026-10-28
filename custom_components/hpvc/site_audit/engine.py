@@ -15,6 +15,7 @@ from ..inverter.hoymiles import parse_status, status_url
 from ..inverter.generic_number import represent_target
 from ..control.models import PlantConfiguration
 from .schema import EXPECTED, NATIVE_IDS, validate_export, redact, digest
+from .ownership import classify_ownership, ownership_inventory
 
 
 def stamp(value):
@@ -62,17 +63,6 @@ def registry_audit(bundle, preview, plant_uid):
         for r in bundle.get("config_entries", [])
         if r.get("domain") == "hpvc"
     }
-    evidence = bundle.get("legacy", {}).get("registry_ownership", [])
-    proven = {
-        (
-            r.get("entity_id"),
-            r.get("unique_id"),
-            r.get("platform"),
-            r.get("config_entry_id"),
-        )
-        for r in evidence
-        if isinstance(r, dict)
-    }
     snap = tuple(
         RegistryIdentity(
             r["entity_id"],
@@ -107,19 +97,17 @@ def registry_audit(bundle, preview, plant_uid):
             manual_review=False,
         )
         if occupant:
+            proof = classify_ownership(occupant, bundle)
+            entry["ownership_classification"] = proof["classification"]
+            entry["ownership_evidence"] = proof
             entry["collision"] = (
                 not native or occupant["entity_id"] != native["entity_id"]
             )
             if native and occupant["entity_id"] == native["entity_id"]:
                 entry["ownership"] = "native_HPVC"
-            elif (
-                occupant["entity_id"],
-                occupant.get("unique_id"),
-                occupant.get("platform"),
-                occupant.get("config_entry_id"),
-            ) in proven:
+            elif proof["classification"] == "proven_legacy_hpvc_owned":
                 entry.update(
-                    ownership="legacy_HPVC_proven_by_supplied_manifest",
+                    ownership="proven_legacy_hpvc_owned",
                     manual_review=True,
                     suffix_risk=True,
                 )
@@ -837,6 +825,7 @@ def audit_site(raw, *, now):
             settings=manifest,
         ),
         registry_migration=collisions,
+        registry_ownership=ownership_inventory(bundle),
         references=bundle.get("references", []),
         external_reference_scope=dict(
             exhaustive=False,
