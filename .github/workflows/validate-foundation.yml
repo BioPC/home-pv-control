@@ -110,7 +110,7 @@ jobs:
       - name: Real Home Assistant acceptance
         run: |
           set -o pipefail
-          python -m pytest tests/ha -v -rA --junitxml=acceptance-results.xml 2>&1 | tee ha-acceptance-results.log
+          python -m pytest tests/ha -v -ra --junitxml=acceptance-results.xml 2>&1 | tee ha-acceptance-results.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -142,7 +142,11 @@ async def test_generated_dashboard_loads_through_real_lovelace_backend(hass):
     entry = await start(hass)
     config = parity_dashboard()
     path = Path(hass.config.path("hpvc-ci-dashboard.yaml"))
-    await hass.async_add_executor_job(path.write_text, json.dumps(config))
+    # Match the generated artifact's UTF-8 serialization. YAML parsers do not
+    # combine JSON's escaped UTF-16 surrogate pairs for non-BMP icons.
+    await hass.async_add_executor_job(
+        path.write_text, json.dumps(config, ensure_ascii=False), "utf-8"
+    )
     dashboard = {"mode": "yaml", "title": "HPVC CI", "filename": str(path)}
     CONFIG_SCHEMA({"lovelace": {"dashboards": {"hpvc-ci": dashboard}}})
     loader = LovelaceYAML(hass, "hpvc-ci", dashboard)
@@ -168,7 +172,7 @@ async def test_native_report_templates_render_without_control_services(hass):
                 yield from markdown(child)
 
     with patch.object(
-        hass.services,
+        type(hass.services),
         "async_call",
         AsyncMock(side_effect=AssertionError("Report invoked a service")),
     ) as service:
