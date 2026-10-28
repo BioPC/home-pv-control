@@ -10,7 +10,6 @@ def normalize(value):
 
 TEST_TRANSPORT_TARGETS = frozenset(
     {
-        "number.external_limit",
         "number.dev6_target",
         "number.dev6_enphase",
         "switch.dev6_pre",

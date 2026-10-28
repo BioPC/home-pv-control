@@ -117,9 +117,11 @@ def build_preview(values: dict[str, str | None], plant_uid: str) -> ImportTransa
             return default
         return raw == "on"
 
-    def text(key, default=""):
+    def text(key, default="", *, optional_json=False):
         raw = values.get(key)
         if raw is None:
+            return default
+        if optional_json and not raw.strip():
             return default
         if raw.strip().lower() in ("unknown", "unavailable", "none"):
             issue(key, "unavailable_text")
@@ -172,6 +174,13 @@ def build_preview(values: dict[str, str | None], plant_uid: str) -> ImportTransa
                     else "value"
                     if key == "value_field"
                     else "",
+                    optional_json=key
+                    in (
+                        "fixed_data_json",
+                        "target_json",
+                        "pre_actions_json",
+                        "post_actions_json",
+                    ),
                 )
                 for key in CONTROLLER_TEXT
             }
@@ -192,11 +201,6 @@ def build_preview(values: dict[str, str | None], plant_uid: str) -> ImportTransa
                 ("post_actions_json", list),
             ):
                 try:
-                    # An unused optional helper is exported by HA as an empty
-                    # string, whereas an absent helper already uses this default.
-                    # Normalize only blank text; populated payloads stay strict.
-                    if not kw[key].strip():
-                        kw[key] = "{}" if typ is dict else "[]"
                     parsed = strict_json(kw[key])
                     if not isinstance(parsed, typ):
                         raise SchemaError("wrong JSON shape")

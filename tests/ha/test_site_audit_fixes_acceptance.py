@@ -53,11 +53,11 @@ async def test_actual_ha_capture_keeps_fixture_marker_and_excludes_fake_controll
         ("switch", "on", {}),
     ):
         tail = {"number": "limit", "select": "mode", "switch": "enabled"}[prefix]
-        hass.states.async_set(prefix + ".renamed_envoy_dpel_" + tail, value, attrs)
-        er.async_get(hass).async_get_or_create(
+        row = er.async_get(hass).async_get_or_create(
             prefix, "template", "renamed_envoy_dpel_" + tail,
             suggested_object_id="renamed_envoy_dpel_" + tail,
         )
+        hass.states.async_set(row.entity_id, value, attrs)
     with patch.object(
         type(hass.services),
         "async_call",

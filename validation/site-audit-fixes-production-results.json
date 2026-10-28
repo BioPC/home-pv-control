@@ -1,0 +1,48 @@
+{
+  "snapshot_sha256": "0253164ed6ae6dabba855a8c10a173252a23710db5b451a998b51a552cfae1fc",
+  "capture_at_utc": 1793183255.32,
+  "audit_at_utc": 1793186589.7675538,
+  "original_import_issue_count": 40,
+  "fixed_import_issue_count": 0,
+  "original_controllers": [
+    "number.hpvc_fake_enphase_envoy_dpel_limit",
+    "number.hms_1000_2t_limit_nonpersistent_absolute",
+    "number.hms_2000_4t_limit_nonpersistent_absolute"
+  ],
+  "fixed_controllers": [
+    "number.hms_1000_2t_limit_nonpersistent_absolute",
+    "number.hms_2000_4t_limit_nonpersistent_absolute"
+  ],
+  "proven_collisions": [
+    "binary_sensor.hpvc_required_inputs_ready",
+    "sensor.hpvc_installed_version",
+    "switch.hpvc_pv10_control",
+    "switch.hpvc_pv1_control",
+    "switch.hpvc_pv2_control",
+    "switch.hpvc_pv3_control",
+    "switch.hpvc_pv4_control",
+    "switch.hpvc_pv5_control",
+    "switch.hpvc_pv6_control",
+    "switch.hpvc_pv7_control",
+    "switch.hpvc_pv8_control",
+    "switch.hpvc_pv9_control"
+  ],
+  "unproven_collisions": [],
+  "registry_proposal_count": 0,
+  "overall_verdict": "UNKNOWN",
+  "production_transport_authorized": false,
+  "import_committed": false,
+  "production_state_advanced": false,
+  "remaining_evidence_codes": [
+    "HBC_restoration",
+    "battery_telemetry",
+    "controller_evidence",
+    "legacy_bridge",
+    "legacy_identity",
+    "legacy_runtime",
+    "pending_update",
+    "recovery_pending",
+    "site_telemetry",
+    "snapshot_not_current"
+  ]
+}

@@ -68,7 +68,7 @@ class EmptyJsonTests(unittest.TestCase):
 
     def test_blank_and_missing_optional_payloads_have_defined_defaults(self):
         for method in ("Number entity", "Action/service"):
-            for value in (None, "", " \t\n "):
+            for value in (None, "", " \t\n ", " " * 300):
                 values = self.values(method)
                 for key in OPTIONAL:
                     if value is not None:
@@ -304,6 +304,12 @@ class OwnershipProofTests(unittest.TestCase):
 
 
 class ProductionRegressionTests(unittest.TestCase):
+    def test_all_original_suites_and_control_sources_are_byte_preserved(self):
+        hashes = json.loads((ROOT / "tests/fixtures/dev8-preserved-baseline-sha256.json").read_text(encoding="utf-8"))
+        for name, expected in hashes.items():
+            with self.subTest(path=name):
+                self.assertEqual(hashlib.sha256((ROOT / name).read_bytes()).hexdigest(), expected)
+
     def test_actual_redacted_export_has_40_blanks_no_false_import_errors_and_two_real_controllers(
         self,
     ):
