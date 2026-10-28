@@ -1,8 +1,0 @@
-{
-  "version": "2.0.0-dev.7",
-  "stage": "dry-run-legacy-handoff",
-  "legacy_reference": "1.6.0",
-  "production_transport_authorized": false,
-  "release": false,
-  "baseline": "hpvc-2.0.0-dev.6-ha-service-executor"
-}
