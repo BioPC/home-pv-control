@@ -1,0 +1,1227 @@
+{
+  "schema": "hpvc-site-audit/1",
+  "source": "redacted_production_regression_fixture",
+  "collected_at_utc": 1793183255.32,
+  "ha": {
+    "version": "2026.10.4"
+  },
+  "states": [
+    {
+      "entity_id": "input_text.hpvc_pv1_fixed_data_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.218249+00:00",
+      "last_updated": "2026-10-28T00:33:39.218249+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv1_pre_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.218345+00:00",
+      "last_updated": "2026-10-28T00:33:39.218345+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv1_post_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.218460+00:00",
+      "last_updated": "2026-10-28T00:33:39.218460+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv2_fixed_data_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.218882+00:00",
+      "last_updated": "2026-10-28T00:33:39.218882+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv2_pre_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.218981+00:00",
+      "last_updated": "2026-10-28T00:33:39.218981+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv2_post_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.219088+00:00",
+      "last_updated": "2026-10-28T00:33:39.219088+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv3_fixed_data_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.219503+00:00",
+      "last_updated": "2026-10-28T00:33:39.219503+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv3_pre_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.219596+00:00",
+      "last_updated": "2026-10-28T00:33:39.219596+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv3_post_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.219695+00:00",
+      "last_updated": "2026-10-28T00:33:39.219695+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv4_fixed_data_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.220088+00:00",
+      "last_updated": "2026-10-28T00:33:39.220088+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv4_pre_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.220184+00:00",
+      "last_updated": "2026-10-28T00:33:39.220184+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv4_post_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.220286+00:00",
+      "last_updated": "2026-10-28T00:33:39.220286+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv5_fixed_data_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.220663+00:00",
+      "last_updated": "2026-10-28T00:33:39.220663+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv5_pre_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.220765+00:00",
+      "last_updated": "2026-10-28T00:33:39.220765+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv5_post_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.220971+00:00",
+      "last_updated": "2026-10-28T00:33:39.220971+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv6_fixed_data_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.221391+00:00",
+      "last_updated": "2026-10-28T00:33:39.221391+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv6_pre_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.221488+00:00",
+      "last_updated": "2026-10-28T00:33:39.221488+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv6_post_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.221586+00:00",
+      "last_updated": "2026-10-28T00:33:39.221586+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv7_fixed_data_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.222009+00:00",
+      "last_updated": "2026-10-28T00:33:39.222009+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv7_pre_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.222103+00:00",
+      "last_updated": "2026-10-28T00:33:39.222103+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv7_post_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.222199+00:00",
+      "last_updated": "2026-10-28T00:33:39.222199+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv8_fixed_data_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.222587+00:00",
+      "last_updated": "2026-10-28T00:33:39.222587+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv8_pre_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.222680+00:00",
+      "last_updated": "2026-10-28T00:33:39.222680+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv8_post_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.222780+00:00",
+      "last_updated": "2026-10-28T00:33:39.222780+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv9_fixed_data_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.223162+00:00",
+      "last_updated": "2026-10-28T00:33:39.223162+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv9_pre_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.223252+00:00",
+      "last_updated": "2026-10-28T00:33:39.223252+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv9_post_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.223349+00:00",
+      "last_updated": "2026-10-28T00:33:39.223349+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv10_fixed_data_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.223707+00:00",
+      "last_updated": "2026-10-28T00:33:39.223707+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv10_pre_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.223797+00:00",
+      "last_updated": "2026-10-28T00:33:39.223797+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv10_post_actions_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.223889+00:00",
+      "last_updated": "2026-10-28T00:33:39.223889+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv1_target_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.224079+00:00",
+      "last_updated": "2026-10-28T00:33:39.224079+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv2_target_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.224168+00:00",
+      "last_updated": "2026-10-28T00:33:39.224168+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv3_target_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.224256+00:00",
+      "last_updated": "2026-10-28T00:33:39.224256+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv4_target_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.224363+00:00",
+      "last_updated": "2026-10-28T00:33:39.224363+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv5_target_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.224458+00:00",
+      "last_updated": "2026-10-28T00:33:39.224458+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv6_target_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.224555+00:00",
+      "last_updated": "2026-10-28T00:33:39.224555+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv7_target_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.224873+00:00",
+      "last_updated": "2026-10-28T00:33:39.224873+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv8_target_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.224974+00:00",
+      "last_updated": "2026-10-28T00:33:39.224974+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv9_target_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.225066+00:00",
+      "last_updated": "2026-10-28T00:33:39.225066+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_text.hpvc_pv10_target_json",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.225163+00:00",
+      "last_updated": "2026-10-28T00:33:39.225163+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "entity_id": "input_number.hpvc_inverter_count",
+      "state": "3.0",
+      "last_reported": "2026-10-28T00:33:39.290959+00:00",
+      "last_updated": "2026-10-28T00:33:39.290959+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 10,
+        "step": 1
+      }
+    },
+    {
+      "entity_id": "input_number.hpvc_pv_limiting_price",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.293490+00:00",
+      "last_updated": "2026-10-28T00:33:39.293490+00:00",
+      "attributes": {
+        "min": -0.5,
+        "max": 0.2,
+        "step": 0.01,
+        "unit_of_measurement": "\u20ac/kWh"
+      }
+    },
+    {
+      "entity_id": "input_number.hpvc_battery_price_hysteresis",
+      "state": "0.01",
+      "last_reported": "2026-10-28T00:33:39.293605+00:00",
+      "last_updated": "2026-10-28T00:33:39.293605+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 0.1,
+        "step": 0.01,
+        "unit_of_measurement": "\u20ac/kWh"
+      }
+    },
+    {
+      "entity_id": "input_number.hpvc_export_start_threshold",
+      "state": "-150.0",
+      "last_reported": "2026-10-28T00:33:39.293733+00:00",
+      "last_updated": "2026-10-28T00:33:39.293733+00:00",
+      "attributes": {
+        "min": -5000,
+        "max": 0,
+        "step": 10,
+        "unit_of_measurement": "W"
+      }
+    },
+    {
+      "entity_id": "input_number.hpvc_export_stop_threshold",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.293865+00:00",
+      "last_updated": "2026-10-28T00:33:39.293865+00:00",
+      "attributes": {
+        "min": -5000,
+        "max": 500,
+        "step": 5,
+        "unit_of_measurement": "W"
+      }
+    },
+    {
+      "entity_id": "input_number.hpvc_import_restore_threshold",
+      "state": "150.0",
+      "last_reported": "2026-10-28T00:33:39.293979+00:00",
+      "last_updated": "2026-10-28T00:33:39.293979+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 5000,
+        "step": 10,
+        "unit_of_measurement": "W"
+      }
+    },
+    {
+      "entity_id": "input_number.hpvc_pv_min_power_for_control",
+      "state": "100.0",
+      "last_reported": "2026-10-28T00:33:39.294092+00:00",
+      "last_updated": "2026-10-28T00:33:39.294092+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 5000,
+        "step": 10,
+        "unit_of_measurement": "W"
+      }
+    },
+    {
+      "entity_id": "input_number.hpvc_pv_night_restore_power",
+      "state": "10.0",
+      "last_reported": "2026-10-28T00:33:39.294207+00:00",
+      "last_updated": "2026-10-28T00:33:39.294207+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 1000,
+        "step": 5,
+        "unit_of_measurement": "W"
+      }
+    },
+    {
+      "entity_id": "input_number.hpvc_cooldown_seconds",
+      "state": "10.0",
+      "last_reported": "2026-10-28T00:33:39.294322+00:00",
+      "last_updated": "2026-10-28T00:33:39.294322+00:00",
+      "attributes": {
+        "min": 10,
+        "max": 60,
+        "step": 5,
+        "unit_of_measurement": "sec"
+      }
+    },
+    {
+      "entity_id": "input_number.hpvc_pv_adjust_deadband",
+      "state": "25.0",
+      "last_reported": "2026-10-28T00:33:39.294427+00:00",
+      "last_updated": "2026-10-28T00:33:39.294427+00:00",
+      "attributes": {
+        "min": 1,
+        "max": 500,
+        "step": 1,
+        "unit_of_measurement": "W"
+      }
+    },
+    {
+      "entity_id": "number.hms_2000_4t_limit_nonpersistent_absolute",
+      "state": "2000.0",
+      "last_reported": "2026-10-28T00:33:54.555654+00:00",
+      "last_updated": "2026-10-28T00:33:54.555654+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 2250,
+        "step": 1,
+        "unit_of_measurement": "W"
+      }
+    },
+    {
+      "entity_id": "number.hms_1000_2t_limit_nonpersistent_absolute",
+      "state": "1000.0",
+      "last_reported": "2026-10-28T00:33:54.556536+00:00",
+      "last_updated": "2026-10-28T00:33:54.556536+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 2250,
+        "step": 1,
+        "unit_of_measurement": "W"
+      }
+    },
+    {
+      "entity_id": "number.hpvc_fake_enphase_envoy_dpel_limit",
+      "state": "5000",
+      "last_reported": "2026-10-28T00:33:54.560876+00:00",
+      "last_updated": "2026-10-28T00:33:54.560876+00:00",
+      "attributes": {
+        "min": 0,
+        "max": 5000,
+        "step": 1,
+        "unit_of_measurement": "W"
+      }
+    },
+    {
+      "entity_id": "select.hpvc_fake_enphase_envoy_dpel_mode",
+      "state": "Production",
+      "last_reported": "2026-10-28T00:33:54.575990+00:00",
+      "last_updated": "2026-10-28T00:33:54.575990+00:00",
+      "attributes": {
+        "options": [
+          "Production",
+          "Export",
+          "Off"
+        ]
+      }
+    },
+    {
+      "entity_id": "switch.hpvc_fake_enphase_envoy_dpel_enabled",
+      "state": "on",
+      "last_reported": "2026-10-28T00:33:54.606647+00:00",
+      "last_updated": "2026-10-28T00:33:54.606647+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_text.hpvc_pv1_limit_number",
+      "state": "number.hms_1000_2t_limit_nonpersistent_absolute",
+      "last_reported": "2026-10-28T00:33:39.216359+00:00",
+      "last_updated": "2026-10-28T00:33:39.216359+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_text.hpvc_pv2_limit_number",
+      "state": "number.hms_2000_4t_limit_nonpersistent_absolute",
+      "last_reported": "2026-10-28T00:33:39.216478+00:00",
+      "last_updated": "2026-10-28T00:33:39.216478+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_text.hpvc_pv3_limit_number",
+      "state": "number.hpvc_fake_enphase_envoy_dpel_limit",
+      "last_reported": "2026-10-28T00:33:39.216587+00:00",
+      "last_updated": "2026-10-28T00:33:39.216587+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_text.hpvc_pv4_limit_number",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.216690+00:00",
+      "last_updated": "2026-10-28T00:33:39.216690+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_text.hpvc_pv5_limit_number",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.217353+00:00",
+      "last_updated": "2026-10-28T00:33:39.217353+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_text.hpvc_pv6_limit_number",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.217482+00:00",
+      "last_updated": "2026-10-28T00:33:39.217482+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_text.hpvc_pv7_limit_number",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.217600+00:00",
+      "last_updated": "2026-10-28T00:33:39.217600+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_text.hpvc_pv8_limit_number",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.217704+00:00",
+      "last_updated": "2026-10-28T00:33:39.217704+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_text.hpvc_pv9_limit_number",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.217828+00:00",
+      "last_updated": "2026-10-28T00:33:39.217828+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_text.hpvc_pv10_limit_number",
+      "state": "",
+      "last_reported": "2026-10-28T00:33:39.217928+00:00",
+      "last_updated": "2026-10-28T00:33:39.217928+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv1_control_disabled",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.228376+00:00",
+      "last_updated": "2026-10-28T00:33:39.228376+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv2_control_disabled",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.228458+00:00",
+      "last_updated": "2026-10-28T00:33:39.228458+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv3_control_disabled",
+      "state": "on",
+      "last_reported": "2026-10-28T00:33:39.228566+00:00",
+      "last_updated": "2026-10-28T00:33:39.228566+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv4_control_disabled",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.228656+00:00",
+      "last_updated": "2026-10-28T00:33:39.228656+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv5_control_disabled",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.228738+00:00",
+      "last_updated": "2026-10-28T00:33:39.228738+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv6_control_disabled",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.228822+00:00",
+      "last_updated": "2026-10-28T00:33:39.228822+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv7_control_disabled",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.228901+00:00",
+      "last_updated": "2026-10-28T00:33:39.228901+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv8_control_disabled",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.228989+00:00",
+      "last_updated": "2026-10-28T00:33:39.228989+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv9_control_disabled",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.229068+00:00",
+      "last_updated": "2026-10-28T00:33:39.229068+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv10_control_disabled",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.229155+00:00",
+      "last_updated": "2026-10-28T00:33:39.229155+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv1_auto_managed",
+      "state": "on",
+      "last_reported": "2026-10-28T00:33:59.889704+00:00",
+      "last_updated": "2026-10-28T00:33:59.889704+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv2_auto_managed",
+      "state": "on",
+      "last_reported": "2026-10-28T00:34:00.044150+00:00",
+      "last_updated": "2026-10-28T00:34:00.044150+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv3_auto_managed",
+      "state": "on",
+      "last_reported": "2026-10-28T00:34:00.198123+00:00",
+      "last_updated": "2026-10-28T00:34:00.198123+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv4_auto_managed",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.229534+00:00",
+      "last_updated": "2026-10-28T00:33:39.229534+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv5_auto_managed",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.229617+00:00",
+      "last_updated": "2026-10-28T00:33:39.229617+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv6_auto_managed",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.229696+00:00",
+      "last_updated": "2026-10-28T00:33:39.229696+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv7_auto_managed",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.229774+00:00",
+      "last_updated": "2026-10-28T00:33:39.229774+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv8_auto_managed",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.229861+00:00",
+      "last_updated": "2026-10-28T00:33:39.229861+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv9_auto_managed",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.229974+00:00",
+      "last_updated": "2026-10-28T00:33:39.229974+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_boolean.hpvc_pv10_auto_managed",
+      "state": "off",
+      "last_reported": "2026-10-28T00:33:39.230062+00:00",
+      "last_updated": "2026-10-28T00:33:39.230062+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv1_control_method",
+      "state": "Number entity",
+      "last_reported": "2026-10-28T00:33:39.273552+00:00",
+      "last_updated": "2026-10-28T00:33:39.273552+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv2_control_method",
+      "state": "Number entity",
+      "last_reported": "2026-10-28T00:33:39.273674+00:00",
+      "last_updated": "2026-10-28T00:33:39.273674+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv3_control_method",
+      "state": "Number entity",
+      "last_reported": "2026-10-28T00:33:39.273796+00:00",
+      "last_updated": "2026-10-28T00:33:39.273796+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv4_control_method",
+      "state": "Number entity",
+      "last_reported": "2026-10-28T00:33:39.273910+00:00",
+      "last_updated": "2026-10-28T00:33:39.273910+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv5_control_method",
+      "state": "Number entity",
+      "last_reported": "2026-10-28T00:33:39.274015+00:00",
+      "last_updated": "2026-10-28T00:33:39.274015+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv6_control_method",
+      "state": "Number entity",
+      "last_reported": "2026-10-28T00:33:39.274116+00:00",
+      "last_updated": "2026-10-28T00:33:39.274116+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv7_control_method",
+      "state": "Number entity",
+      "last_reported": "2026-10-28T00:33:39.274243+00:00",
+      "last_updated": "2026-10-28T00:33:39.274243+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv8_control_method",
+      "state": "Number entity",
+      "last_reported": "2026-10-28T00:33:39.274347+00:00",
+      "last_updated": "2026-10-28T00:33:39.274347+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv9_control_method",
+      "state": "Number entity",
+      "last_reported": "2026-10-28T00:33:39.274444+00:00",
+      "last_updated": "2026-10-28T00:33:39.274444+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv10_control_method",
+      "state": "Number entity",
+      "last_reported": "2026-10-28T00:33:39.274539+00:00",
+      "last_updated": "2026-10-28T00:33:39.274539+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv1_limit_unit",
+      "state": "Watts",
+      "last_reported": "2026-10-28T00:33:39.274644+00:00",
+      "last_updated": "2026-10-28T00:33:39.274644+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv2_limit_unit",
+      "state": "Watts",
+      "last_reported": "2026-10-28T00:33:39.274738+00:00",
+      "last_updated": "2026-10-28T00:33:39.274738+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv3_limit_unit",
+      "state": "Watts",
+      "last_reported": "2026-10-28T00:33:39.274829+00:00",
+      "last_updated": "2026-10-28T00:33:39.274829+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv4_limit_unit",
+      "state": "Watts",
+      "last_reported": "2026-10-28T00:33:39.274926+00:00",
+      "last_updated": "2026-10-28T00:33:39.274926+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv5_limit_unit",
+      "state": "Watts",
+      "last_reported": "2026-10-28T00:33:39.275033+00:00",
+      "last_updated": "2026-10-28T00:33:39.275033+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv6_limit_unit",
+      "state": "Watts",
+      "last_reported": "2026-10-28T00:33:39.275122+00:00",
+      "last_updated": "2026-10-28T00:33:39.275122+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv7_limit_unit",
+      "state": "Watts",
+      "last_reported": "2026-10-28T00:33:39.275236+00:00",
+      "last_updated": "2026-10-28T00:33:39.275236+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv8_limit_unit",
+      "state": "Watts",
+      "last_reported": "2026-10-28T00:33:39.275343+00:00",
+      "last_updated": "2026-10-28T00:33:39.275343+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv9_limit_unit",
+      "state": "Watts",
+      "last_reported": "2026-10-28T00:33:39.275445+00:00",
+      "last_updated": "2026-10-28T00:33:39.275445+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_select.hpvc_pv10_limit_unit",
+      "state": "Watts",
+      "last_reported": "2026-10-28T00:33:39.275547+00:00",
+      "last_updated": "2026-10-28T00:33:39.275547+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv1_full_limit",
+      "state": "1000.0",
+      "last_reported": "2026-10-28T00:33:39.291089+00:00",
+      "last_updated": "2026-10-28T00:33:39.291089+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv1_low_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.291212+00:00",
+      "last_updated": "2026-10-28T00:33:39.291212+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv2_full_limit",
+      "state": "2000.0",
+      "last_reported": "2026-10-28T00:33:39.291335+00:00",
+      "last_updated": "2026-10-28T00:33:39.291335+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv2_low_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.291454+00:00",
+      "last_updated": "2026-10-28T00:33:39.291454+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv3_full_limit",
+      "state": "5000.0",
+      "last_reported": "2026-10-28T00:33:39.291601+00:00",
+      "last_updated": "2026-10-28T00:33:39.291601+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv3_low_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.291722+00:00",
+      "last_updated": "2026-10-28T00:33:39.291722+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv4_full_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.291857+00:00",
+      "last_updated": "2026-10-28T00:33:39.291857+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv4_low_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.291979+00:00",
+      "last_updated": "2026-10-28T00:33:39.291979+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv5_full_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.292096+00:00",
+      "last_updated": "2026-10-28T00:33:39.292096+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv5_low_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.292214+00:00",
+      "last_updated": "2026-10-28T00:33:39.292214+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv6_full_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.292335+00:00",
+      "last_updated": "2026-10-28T00:33:39.292335+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv6_low_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.292440+00:00",
+      "last_updated": "2026-10-28T00:33:39.292440+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv7_full_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.292561+00:00",
+      "last_updated": "2026-10-28T00:33:39.292561+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv7_low_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.292681+00:00",
+      "last_updated": "2026-10-28T00:33:39.292681+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv8_full_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.292798+00:00",
+      "last_updated": "2026-10-28T00:33:39.292798+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv8_low_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.292911+00:00",
+      "last_updated": "2026-10-28T00:33:39.292911+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv9_full_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.293027+00:00",
+      "last_updated": "2026-10-28T00:33:39.293027+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv9_low_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.293143+00:00",
+      "last_updated": "2026-10-28T00:33:39.293143+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv10_full_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.293259+00:00",
+      "last_updated": "2026-10-28T00:33:39.293259+00:00",
+      "attributes": {}
+    },
+    {
+      "entity_id": "input_number.hpvc_pv10_low_limit",
+      "state": "0.0",
+      "last_reported": "2026-10-28T00:33:39.293376+00:00",
+      "last_updated": "2026-10-28T00:33:39.293376+00:00",
+      "attributes": {}
+    }
+  ],
+  "entity_registry": [
+    {
+      "entity_id": "number.hms_2000_4t_limit_nonpersistent_absolute",
+      "registry_id": "redacted-registry-1",
+      "device_id": "redacted-device-1",
+      "platform": "mqtt",
+      "config_entry_id": "redacted-mqtt-entry",
+      "unique_id": "redacted-hoymiles-1_limit_nonpersistent_absolute",
+      "original_entity_id": "number.hms_2000_4t_limit_nonpersistent_absolute",
+      "disabled_by": null
+    },
+    {
+      "entity_id": "number.hms_1000_2t_limit_nonpersistent_absolute",
+      "registry_id": "redacted-registry-2",
+      "device_id": "redacted-device-2",
+      "platform": "mqtt",
+      "config_entry_id": "redacted-mqtt-entry",
+      "unique_id": "redacted-hoymiles-2_limit_nonpersistent_absolute",
+      "original_entity_id": "number.hms_1000_2t_limit_nonpersistent_absolute",
+      "disabled_by": null
+    },
+    {
+      "entity_id": "binary_sensor.hpvc_required_inputs_ready",
+      "unique_id": "hpvc_required_inputs_ready",
+      "platform": "template",
+      "config_entry_id": null,
+      "disabled_by": null
+    },
+    {
+      "entity_id": "sensor.hpvc_installed_version",
+      "unique_id": "hpvc_installed_version",
+      "platform": "template",
+      "config_entry_id": null,
+      "disabled_by": null
+    },
+    {
+      "entity_id": "switch.hpvc_pv1_control",
+      "unique_id": "hpvc_pv1_control",
+      "platform": "template",
+      "config_entry_id": null,
+      "disabled_by": null
+    },
+    {
+      "entity_id": "switch.hpvc_pv2_control",
+      "unique_id": "hpvc_pv2_control",
+      "platform": "template",
+      "config_entry_id": null,
+      "disabled_by": null
+    },
+    {
+      "entity_id": "switch.hpvc_pv3_control",
+      "unique_id": "hpvc_pv3_control",
+      "platform": "template",
+      "config_entry_id": null,
+      "disabled_by": null
+    },
+    {
+      "entity_id": "switch.hpvc_pv4_control",
+      "unique_id": "hpvc_pv4_control",
+      "platform": "template",
+      "config_entry_id": null,
+      "disabled_by": null
+    },
+    {
+      "entity_id": "switch.hpvc_pv5_control",
+      "unique_id": "hpvc_pv5_control",
+      "platform": "template",
+      "config_entry_id": null,
+      "disabled_by": null
+    },
+    {
+      "entity_id": "switch.hpvc_pv6_control",
+      "unique_id": "hpvc_pv6_control",
+      "platform": "template",
+      "config_entry_id": null,
+      "disabled_by": null
+    },
+    {
+      "entity_id": "switch.hpvc_pv7_control",
+      "unique_id": "hpvc_pv7_control",
+      "platform": "template",
+      "config_entry_id": null,
+      "disabled_by": null
+    },
+    {
+      "entity_id": "switch.hpvc_pv8_control",
+      "unique_id": "hpvc_pv8_control",
+      "platform": "template",
+      "config_entry_id": null,
+      "disabled_by": null
+    },
+    {
+      "entity_id": "switch.hpvc_pv9_control",
+      "unique_id": "hpvc_pv9_control",
+      "platform": "template",
+      "config_entry_id": null,
+      "disabled_by": null
+    },
+    {
+      "entity_id": "switch.hpvc_pv10_control",
+      "unique_id": "hpvc_pv10_control",
+      "platform": "template",
+      "config_entry_id": null,
+      "disabled_by": null
+    }
+  ],
+  "device_registry": [
+    {
+      "device_id": "redacted-device-1",
+      "manufacturer": "OpenDTU",
+      "model": "HMS-1600/1800/2000-4T",
+      "name": "Redacted Hoymiles",
+      "identifiers": [],
+      "config_entries": [
+        "redacted-mqtt-entry"
+      ]
+    },
+    {
+      "device_id": "redacted-device-2",
+      "manufacturer": "OpenDTU",
+      "model": "HMS-600/700/800/900/1000-2T",
+      "name": "Redacted Hoymiles",
+      "identifiers": [],
+      "config_entries": [
+        "redacted-mqtt-entry"
+      ]
+    }
+  ],
+  "config_entries": [
+    {
+      "entry_id": "redacted-mqtt-entry",
+      "domain": "mqtt"
+    }
+  ],
+  "native_configuration": null,
+  "native_runtime": {
+    "user_reported_installed": false
+  },
+  "legacy": {
+    "user_reported_version": "1.6.0",
+    "user_reported_runtime": "Node-RED"
+  },
+  "opendtu": [],
+  "references": [],
+  "coverage": {
+    "fixture_provenance": {
+      "source_sha256": "0253164ed6ae6dabba855a8c10a173252a23710db5b451a998b51a552cfae1fc",
+      "description": "Allowlisted subset of supplied production snapshot; registry/device identifiers pseudonymized; no network addresses, secrets or unrelated entities."
+    }
+  },
+  "collection_errors": [],
+  "redactions": []
+}

@@ -1,0 +1,146 @@
+{
+  "ownership_cases": [
+    {
+      "name": "exact_catalogue_identity",
+      "expected": "proven_legacy_hpvc_owned",
+      "actual": "proven_legacy_hpvc_owned",
+      "approved_catalogue_match": true,
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "renamed_exact_identity",
+      "expected": "proven_legacy_hpvc_owned",
+      "actual": "proven_legacy_hpvc_owned",
+      "approved_catalogue_match": true,
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "same_name_other_uid",
+      "expected": "unproven_collision",
+      "actual": "unproven_collision",
+      "approved_catalogue_match": false,
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "wrong_domain",
+      "expected": "unproven_collision",
+      "actual": "unproven_collision",
+      "approved_catalogue_match": false,
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "wrong_platform",
+      "expected": "unproven_collision",
+      "actual": "unproven_collision",
+      "approved_catalogue_match": false,
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "config_entry_owned",
+      "expected": "unproven_collision",
+      "actual": "unproven_collision",
+      "approved_catalogue_match": true,
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "duplicate_identity",
+      "expected": "unproven_collision",
+      "actual": "unproven_collision",
+      "approved_catalogue_match": true,
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "contradictory_package",
+      "expected": "unproven_collision",
+      "actual": "unproven_collision",
+      "approved_catalogue_match": true,
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "unrelated_template",
+      "expected": "unrelated",
+      "actual": "unrelated",
+      "approved_catalogue_match": false,
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "manifest_cannot_bypass_catalogue",
+      "expected": "unproven_collision",
+      "actual": "unproven_collision",
+      "approved_catalogue_match": false,
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "manifest_cannot_bypass_domain",
+      "expected": "unproven_collision",
+      "actual": "unproven_collision",
+      "approved_catalogue_match": false,
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "manifest_cannot_prove_unknown_config_entry",
+      "expected": "unproven_collision",
+      "actual": "unproven_collision",
+      "approved_catalogue_match": true,
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "manifest_cannot_bypass_duplicates",
+      "expected": "unproven_collision",
+      "actual": "unproven_collision",
+      "approved_catalogue_match": true,
+      "input_unchanged": true,
+      "passed": true
+    },
+    {
+      "name": "manifest_cannot_bypass_package_mismatch",
+      "expected": "unproven_collision",
+      "actual": "unproven_collision",
+      "approved_catalogue_match": true,
+      "input_unchanged": true,
+      "passed": true
+    }
+  ],
+  "ownership_passed": 14,
+  "ownership_failed": 0,
+  "manual_binding_cases": [
+    {
+      "markers": {},
+      "passed": true,
+      "physical_writes_authorized": false
+    },
+    {
+      "markers": {
+        "hpvc_test_fixture": true
+      },
+      "passed": true,
+      "physical_writes_authorized": false
+    },
+    {
+      "markers": {
+        "hpvc_test_transport": true
+      },
+      "passed": true,
+      "physical_writes_authorized": false
+    }
+  ],
+  "safety": {
+    "production_transport_authorized": false,
+    "permanent_veto": true,
+    "admission_returns_literal_false": true,
+    "service_or_registry_write_calls": 0,
+    "hardware_actions": 0
+  }
+}

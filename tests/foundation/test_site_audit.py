@@ -105,19 +105,19 @@ class AuditTests(unittest.TestCase):
     def test_safe_owned_collision_proposal_is_data_only(self):
         b = sample()
         old = dict(
-            entity_id="sensor.hpvc_status",
+            entity_id="sensor.hpvc_installed_version",
             registry_id="old",
             platform="template",
-            config_entry_id="legacy-entry",
-            unique_id="legacy-status",
+            config_entry_id=None,
+            unique_id="hpvc_installed_version",
             device_id=None,
         )
         native = dict(
-            entity_id="sensor.hpvc_status_2",
+            entity_id="sensor.hpvc_installed_version_2",
             registry_id="new",
             platform="hpvc",
             config_entry_id="native-entry",
-            unique_id="site-audit-preview:status",
+            unique_id="site-audit-preview:installed_version",
             device_id=None,
         )
         b["entity_registry"] += [old, native]
@@ -129,11 +129,11 @@ class AuditTests(unittest.TestCase):
         c = next(
             x
             for x in r["registry_migration"]
-            if x["intended_entity_id"] == "sensor.hpvc_status"
+            if x["intended_entity_id"] == "sensor.hpvc_installed_version"
         )
         self.assertEqual(len(c["proposal"]), 2)
-        self.assertEqual(c["proposal"][-1]["destination"], "sensor.hpvc_status")
-        self.assertEqual(b["entity_registry"][-1]["entity_id"], "sensor.hpvc_status_2")
+        self.assertEqual(c["proposal"][-1]["destination"], "sensor.hpvc_installed_version")
+        self.assertEqual(b["entity_registry"][-1]["entity_id"], "sensor.hpvc_installed_version_2")
 
     def test_redaction_preserves_identity_but_removes_credentials_in_nested_JSON_and_URLs(
         self,

@@ -40,11 +40,13 @@ The exact-copy CLI `--hpvc-package` proof contract is unchanged.
 
 The existing dev.8 explicitly supplied `legacy.registry_ownership` manifest
 channel is retained: it asserts an exact entity-ID/unique-ID/platform/config-entry
-tuple, rather than inference from names. Package mismatches, duplicate identities
-and ownership by any supplied config entry veto this channel too. This channel
-is operator-supplied provenance; copying a registry row does not authenticate the
-deployment. The automatic catalogue path never infers YAML ownership for an entity
-with a config-entry ID.
+tuple, rather than inference from names. Both paths now require the approved
+catalogue domain/platform/unique-ID tuple and absent config-entry ownership.
+Unknown entries fail closed; resolved config-entry owners are inconsistent with
+these YAML-owned identities. Package mismatches, duplicate registry identities and
+contradictory manifest rows veto both paths. An exact operator manifest supplements
+the evidence and remains identified in the proof, but cannot override those gates.
+See `ownership-hardening.md` for the scoped compatibility-fixture correction.
 
 New `registry_ownership[].classification` and collision
 `ownership_classification` fields distinguish `proven_legacy_hpvc_owned`,

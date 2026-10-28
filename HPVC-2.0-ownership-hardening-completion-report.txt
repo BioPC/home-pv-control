@@ -1,0 +1,208 @@
+HPVC AUDIT-FIXES.1 — STRICT OWNERSHIP HARDENING
+28 October 2026
+
+OWNERSHIP_HARDENING_READY_FOR_FINAL_CI
+
+Local hardening is complete. Strict ownership: 14/14 passed. Full foundation:
+985/985 passed. All 12 genuine production collisions remain proven. Production
+transport remains false. Nothing was published or installed on production.
+
+This report supersedes the three ownership failures in the prior validation
+report. It does not declare DEV8_AUDIT_FIXES_READY_FOR_SITE_RERUN: that still
+requires the final published commit and successful HA 2025.12.0 and 2026.10.4 CI.
+Earlier reports included in the source tree describe historical intermediate builds.
+
+1. ROOT CAUSE OF EACH DEFECT
+
+A. manifest_cannot_bypass_catalogue: the explicit-manifest OR branch accepted a
+   template/unique-ID assertion without requiring membership in the approved
+   domain/platform/unique-ID catalogue.
+B. manifest_cannot_bypass_domain: the same shortcut bypassed the exact catalogue
+   domain, allowing a sensor to claim a binary sensor's legacy unique ID.
+C. manifest_cannot_prove_unknown_config_entry: conflict detection only rejected
+   an entry ID found in the supplied config_entries. An unknown owner was treated
+   as if it were safe when asserted by the manifest.
+
+2. FILES CHANGED
+
+Only one runtime module changed from the preceding local audit-fixes.1 patch:
+- custom_components/hpvc/site_audit/ownership.py
+
+Existing test/documentation changes:
+- tests/foundation/test_site_audit.py: only the positive compatibility fixture.
+- tests/fixtures/dev8-preserved-baseline-sha256.json: only that authorized test
+  module's expected hash; every other preservation entry is unchanged.
+- docs/site-audit-fixes.md: replace the old manifest exception description.
+
+New regression/documentation files:
+- tests/foundation/test_ownership_hardening.py: 16 new test methods.
+- tests/fixtures/ownership-compatibility-change.json: exact old/new method bodies,
+  approved literal substitutions and module hashes.
+- tests/fixtures/site-audit-production-12-collisions-redacted.json: unchanged copy
+  of the previously derived expanded production fixture.
+- docs/ownership-hardening.md
+- validation/ownership-hardening/: strict checker, results, logs and boundary proof.
+- this completion report and its full-answer text copy.
+
+No importer, discovery, policy, allocation, HBC, dispatcher, executor, recovery,
+coordinator, storage, migration execution or authorization source changed here.
+
+3. EXACT NEW OWNERSHIP DECISION RULE
+
+Both proof paths require ALL of:
+- approved catalogue membership for the exact domain/platform/unique-ID triple;
+- absent config-entry ownership;
+- no duplicate registry identity;
+- no contradictory supplied package hash, match flag or package reference;
+- no manifest row contradicting the current entity's actual registry tuple.
+
+The catalogue describes YAML-owned templates. No config-entry ID is the valid
+legacy ownership fact (None or empty string in an export). A supplied nonempty ID
+is checked against the local config_entries evidence: absent/ambiguous entries
+are unresolved; uniquely resolved entries are conflicting owners for these YAML
+identities. Neither condition may be converted to proof by an operator assertion.
+
+Only proven_legacy_hpvc_owned may reach the existing preview proposal builder.
+unproven_collision and unrelated remain distinct. No proposal is executed.
+
+4. HOW THE MANIFEST NOW INTERACTS WITH THE CATALOGUE
+
+The explicit channel remains supported. An exact valid manifest records
+proof=exact_supplied_registry_manifest, supplements approved catalogue evidence,
+and supports renamed entities through their stable approved unique IDs.
+Without a manifest, valid exact catalogue identities can still be recognized.
+
+The manifest is never an alternative to mandatory checks. Contradictory rows for
+the same current entity veto proof even if another manifest row matches. Claims
+about another entity do not supply proof for the current one. Names alone grant
+nothing. Package contradictions and duplicate registry identities veto both paths.
+
+5. ORIGINAL DEV.8 TEST CHANGE AND WHY IT IS STRICTER
+
+One original method changed:
+tests/foundation/test_site_audit.py::test_safe_owned_collision_proposal_is_data_only
+
+Its old positive fixture used uncatalogued legacy-status with unresolved
+config_entry_id=legacy-entry. A positive reclamation proposal for that fixture
+cannot coexist with the approved invariant. The fixture now uses the real
+sensor.hpvc_installed_version / hpvc_installed_version catalogue identity, no
+config-entry owner, and the corresponding native installed_version preview row.
+
+All three original assertions remain equivalent under these literal substitutions:
+two hypothetical moves, the intended destination and an unchanged native registry
+ID. A new regression verifies the entire method AST differs only by those literal
+substitutions, verifies all other module text by hash, and pins the updated module.
+No assertion was removed, skipped or weakened.
+
+The old fabricated fixture is retained as a new NEGATIVE test. It must be
+unproven, return no proposals and keep the audit BLOCKED. A trap raises if it ever
+reaches the preview proposal builder. Input, import state and authorization remain
+unchanged. This closes the old weaker assumption rather than grandfathering it.
+
+6. STRICT REQUIREMENTS RESULT
+
+The same strict-requirements-check.py used in the prior validation was rerun,
+unchanged, against the hardened source:
+14/14 ownership cases passed; 0 failed; exit code 0.
+
+All three former failures are green:
+- manifest_cannot_bypass_catalogue
+- manifest_cannot_bypass_domain
+- manifest_cannot_prove_unknown_config_entry
+
+The checker also passed all 3 manual-binding cases and confirmed literal false
+production admission and the permanent veto. The added foundation regressions
+cover valid manifests, renamed identities, wrong domain/platform/unique IDs,
+resolved and unknown config-entry owners, contradictory registry assertions,
+duplicate identities, conflicting package evidence, unrelated identities, and
+the old invalid compatibility fixture.
+
+Reproduce from an extracted package:
+python -B validation/ownership-hardening/strict-requirements-check.py --source-root .
+
+7. FULL FOUNDATION RESULT
+
+985/985 passed; 0 failures; 0 errors; 0 skipped; 0 expected failures; 0 unexpected
+successes. This is the previous 969 tests plus 16 new hardening methods.
+
+Command: python -B scripts/test_foundation.py
+Environment: Windows, Python 3.12.14. Runtime: 78.949 seconds.
+Windows asyncio required its local loopback socket-pair permission; no production
+HA or GitHub connection was made. The full local suite completed unchanged apart
+from the one authorized fixture correction and the new regression coverage.
+
+Logs and machine-readable counts are in validation/ownership-hardening/.
+These local results do not substitute for the forthcoming two-version real-HA CI.
+
+8. PRODUCTION-DERIVED FIXTURE RESULT
+
+Expanded fixture SHA-256:
+cdb4515bdd71c6e84744f9bd5a461e8e27f543074c8c0f95e948b3a7f8814526
+
+It is the same redacted historical subset used in the prior validation: 125 states,
+14 registry rows, no secrets, network addresses, serials or unrelated personal
+entities. It was not invented from the summary or captured from live HA here.
+
+Results:
+- Import issues: 0.
+- Fake Enphase controller: absent.
+- number.hms_1000_2t_limit_nonpersistent_absolute: retained.
+- number.hms_2000_4t_limit_nonpersistent_absolute: retained.
+- Known collisions proven: 12.
+- Registry proposals: 0 while native HPVC is absent.
+- Registry mutations: 0; input fixture unchanged.
+- Import committed: false; ownership advanced: false.
+- Production transport authorized: false.
+- Historical readiness: UNKNOWN; no missing live evidence was converted to READY.
+
+This result is now also a permanent foundation regression with a proposal-builder
+trap when no native replacement exists.
+
+9. THE 12 PRODUCTION COLLISIONS
+
+All remain proven_legacy_hpvc_owned by genuine catalogue identity and absent
+config-entry ownership:
+- binary_sensor.hpvc_required_inputs_ready
+- sensor.hpvc_installed_version
+- switch.hpvc_pv1_control through switch.hpvc_pv10_control
+
+The hardening rejects the unsafe manifest shortcuts without rejecting these
+legitimate production identities. No ID is actually reclaimed, moved or renamed.
+
+10. PRODUCTION TRANSPORT AUTHORIZATION
+
+production_transport_authorized = false
+permanent transport veto = true
+
+The execution admission function still returns literal False, and the executor
+source is byte-identical. Tests invoked test doubles and pure preview functions;
+no real production actuator, HA service or registry write occurred. No Node-RED
+mutation, inverter limit write, HBC strategy write, OpenDTU command, production
+installation or handoff was performed.
+
+11. PROOF NO CONTROL/HBC BEHAVIOR CHANGED
+
+Boundary comparison against the preceding local audit-fixes.1 stage confirms
+63 other native runtime Python modules are byte-identical. Only the read-only
+ownership classifier changed. All policy, allocation, HBC, dispatcher, executor,
+recovery, coordinator, storage, physical authorization and migration/handoff
+execution source remains unchanged. No unexpected source diff was found.
+
+The preservation manifest keeps all other original hashes intact. Its sole
+updated test hash is paired with explicit old/new fixture provenance, outside-
+method hashing, and AST equivalence of all assertions. The catalogue is unchanged.
+The scoped source diff and boundary-review JSON are supplied for review.
+
+12. READY FOR FINAL PUBLISH + TWO-VERSION HA CI?
+
+YES: OWNERSHIP_HARDENING_READY_FOR_FINAL_CI
+
+The three ownership defects are fixed, all 14 strict cases and the full 985-test
+foundation suite pass, and the 12 genuine production identities retain their
+correct classification. No unrelated feature or control behavior was changed.
+
+This work remained local. No final commit was published and no HA matrix was run
+in this stage. The later site-rerun verdict is NOT declared. It still requires
+publishing the final reviewed patch and successful complete HA 2025.12.0 /
+Python 3.13 and HA 2026.10.4 / Python 3.14 validation. Production readiness remains
+separate from this local code-validation result.

@@ -194,6 +194,28 @@ class DiscoveryExclusionTests(unittest.TestCase):
             )
         )
 
+        # The shared generic test name can also be a legitimate, renamed
+        # physical MQTT entity. Metadata proves its role; the name is not a ban.
+        hm = EntityRecord(
+            "number.external_limit",
+            "1000",
+            attributes_json='{"unit_of_measurement":"W","max":2000}',
+        )
+        reg = RegistryEntity(
+            hm.entity_id,
+            device_id="hm",
+            platform="mqtt",
+            unique_id="112233445566_limit_nonpersistent_absolute",
+        )
+        device = RegistryDevice("hm", manufacturer="Hoymiles", model="HMS")
+        self.assertEqual(len(discover_controllers((reg,), (device,), (hm,))), 1)
+        marked = EntityRecord(
+            hm.entity_id,
+            "1000",
+            attributes_json='{"unit_of_measurement":"W","max":2000,"hpvc_test_transport":true}',
+        )
+        self.assertFalse(discover_controllers((reg,), (device,), (marked,)))
+
     def test_reserved_executor_targets_and_fake_hoymiles_are_never_discovered(self):
         from custom_components.hpvc.inverter.detection import TEST_TRANSPORT_TARGETS
 
@@ -304,11 +326,20 @@ class OwnershipProofTests(unittest.TestCase):
 
 
 class ProductionRegressionTests(unittest.TestCase):
-    def test_all_original_suites_and_control_sources_are_byte_preserved(self):
-        hashes = json.loads((ROOT / "tests/fixtures/dev8-preserved-baseline-sha256.json").read_text(encoding="utf-8"))
+    def test_all_original_suites_and_control_sources_are_preserved(self):
+        hashes = json.loads(
+            (ROOT / "tests/fixtures/dev8-preserved-baseline-sha256.json").read_text(
+                encoding="utf-8"
+            )
+        )
         for name, expected in hashes.items():
             with self.subTest(path=name):
-                self.assertEqual(hashlib.sha256((ROOT / name).read_bytes()).hexdigest(), expected)
+                self.assertEqual(
+                    hashlib.sha256(
+                        (ROOT / name).read_bytes().replace(b"\r\n", b"\n")
+                    ).hexdigest(),
+                    expected,
+                )
 
     def test_actual_redacted_export_has_40_blanks_no_false_import_errors_and_two_real_controllers(
         self,

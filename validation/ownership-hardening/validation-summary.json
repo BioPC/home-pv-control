@@ -1,0 +1,80 @@
+{
+  "verdict": "OWNERSHIP_HARDENING_READY_FOR_FINAL_CI",
+  "site_rerun_readiness_claimed": false,
+  "published": false,
+  "real_HA_CI": "pending: HA 2025.12.0 / Python 3.13 and HA 2026.10.4 / Python 3.14",
+  "strict_ownership": {
+    "passed": 14,
+    "total": 14,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "foundation": {
+    "tests_run": 985,
+    "failures": 0,
+    "errors": 0,
+    "successful": true,
+    "exit_code": 0,
+    "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]"
+  },
+  "production_fixture": {
+    "fixture": "tests/fixtures/site-audit-production-12-collisions-redacted.json",
+    "fixture_sha256": "cdb4515bdd71c6e84744f9bd5a461e8e27f543074c8c0f95e948b3a7f8814526",
+    "import_issues": 0,
+    "controllers": [
+      "number.hms_1000_2t_limit_nonpersistent_absolute",
+      "number.hms_2000_4t_limit_nonpersistent_absolute"
+    ],
+    "proven_collisions": [
+      "binary_sensor.hpvc_required_inputs_ready",
+      "sensor.hpvc_installed_version",
+      "switch.hpvc_pv10_control",
+      "switch.hpvc_pv1_control",
+      "switch.hpvc_pv2_control",
+      "switch.hpvc_pv3_control",
+      "switch.hpvc_pv4_control",
+      "switch.hpvc_pv5_control",
+      "switch.hpvc_pv6_control",
+      "switch.hpvc_pv7_control",
+      "switch.hpvc_pv8_control",
+      "switch.hpvc_pv9_control"
+    ],
+    "registry_proposals": 0,
+    "registry_mutations": 0,
+    "input_unchanged": true,
+    "import_committed": false,
+    "ownership_advanced": false,
+    "production_transport_authorized": false,
+    "permanent_transport_veto": true,
+    "readiness": "UNKNOWN"
+  },
+  "source_boundaries": {
+    "changed_existing_files": [
+      "docs/site-audit-fixes.md",
+      "custom_components/hpvc/site_audit/ownership.py",
+      "tests/fixtures/dev8-preserved-baseline-sha256.json",
+      "tests/foundation/test_site_audit.py"
+    ],
+    "new_files": [
+      "docs/ownership-hardening.md",
+      "tests/fixtures/ownership-compatibility-change.json",
+      "tests/fixtures/site-audit-production-12-collisions-redacted.json",
+      "tests/foundation/test_ownership_hardening.py"
+    ],
+    "unexpected_changes": [],
+    "runtime_modules_byte_preserved_except_classifier": 63,
+    "original_test_modules_changed": [
+      "tests/foundation/test_site_audit.py"
+    ],
+    "reason": "Only approved compatibility fixture literals; AST-equivalent assertions and outside-module hash verified by test_ownership_hardening.py",
+    "production_or_github_writes": 0
+  },
+  "original_test_change": {
+    "file": "tests/foundation/test_site_audit.py",
+    "method": "test_safe_owned_collision_proposal_is_data_only",
+    "assertions_preserved": 3,
+    "change": "Only approved catalogue/no-owner fixture literal substitutions; module outside this method unchanged; negative old-fixture rejection added."
+  },
+  "production_transport_authorized": false,
+  "production_or_GitHub_actions": 0
+}

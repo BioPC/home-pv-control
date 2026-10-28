@@ -1,0 +1,246 @@
+HPVC DEV.8 AUDIT FIXES — LOCAL COMPLETION REPORT
+Date: 28 October 2026
+
+Status: LOCAL_FIXES_COMPLETE_FINAL_HA_MATRIX_PENDING
+Requested target DEV8_AUDIT_FIXES_READY_FOR_SITE_RERUN is not claimed as fully validated.
+
+The supplied production snapshot has been rerun successfully for the three
+reported defects. The final local patch still needs its complete two-version HA
+acceptance run. This package is a local development patch, not a release or a
+production deployment. Manifest version remains 2.0.0-dev.8; development revision
+is audit-fixes.1. The separate dev.9 dashboard work is not included.
+
+GitHub scope: two test commits had been submitted under the earlier authorization.
+The second update was already in flight when repository updates were revoked and
+completed at ec05443b1ec20bf256fe9894a75912c15c091a53 on the isolated branch.
+No further GitHub mutations were performed. The final line-ending guard correction
+is local only. No main branch, release, production installation or hardware changed.
+
+1. FILES CHANGED
+
+Original implementation files changed:
+- custom_components/hpvc/legacy.py
+- custom_components/hpvc/inverter/detection.py
+- custom_components/hpvc/site_audit/engine.py
+- custom_components/hpvc/site_audit/schema.py
+- custom_components/hpvc/site_audit/render.py
+- DEVELOPMENT.json (patch revision metadata only)
+
+New implementation, documentation and regression artifacts:
+- custom_components/hpvc/site_audit/ownership.py
+- custom_components/hpvc/site_audit/legacy_ownership.json
+- docs/site-audit-fixes.md
+- tests/fixtures/site-audit-production-redacted.json
+- tests/fixtures/dev8-preserved-baseline-sha256.json
+- tests/foundation/test_site_audit_fixes.py
+- tests/ha/test_site_audit_fixes_acceptance.py
+- validation/site-audit-fixes-production-results.json
+- validation/audit-fixes-validation.json
+- this completion report and the standalone full-answer text
+
+Every original dev.1–dev.8 test file is unchanged. The package retains the
+previously omitted HPVC-2.0-site-export-instructions.txt as a standalone artifact.
+The original legacy dashboard, YAML package and Node-RED source are unchanged.
+
+2. ROOT CAUSE OF THE 40 IMPORT VALIDATION ISSUES
+
+The importer supplied defaults only when a helper was absent (None). Present
+helpers with an empty HA text state reached strict_json(''), which correctly
+rejected that string. All four optional JSON helpers for PV1–PV10 were present
+and blank, producing exactly 40 false-positive invalid_json_payload issues.
+
+3. EXACT EMPTY-JSON HANDLING RULE
+
+For only fixed_data_json, target_json, pre_actions_json and post_actions_json,
+missing, empty or whitespace-only text uses the defined defaults:
+- fixed_data_json and target_json: {}
+- pre_actions_json and post_actions_json: []
+
+All nonblank strings retain their exact contents. Strict parsing, required JSON
+shapes, duplicate-key and non-finite-value rejection, and sequence action/payload
+validation remain active. Nonempty malformed data still prevents a valid import
+candidate. unknown/unavailable states remain errors. The rule applies consistently
+to unused slots, Number entity slots and Action/service slots. Configured payloads
+are not rewritten. Original captured helper text and transaction fingerprints
+remain based on the supplied raw values. Import remains preview-only and imports
+enabled intent as false; no action or service is invoked.
+
+Tests cover missing, empty, whitespace (including long whitespace), {}, [], valid
+populated objects/arrays, wrong shapes, malformed JSON, duplicate keys, NaN and
+unavailable states. Input dictionaries remain unchanged.
+
+4. ROOT CAUSE OF FAKE ENPHASE DETECTION
+
+The production snapshot included number.hpvc_fake_enphase_envoy_dpel_limit and
+matching mode/enable entities with structurally valid Enphase roles, units and
+options. Fallback discovery treated that trio as a real controller because it had
+no explicit HPVC synthetic-entity exclusion.
+
+5. EXACT PRODUCTION TEST-ENTITY EXCLUSION RULE
+
+Both registry-based and fallback auto-discovery reject:
+- an object ID starting hpvc_fake_, checked against current entity ID, original
+  registry entity ID and registry unique ID;
+- literal boolean state attributes hpvc_test_fixture: true or
+  hpvc_test_transport: true;
+- the exact reserved executor targets number.dev6_target, number.dev6_enphase,
+  switch.dev6_pre, switch.dev6_post, switch.dev6_enphase, select.dev6_enphase.
+
+Enphase mode and enable companions are checked as well as the Number limit.
+The read-only export projector preserves the two explicit fixture markers.
+Unrelated names merely containing hpvc are not excluded. number.external_limit
+is not globally reserved: it is a generic name shared by a valid metadata-backed
+OpenDTU regression and may be a legitimate user entity. A marked HPVC fixture at
+that name is excluded by its marker; the bare name cannot match the fallback
+controller suffix rules. Manual bindings and executor admission are unchanged.
+
+6. LEGACY OWNERSHIP PROOF RULE
+
+The new catalogue contains 100 exact template domain/platform/unique-ID identities
+from the approved shipped home assistant/hpvc_config.yaml, pinned by SHA-256:
+aeccabe1fd95809fd0afcc239c9919812bea129e880e4c24d9ee71f6fd03c08b
+
+Automatic proof requires an exact catalogue match, no config-entry ownership and
+no duplicate registry identity. Renamed entity IDs are supported; matching names
+or friendly names are never proof. A supplied package hash, match flag or
+reference that contradicts the approved package vetoes proof.
+
+The prior dev.8 explicit legacy.registry_ownership manifest channel remains
+supported for exact entity-ID/unique-ID/platform/config-entry tuples. It is an
+operator provenance assertion, not ownership inferred from names. Duplicate
+identities, package mismatches and ownership by a supplied config entry veto
+this channel too. It does not authenticate deployment by copying registry rows.
+
+New ownership_classification and registry_ownership[].classification fields
+distinguish proven_legacy_hpvc_owned, unproven_collision and unrelated. The old
+combined blocked ownership string remains for existing dev.8 consumer compatibility.
+Renamed identities are included in the separate ownership inventory. Only proven
+rows may reach the existing preview proposal builder; no proposal is executed.
+
+7. COLLISIONS THAT BECOME PROVEN HPVC-OWNED
+
+The complete supplied snapshot has 12 proven collisions:
+- binary_sensor.hpvc_required_inputs_ready
+- sensor.hpvc_installed_version
+- switch.hpvc_pv1_control through switch.hpvc_pv10_control
+
+Their exact domain/template-platform/unique-ID identities match the approved
+source, and none has config-entry ownership. These findings establish legacy
+source identity for review; they do not authorize moving or deleting anything.
+Native HPVC is absent, so all registry move proposal lists remain empty.
+
+8. COLLISIONS THAT REMAIN UNPROVEN
+
+No other intended-native-ID collision was present in the supplied snapshot.
+Synthetic regression cases verify that a matching name with another unique ID,
+wrong platform/domain, config-entry ownership, duplicate identities or conflicting
+package evidence remains unproven. Unrelated template identities are classified
+unrelated. An injected unproven collision still makes the audit BLOCKED and
+receives no reclamation proposal. Absence of a native installation does not
+constitute proof that any intended ID can be seized.
+
+9. REAL-SITE FIXTURE AND SNAPSHOT RESULTS
+
+Input snapshot SHA-256:
+0253164ed6ae6dabba855a8c10a173252a23710db5b451a998b51a552cfae1fc
+
+The three user-supplied files were read locally. The original files were not
+overwritten. Full site data is not included in the source ZIP or published fixture.
+The redacted fixture is an allowlisted subset of the actual supplied snapshot:
+125 relevant states and five registry rows, including the 40 blank helpers,
+fake Enphase trio, both Hoymiles controllers and three representative collisions.
+Registry/device identifiers are pseudonymized. Network addresses, serials,
+credentials, unrelated personal entities and raw production exports are absent.
+
+Complete snapshot before/after:
+- Import issues: 40 -> 0.
+- Fake Enphase controller: present -> absent.
+- number.hms_2000_4t_limit_nonpersistent_absolute: retained.
+- number.hms_1000_2t_limit_nonpersistent_absolute: retained.
+- Proven legacy collisions: 12.
+- Registry move proposals: 0; registry mutations: 0.
+- Import committed: false; ownership advanced: false.
+- Production transport authorized: false.
+- Overall readiness: UNKNOWN, not production-ready.
+
+Missing legacy runtime/bridge/fence evidence, independent controller/rated-power
+evidence, HBC restoration, telemetry and snapshot freshness are still unresolved.
+The fixes do not manufacture those observations or approve a handoff.
+The safe machine-readable result is validation/site-audit-fixes-production-results.json.
+The complete local rerun is provided separately in the workspace outputs folder.
+
+10. FULL VALIDATION RESULTS AND REMAINING GAP
+
+Final local patch:
+- All 15 new regression test methods pass, including the actual redacted fixture,
+  strict JSON boundaries, synthetic exclusions, legitimate discovery, registry
+  evidence and preserved-source guard.
+- 84 original control/reference/test files are byte-identical to the dev.8 ZIP.
+  The automated cross-platform guard normalizes CRLF to LF only when hashing text.
+- All existing test files remain unchanged; no safety assertion was weakened.
+- Existing full local suites encountered Windows async-test timeouts; no full
+  local-suite pass is claimed. Local legacy temporary-directory errors were
+  resolved by using a writable workspace temp directory, without source changes.
+
+Already-triggered GitHub validation (read-only inspection after updates stopped):
+
+HA 2025.12.0 / Python 3.13:
+- First test commit: 968 foundation tests passed; actual HA: 94 passed, 2 failed.
+- Second commit: 969 foundation tests executed. One new preservation test failed
+  in 61 file subtests because CRLF package hashes differed from the LF checkout.
+  HA installation and acceptance were consequently skipped.
+- The guard correction passes locally but has not been published or rerun in HA.
+
+HA 2026.10.4 / Python 3.14:
+- First test commit: 968 foundation tests passed; actual HA: 94 passed, 2 failed.
+- Second commit: same preservation guard failure across 61 subtests; HA acceptance
+  skipped. The final local patch has not completed this HA matrix either.
+
+The initial HA failures were the broad external_limit name exclusion and the new
+fixture registering a suffixed ID after setting its state. Both were corrected
+before the second commit. No existing test assertion was relaxed to fix them.
+The later guard failure was corrected locally by normalizing line endings, not
+by removing files or permitting changed control source.
+
+All 17 legacy regression scripts and all 36 release-integrity checks passed in
+the already-triggered legacy workflow for the second test commit. Metadata,
+read-only audit scanner and migration bridge checks passed as well.
+
+Evidence URLs:
+https://github.com/BioPC/home-pv-control/actions/runs/40679207109
+https://github.com/BioPC/home-pv-control/actions/runs/40681081674
+https://github.com/BioPC/home-pv-control/actions/runs/40681081764
+
+The final full two-version HA run remains pending under the instruction to make
+no more repository updates. validation/audit-fixes-validation.json records these
+results and limitations. No final all-green matrix or release approval is claimed.
+
+11. PROOF PRODUCTION TRANSPORT REMAINS FALSE
+
+The execution admission function, executor, dispatcher, authorization, migration
+state machine, coordinator and ownership-transition code are unchanged. The
+development metadata keeps production_transport_authorized=false. The actual
+snapshot rerun and redacted fixture both return false, with import committed=false
+and production_state_advanced=false. Existing HA service/registry mutation traps
+remain intact, and new HA tests add explicit service and registry write traps.
+No Node-RED mutation, HA service write, OpenDTU write, ownership transition,
+production installation, live collection or hardware test was performed.
+
+12. PROOF NO CONTROL OR HBC BEHAVIOR CHANGED
+
+Policy, allocation, HBC logic, dispatcher, executor, inverter manager, adapter
+implementations, recovery, storage and migration state machine remain unchanged.
+Discovery changes are limited to excluding HPVC synthetic auto-candidates while
+retaining real controllers. Import changes normalize only blank optional JSON;
+valid populated Action/service payloads retain exact text and meaning. Registry
+changes are classification and preview reporting only. No future hardware plan
+or read-only ownership finding grants authorization to production transport.
+
+Reproduce the final local targeted tests:
+python -B -m unittest discover -s tests/foundation -p test_site_audit_fixes.py -v
+
+Read-only rerun from an extracted package, choosing a NEW output directory:
+python -B audit_tools/site_audit.py --input C:/hpvc2/site-audit-output/site-snapshot.json --output-directory C:/hpvc2/site-audit-output-fixed
+
+That command reads the supplied historical snapshot and writes local report files.
+It does not connect to HA, call a service, mutate a registry, deploy or hand off.

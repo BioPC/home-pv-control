@@ -1,0 +1,161 @@
+--- a/docs/site-audit-fixes.md
++++ b/docs/site-audit-fixes.md
+@@ -40,11 +40,13 @@
+ 
+ The existing dev.8 explicitly supplied `legacy.registry_ownership` manifest
+ channel is retained: it asserts an exact entity-ID/unique-ID/platform/config-entry
+-tuple, rather than inference from names. Package mismatches, duplicate identities
+-and ownership by any supplied config entry veto this channel too. This channel
+-is operator-supplied provenance; copying a registry row does not authenticate the
+-deployment. The automatic catalogue path never infers YAML ownership for an entity
+-with a config-entry ID.
++tuple, rather than inference from names. Both paths now require the approved
++catalogue domain/platform/unique-ID tuple and absent config-entry ownership.
++Unknown entries fail closed; resolved config-entry owners are inconsistent with
++these YAML-owned identities. Package mismatches, duplicate registry identities and
++contradictory manifest rows veto both paths. An exact operator manifest supplements
++the evidence and remains identified in the proof, but cannot override those gates.
++See `ownership-hardening.md` for the scoped compatibility-fixture correction.
+ 
+ New `registry_ownership[].classification` and collision
+ `ownership_classification` fields distinguish `proven_legacy_hpvc_owned`,
+--- a/custom_components/hpvc/site_audit/ownership.py
++++ b/custom_components/hpvc/site_audit/ownership.py
+@@ -23,11 +23,11 @@
+ def classify_ownership(row, bundle):
+     """Match exact package identities even after a rename; names prove nothing.
+ 
+-    Retain dev.8's explicitly supplied exact-tuple ownership manifest channel.
+-    A known conflicting config entry, duplicate identity, or supplied package
+-    mismatch vetoes both channels. An inferred YAML identity requires no entry.
+-    The supplied manifest is an operator provenance assertion, not inferred
+-    from entity names or generated from arbitrary registry rows.
++    Both evidence paths require the approved domain/platform/unique-ID tuple.
++    These catalogue identities are YAML-owned templates, so a config-entry ID
++    cannot be reconciled as their owner: unresolved entries and resolved foreign
++    owners both fail closed. Exact operator provenance supplements these facts;
++    it never overrides them. Contradictory manifest rows also veto proof.
+     """
+     domain = row.get("entity_id", "").split(".", 1)[0]
+     key = (domain, row.get("platform"), row.get("unique_id"))
+@@ -35,6 +35,12 @@
+     evidence = legacy.get("registry_ownership", [])
+     explicit = any(
+         isinstance(r, dict) and identity(r) == identity(row) for r in evidence
++    )
++    manifest_conflict = any(
++        isinstance(r, dict)
++        and r.get("entity_id") == row.get("entity_id")
++        and identity(r) != identity(row)
++        for r in evidence
+     )
+     known = key in KNOWN
+     supplied_hash = legacy.get("source_sha256")
+@@ -47,10 +53,13 @@
+         )
+     )
+     entry_id = row.get("config_entry_id")
+-    conflicting_entry = bool(
+-        entry_id
+-        and any(e.get("entry_id") == entry_id for e in bundle.get("config_entries", []))
++    entry_owned = entry_id not in (None, "")
++    entry_matches = (
++        [e for e in bundle.get("config_entries", []) if e.get("entry_id") == entry_id]
++        if entry_owned
++        else []
+     )
++    unresolved_entry = entry_owned and len(entry_matches) != 1
+     duplicates = (
+         sum(
+             (
+@@ -63,13 +72,9 @@
+         )
+         > 1
+     )
+-    if (
+-        known
+-        and not entry_id
+-        or explicit
+-        and row.get("unique_id")
+-        and row.get("platform") == "template"
+-    ) and not (reference_mismatch or conflicting_entry or duplicates):
++    if known and not (
++        entry_owned or reference_mismatch or duplicates or manifest_conflict
++    ):
+         return dict(
+             classification="proven_legacy_hpvc_owned",
+             proof="exact_supplied_registry_manifest"
+@@ -81,14 +86,19 @@
+     suspected = (
+         known
+         or explicit
++        or manifest_conflict
+         or row.get("entity_id", "").split(".", 1)[-1].startswith("hpvc_")
+     )
+     return dict(
+         classification="unproven_collision" if suspected else "unrelated",
+         proof="package_mismatch"
+         if reference_mismatch
++        else "manifest_registry_identity_mismatch"
++        if manifest_conflict
++        else "config_entry_ownership_unresolved"
++        if unresolved_entry
+         else "config_entry_ownership_conflict"
+-        if conflicting_entry
++        if entry_owned
+         else "duplicate_legacy_identity"
+         if duplicates
+         else "insufficient_exact_legacy_provenance",
+--- a/tests/fixtures/dev8-preserved-baseline-sha256.json
++++ b/tests/fixtures/dev8-preserved-baseline-sha256.json
+@@ -69,7 +69,7 @@
+   "tests/foundation/test_policy_sequences.py": "9974e6bd5413ac21e060165203bf0cbd8ca6625b23e89007bba960f7f19a7521",
+   "tests/foundation/test_readonly_adapters.py": "24d5b473dcd003294931f00fc5e5069b6f5f48089dacc9940cea112d151a0367",
+   "tests/foundation/test_runtime_adapter.py": "4caf15d4eec271c27d5f60092fb244f78335a146800281cd03e1fd3663e28f62",
+-  "tests/foundation/test_site_audit.py": "5dd76996cb8b2217e5a114b89ecf9a58be60d42e03f895f0c3eb4df30de0faa5",
++  "tests/foundation/test_site_audit.py": "b936d815dd933b1144240ef9b235bc06fec6893acd3d5ff5370363078d53588c",
+   "tests/foundation/transport_support.py": "5c7be71a2f22ab966e7139ae0df0b0b94668562b739a8fc964e1aa83cf3dc5df",
+   "tests/ha/conftest.py": "dc5bcbb2750f3b9955590c4bf84277dfaf472f2a3a2bdbd9cf8089a42c67fdca",
+   "tests/ha/ha_transport_support.py": "560b4653e43e97733a0a7a87dae38d8283e395abc20bbceb7db5b365dc99e862",
+--- a/tests/foundation/test_site_audit.py
++++ b/tests/foundation/test_site_audit.py
+@@ -105,19 +105,19 @@
+     def test_safe_owned_collision_proposal_is_data_only(self):
+         b = sample()
+         old = dict(
+-            entity_id="sensor.hpvc_status",
++            entity_id="sensor.hpvc_installed_version",
+             registry_id="old",
+             platform="template",
+-            config_entry_id="legacy-entry",
+-            unique_id="legacy-status",
++            config_entry_id=None,
++            unique_id="hpvc_installed_version",
+             device_id=None,
+         )
+         native = dict(
+-            entity_id="sensor.hpvc_status_2",
++            entity_id="sensor.hpvc_installed_version_2",
+             registry_id="new",
+             platform="hpvc",
+             config_entry_id="native-entry",
+-            unique_id="site-audit-preview:status",
++            unique_id="site-audit-preview:installed_version",
+             device_id=None,
+         )
+         b["entity_registry"] += [old, native]
+@@ -129,11 +129,11 @@
+         c = next(
+             x
+             for x in r["registry_migration"]
+-            if x["intended_entity_id"] == "sensor.hpvc_status"
++            if x["intended_entity_id"] == "sensor.hpvc_installed_version"
+         )
+         self.assertEqual(len(c["proposal"]), 2)
+-        self.assertEqual(c["proposal"][-1]["destination"], "sensor.hpvc_status")
+-        self.assertEqual(b["entity_registry"][-1]["entity_id"], "sensor.hpvc_status_2")
++        self.assertEqual(c["proposal"][-1]["destination"], "sensor.hpvc_installed_version")
++        self.assertEqual(b["entity_registry"][-1]["entity_id"], "sensor.hpvc_installed_version_2")
+ 
+     def test_redaction_preserves_identity_but_removes_credentials_in_nested_JSON_and_URLs(
+         self,

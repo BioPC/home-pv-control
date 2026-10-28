@@ -1,0 +1,21 @@
+{
+  "changed_existing_files": [
+    "docs/site-audit-fixes.md",
+    "custom_components/hpvc/site_audit/ownership.py",
+    "tests/fixtures/dev8-preserved-baseline-sha256.json",
+    "tests/foundation/test_site_audit.py"
+  ],
+  "new_files": [
+    "docs/ownership-hardening.md",
+    "tests/fixtures/ownership-compatibility-change.json",
+    "tests/fixtures/site-audit-production-12-collisions-redacted.json",
+    "tests/foundation/test_ownership_hardening.py"
+  ],
+  "unexpected_changes": [],
+  "runtime_modules_byte_preserved_except_classifier": 63,
+  "original_test_modules_changed": [
+    "tests/foundation/test_site_audit.py"
+  ],
+  "reason": "Only approved compatibility fixture literals; AST-equivalent assertions and outside-module hash verified by test_ownership_hardening.py",
+  "production_or_github_writes": 0
+}

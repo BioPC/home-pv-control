@@ -1,0 +1,79 @@
+{
+  "status": "LOCAL_FIXES_COMPLETE_FINAL_HA_MATRIX_PENDING",
+  "requested_target": "DEV8_AUDIT_FIXES_READY_FOR_SITE_RERUN",
+  "target_claimed": false,
+  "github_updates_permitted": false,
+  "last_published_commit": "ec05443b1ec20bf256fe9894a75912c15c091a53",
+  "last_published_tree": "7e160283b2ea1c74eab419ad9cb5c2294c3c0721",
+  "github_note": "Both commits were submitted under the earlier authorization. The second was already in flight when the user revoked repository updates. No further mutations were made.",
+  "local_new_regressions": {
+    "tests": 15,
+    "passed": 15,
+    "failures": 0
+  },
+  "legacy": {
+    "run_id": 40681081764,
+    "url": "https://github.com/BioPC/home-pv-control/actions/runs/40681081764",
+    "conclusion": "success",
+    "legacy_regression_scripts": 17,
+    "release_integrity_checks": 36
+  },
+  "matrix": [
+    {
+      "ha": "2025.12.0",
+      "python": "3.13",
+      "first_commit": "6493a7d89feac67a6afa7e217c3eb96aa644fcee",
+      "first_foundation": {
+        "tests": 968,
+        "success": true
+      },
+      "first_real_ha": {
+        "passed": 94,
+        "failed": 2
+      },
+      "second_foundation": {
+        "tests": 969,
+        "failing_subtests": 61,
+        "failed_test_methods": 1
+      },
+      "second_real_ha": "not_run_due_to_foundation_guard_failure",
+      "final_local_patch_real_ha": "pending"
+    },
+    {
+      "ha": "2026.10.4",
+      "python": "3.14",
+      "first_commit": "6493a7d89feac67a6afa7e217c3eb96aa644fcee",
+      "first_foundation": {
+        "tests": 968,
+        "success": true
+      },
+      "first_real_ha": {
+        "passed": 94,
+        "failed": 2
+      },
+      "second_foundation": {
+        "tests": 969,
+        "failing_subtests": 61,
+        "failed_test_methods": 1
+      },
+      "second_real_ha": "not_run_due_to_foundation_guard_failure",
+      "final_local_patch_real_ha": "pending"
+    }
+  ],
+  "first_native_run": "https://github.com/BioPC/home-pv-control/actions/runs/40679207109",
+  "second_native_run": "https://github.com/BioPC/home-pv-control/actions/runs/40681081674",
+  "local_corrections_after_last_publish": "CRLF/LF-normalized preservation guard, added legitimate shared-name discovery assertion, and new-test formatting; no production source changed after the last published commit.",
+  "source_preservation": {
+    "original_files": 84,
+    "existing_tests_edited": 0,
+    "packaged_original_bytes_unchanged": true,
+    "test_hash_normalization": "CRLF to LF only"
+  },
+  "local_full_foundation": "timeout at first existing dispatcher async test after 55 seconds; no pass claim",
+  "local_original_audit_suite": "timeout at existing ProtocolTests after 15 seconds; no full-suite pass claim",
+  "production_transport_authorized": false,
+  "import_committed": false,
+  "registry_mutated": false,
+  "ownership_advanced": false,
+  "hardware_actions": 0
+}

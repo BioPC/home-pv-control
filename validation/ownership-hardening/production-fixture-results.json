@@ -1,0 +1,31 @@
+{
+  "fixture": "tests/fixtures/site-audit-production-12-collisions-redacted.json",
+  "fixture_sha256": "cdb4515bdd71c6e84744f9bd5a461e8e27f543074c8c0f95e948b3a7f8814526",
+  "import_issues": 0,
+  "controllers": [
+    "number.hms_1000_2t_limit_nonpersistent_absolute",
+    "number.hms_2000_4t_limit_nonpersistent_absolute"
+  ],
+  "proven_collisions": [
+    "binary_sensor.hpvc_required_inputs_ready",
+    "sensor.hpvc_installed_version",
+    "switch.hpvc_pv10_control",
+    "switch.hpvc_pv1_control",
+    "switch.hpvc_pv2_control",
+    "switch.hpvc_pv3_control",
+    "switch.hpvc_pv4_control",
+    "switch.hpvc_pv5_control",
+    "switch.hpvc_pv6_control",
+    "switch.hpvc_pv7_control",
+    "switch.hpvc_pv8_control",
+    "switch.hpvc_pv9_control"
+  ],
+  "registry_proposals": 0,
+  "registry_mutations": 0,
+  "input_unchanged": true,
+  "import_committed": false,
+  "ownership_advanced": false,
+  "production_transport_authorized": false,
+  "permanent_transport_veto": true,
+  "readiness": "UNKNOWN"
+}
