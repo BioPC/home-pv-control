@@ -1,0 +1,5 @@
+{
+  "native_structure_sha256": "39fa890e64ec7562cba7643fccd59ca5fbebf11cc577084d2cae551bd3f588f2",
+  "frontend_sha256_lf": "a7ac336a204fd0cd0abc2e11a0871fef82c287f7d10d28c9acb0bd5df301a215",
+  "notes": "Structural data-stage baseline only; actual frontend loading in both HA versions and physical cooldown/settling source remain unverified/unavailable."
+}

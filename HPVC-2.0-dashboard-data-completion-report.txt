@@ -1,0 +1,196 @@
+HPVC 2.0 NATIVE DASHBOARD DATA COMPLETION REPORT
+Local-only stage | 2026-10-28
+Baseline: hpvc-2.0-dashboard-parity-local.zip
+Baseline SHA256: caf1a634bebc672cac515e11117a8079fb08947519e15d333cc8a6a3b3c56a61
+
+Final verdict: DASHBOARD_DATA_PARITY_INCOMPLETE
+The new data capabilities are implemented and locally tested. The physical
+cooldown/settling source and both real-HA/frontend acceptance checks remain open.
+Neither DASHBOARD_DATA_PARITY_READY_FOR_FRONTEND_ACCEPTANCE nor
+VISUAL_PARITY_APPROVED is claimed.
+
+1. FILES CHANGED
+Complete machine-readable list and hashes: review/data-source-boundary.json.
+Existing integration setup adds the entry-owned dashboard observer. sensor.py
+adds 19 read-only condition sensors and excludes rolling aggregate attributes
+from Recorder. No new service/control endpoint is added.
+New modules: custom_components/hpvc/dashboard/data.py and report.py.
+New condition key catalogue: custom_components/hpvc/dashboard/condition-keys.json.
+Updated dashboard builder/presentation/bindings/pins and generated JSON; read-only
+site-audit native entity catalogue; dashboard fixture/template/frontend tests.
+New tests: tests/foundation/test_dashboard_data.py (29 tests) and
+tests/ha/test_dashboard_data_acceptance.py (2 tests prepared, not run here).
+The existing HA acceptance entity-count assertion now includes 19 presentation
+sensors. Its preservation hash and the generated-dashboard hash are updated.
+All original dashboard tests remain. No control test behavior is weakened.
+Documentation: docs/dashboard-data-parity.md; historical layout doc marked as such.
+All 308 baseline package files are retained, with updated generated review files.
+
+2. NEW ENTITIES / ATTRIBUTES / STORE
+19 read-only sensor.hpvc_dashboard_<attribute> state mirrors replace attribute
+conditions. Full mapping: review/condition-entity-mapping.json. A clean native
+installation is expected to have 301 entities (282 original + 19 presentation).
+The existing sensor.hpvc_status exposes ui_dashboard_data, ui_report_sections,
+ui_maintenance, ui_report_data_available, ui_charge_priority_state and executed
+PV-limited/priority/history attributes. Report export availability remains false.
+The separate config-entry-owned versioned/checksummed store is
+.storage/hpvc_<entry_id>_dashboard.json. Existing control storage schemas are unchanged.
+
+3. EXECUTED CONTROL HISTORY
+Last 2,880 timestamped points, about 24h at 30-second sampling. Normal/Limit need
+fresh independent native operation proofs and matching fresh readback for the
+entire effective fleet, native ownership/configuration identity, completed
+transport and verified operation state. Charge additionally needs independent
+native HBC strategy proof and authoritative Active priority state. PV-limited is
+stored independently of Charge, because both may coexist.
+Requested intent, helper proof, startup assumption, simulated epoch, stale proof,
+missing controller and recovery never establish executed mode. Missing data is
+unknown, not Normal. Restart explicitly adds an unknown gap. Graphs insert a null
+at each observation's 90-second expiry and across downtime, with no extension
+beyond validity. Existing history frames bind native points; an executed-mode
+series distinguishes Normal/Charge/Limit.
+Remaining gap: physical cooldown and settling cannot be populated from an
+authoritative current-runtime feed. They stay unknown. Completed physical service
+awaiting verification is separately labelled verification_pending, not settling.
+The observer does not derive a second cooldown or settling state machine.
+
+4. CHARGE PRIORITY
+Presentation reads PolicyRuntimeAdapter.accepted.hbc.priority_state. Off, Waiting
+and Active map directly; exit_hold maps to Waiting. An old/missing accepted clock,
+fault or unavailable HBC produces unknown. A stable strategy helper does not need
+to change its value to remain available. This is authoritative HBC runtime state,
+not a claim that HPVC physically issued a command. No Charge Priority logic changed.
+
+5. INSIGHTS
+Native observed state/reason and HBC-runtime transitions plus fresh read-only
+policy evaluations. Proposal entries explicitly say proposal, not executed.
+Newest first, maximum 20, local HH:MM:SS display, UTC timestamps preserved.
+Respects native Insights setting, resets at local midnight and persists across
+ordinary restart. No action-success messages are inferred from requested intent.
+Polling does not claim to capture every event between samples.
+
+6. ACCURACY / FORMULA
+Native observed grid target-band metric, not the v1.6 counterfactual/causal loss
+attribution model. Eligibility requires a known verified executed mode and finite
+grid readback no older than 180s, with a new grid measurement timestamp.
+error_W = observed_grid_W - configured_Target_Export_W
+within = abs(error_W) <= configured_PV_Adjust_Deadband_W
+accuracy_percent = 100 * within_count / measured_count
+MAE_W = sum(abs(error_W)) / measured_count
+RMSE_W = sqrt(sum(error_W squared) / measured_count)
+sampled_coverage_percent = 100 * measured_count /
+  (measured_count + unavailable_count + duplicate_count)
+Zero measured samples => unavailable, never invented zero accuracy. Unavailable,
+unknown/stale/nonfinite and overflow samples are excluded and counted. Duplicate
+timestamps are separately counted. Coverage is sampled attempts, not whole-day
+duration. Each observation uses its then-current target/deadband. Native evidence
+does not establish the v1.6 Control/Load/PV/Other estimated-loss breakdown; those
+fields remain unavailable with that difference disclosed.
+
+7. REPORT SECTIONS
+All ten sections bind native data:
+- Executive Summary: observed mode/provenance, date and transport veto.
+- Live Status: enable intent, observed mode, sample/telemetry and maintenance health.
+- Decision Evaluation: fresh native policy status/reason/action, explicitly proposed.
+- Today's Insights: current-day bounded native entries and retention metadata.
+- Power Control: grid/PV, mode, limited, nullable cooldown/settling, pending verification and proof IDs.
+- Today's Accuracy: measured/unavailable/duplicate counts, coverage, accuracy, MAE/RMSE and formula.
+- HBC & Battery Status: availability, strategy/substrategy, authoritative priority and battery observations.
+- Inverters: authoritative effective count and controller UI rows, including zero.
+- Sensor Health: telemetry freshness, dashboard staleness/fault and input availability.
+- Control Settings: native immutable current settings.
+Executive Summary stays open, nine other sections collapsed. Stale proposals and
+unavailable observations are not silently presented as current. Rendering causes
+no collection, control action or external publication. Full export is not required
+by this stage and remains disabled.
+
+8. MAINTENANCE / STATUS
+Installed version, native runtime/recovery health, dashboard store health,
+migration state, unresolved restore obligations, false production authorization
+and permanent veto are exposed. Restart/reload requirement is unavailable without
+an authoritative update source. Legacy update/reload/remove/uninstall stay disabled.
+
+9. PERSISTENCE / RESTART
+Entry-owned worker every 30s, cancelled/awaited by LifecycleOwner on unload.
+Atomic separate-store commit precedes publication. Bounds: 2,880 points, 20 Insights,
+daily accuracy aggregates, bounded evidence/message fields. Current mode/report
+are recomputed; persisted mode is never restored as live truth. Local-date daily
+state rolls at midnight using HA configured timezone. Corrupt/wrong-plant storage
+and backward clock/date produce a visible dashboard fault without changing control
+or overwriting a corrupt file. Large aggregate history/report attributes are
+excluded from Recorder; Power Flow numeric attributes remain recordable.
+
+10. DASHBOARD BINDINGS
+Main/Settings order, sections/cards, inverter layout, read-only two-line Limit ID,
+12h Power Flow and 48h HBC graph retained. New Insights/accuracy/report/status and
+timeline bindings consume native data. No legacy HPVC YAML helper state dependency
+is reintroduced. Optional external HBC inputs remain observations only.
+The previous attribute-condition incompatibility is removed by 19 plain state
+sensor mirrors. No new custom conditional frontend resource is introduced.
+The existing limit-row/navigation module is byte-for-byte unchanged.
+
+11. HA 2025.12 / PYTHON 3.13 RESULT
+PENDING. No matching Linux/Python environment exists locally; user explicitly kept
+this stage local. No CI publication or prior result is substituted. Ordinary state
+conditions remove the known configuration incompatibility, but actual backend and
+frontend/resource loading remain unverified for these new files.
+
+12. HA 2026.10.4 / PYTHON 3.14 RESULT
+PENDING for the same reason. Two additional real-HA tests are prepared (98 total
+expected from prior 96 + 2), not claimed as executed. Actual frontend loading and
+side-by-side visual acceptance remain pending on both versions.
+
+13. FOUNDATION TOTALS
+1,036 passed, 0 failures/errors. Includes the retained 22 dashboard tests and
+29 new native-data tests. Local Python 3.12; current logs under review/data-validation.
+
+14. DASHBOARD / FRONTEND / TEMPLATE TOTALS
+90 isolated DOM/selection/chart assertions passed, including executed-mode and
+PV-limited values through unknown/downtime gaps. 1,408 Markdown renders passed:
+11 zero/one/multiple/Hoymiles/Enphase/mixed/HBC-unavailable/stale/unavailable/
+monitoring-only/partial scenarios in two observer states. These are synthetic
+fixtures and isolated execution, not Home Assistant browser proof or production evidence.
+Pinned generated dashboard/reference/frontend validation passed.
+
+15. LEGACY REGRESSIONS
+All 17 legacy behavioral suites passed on current files. Site-audit tooling,
+migration bridge and development metadata also passed. No production operations
+were performed. Workspace-local temporary folders were used for Windows tests.
+
+16. STRICT OWNERSHIP
+14 passed; 3 manual binding probes passed. Permanent veto true; production
+authorization false; service/registry write calls and hardware actions 0 in probes.
+
+17. RELEASE INTEGRITY
+35 checks passed; 1 skipped because Bash shell syntax checking is unavailable
+on this Windows host. This skip is disclosed, not reported as green execution.
+
+18. SAFETY PROOF / PRODUCTION AUTHORIZATION
+production_transport_authorized = false.
+40 protected source/workflow files compare unchanged against the input package,
+including all control/policy/allocation/HBC/execution/recovery/migration sources,
+coordinator, policy runtime, storage, Node-RED and GitHub workflows. The permanent
+production-admission literal false is unchanged and strict probes confirm it.
+New observation/report code never invokes a decision evaluator, dispatch, executor,
+service, registry mutation, Node-RED operation, OpenDTU command or handoff.
+Only separate dashboard storage is written. Normal HA platform registration of
+presentation entities is not a registry-repair/reassignment path; no live system
+was installed or modified. GitHub unchanged. No inverter or HBC write path added.
+
+19. REMAINING DATA / FRONTEND GAPS
+- No authoritative physical cooldown/settling feed exists to bind. Values remain
+  unknown; pending verification is not silently converted to settling.
+- Both exact real-HA backend matrices and actual frontend/resource loading remain
+  pending under the local-only instruction.
+- Theme, spacing and side-by-side visual acceptance remain pending; this stage
+  intentionally did not polish CSS.
+- Native accuracy is a documented target-band measurement, not v1.6 estimated
+  causal-loss attribution. Those estimates cannot be fabricated from native data.
+- Report publication/export and dangerous legacy maintenance operations remain
+  disabled by scope; the native report data model and safe status are implemented.
+
+20. FINAL VERDICT
+DASHBOARD_DATA_PARITY_INCOMPLETE
+The implemented read-only data layer and current local validation are reviewable.
+The missing authoritative cooldown/settling feed and outstanding real-HA/frontend
+checks prevent the requested readiness declaration. VISUAL_PARITY_APPROVED is not claimed.

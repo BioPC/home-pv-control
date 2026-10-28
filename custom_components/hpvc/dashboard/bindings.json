@@ -1,0 +1,2042 @@
+{
+  "reference": "home assistant/hpvc_dashboard.yaml",
+  "reference_sha256": "6c51ff542a145d28d7a1ef21849149a42ce8d29012a009d4edc07daa5555704b",
+  "native_entities": [
+    "binary_sensor.hpvc_physical_writes_authorized",
+    "binary_sensor.hpvc_pv10_auto_detected",
+    "binary_sensor.hpvc_pv10_available",
+    "binary_sensor.hpvc_pv10_independently_verifiable",
+    "binary_sensor.hpvc_pv10_limit_range_invalid",
+    "binary_sensor.hpvc_pv10_max_power_locked",
+    "binary_sensor.hpvc_pv10_participating",
+    "binary_sensor.hpvc_pv10_writable_capable",
+    "binary_sensor.hpvc_pv1_auto_detected",
+    "binary_sensor.hpvc_pv1_available",
+    "binary_sensor.hpvc_pv1_independently_verifiable",
+    "binary_sensor.hpvc_pv1_limit_range_invalid",
+    "binary_sensor.hpvc_pv1_max_power_locked",
+    "binary_sensor.hpvc_pv1_participating",
+    "binary_sensor.hpvc_pv1_writable_capable",
+    "binary_sensor.hpvc_pv2_auto_detected",
+    "binary_sensor.hpvc_pv2_available",
+    "binary_sensor.hpvc_pv2_independently_verifiable",
+    "binary_sensor.hpvc_pv2_limit_range_invalid",
+    "binary_sensor.hpvc_pv2_max_power_locked",
+    "binary_sensor.hpvc_pv2_participating",
+    "binary_sensor.hpvc_pv2_writable_capable",
+    "binary_sensor.hpvc_pv3_auto_detected",
+    "binary_sensor.hpvc_pv3_available",
+    "binary_sensor.hpvc_pv3_independently_verifiable",
+    "binary_sensor.hpvc_pv3_limit_range_invalid",
+    "binary_sensor.hpvc_pv3_max_power_locked",
+    "binary_sensor.hpvc_pv3_participating",
+    "binary_sensor.hpvc_pv3_writable_capable",
+    "binary_sensor.hpvc_pv4_auto_detected",
+    "binary_sensor.hpvc_pv4_available",
+    "binary_sensor.hpvc_pv4_independently_verifiable",
+    "binary_sensor.hpvc_pv4_limit_range_invalid",
+    "binary_sensor.hpvc_pv4_max_power_locked",
+    "binary_sensor.hpvc_pv4_participating",
+    "binary_sensor.hpvc_pv4_writable_capable",
+    "binary_sensor.hpvc_pv5_auto_detected",
+    "binary_sensor.hpvc_pv5_available",
+    "binary_sensor.hpvc_pv5_independently_verifiable",
+    "binary_sensor.hpvc_pv5_limit_range_invalid",
+    "binary_sensor.hpvc_pv5_max_power_locked",
+    "binary_sensor.hpvc_pv5_participating",
+    "binary_sensor.hpvc_pv5_writable_capable",
+    "binary_sensor.hpvc_pv6_auto_detected",
+    "binary_sensor.hpvc_pv6_available",
+    "binary_sensor.hpvc_pv6_independently_verifiable",
+    "binary_sensor.hpvc_pv6_limit_range_invalid",
+    "binary_sensor.hpvc_pv6_max_power_locked",
+    "binary_sensor.hpvc_pv6_participating",
+    "binary_sensor.hpvc_pv6_writable_capable",
+    "binary_sensor.hpvc_pv7_auto_detected",
+    "binary_sensor.hpvc_pv7_available",
+    "binary_sensor.hpvc_pv7_independently_verifiable",
+    "binary_sensor.hpvc_pv7_limit_range_invalid",
+    "binary_sensor.hpvc_pv7_max_power_locked",
+    "binary_sensor.hpvc_pv7_participating",
+    "binary_sensor.hpvc_pv7_writable_capable",
+    "binary_sensor.hpvc_pv8_auto_detected",
+    "binary_sensor.hpvc_pv8_available",
+    "binary_sensor.hpvc_pv8_independently_verifiable",
+    "binary_sensor.hpvc_pv8_limit_range_invalid",
+    "binary_sensor.hpvc_pv8_max_power_locked",
+    "binary_sensor.hpvc_pv8_participating",
+    "binary_sensor.hpvc_pv8_writable_capable",
+    "binary_sensor.hpvc_pv9_auto_detected",
+    "binary_sensor.hpvc_pv9_available",
+    "binary_sensor.hpvc_pv9_independently_verifiable",
+    "binary_sensor.hpvc_pv9_limit_range_invalid",
+    "binary_sensor.hpvc_pv9_max_power_locked",
+    "binary_sensor.hpvc_pv9_participating",
+    "binary_sensor.hpvc_pv9_writable_capable",
+    "binary_sensor.hpvc_recovery_required",
+    "binary_sensor.hpvc_required_inputs_ready",
+    "binary_sensor.hpvc_show_inverter_slot_10",
+    "binary_sensor.hpvc_show_inverter_slot_2",
+    "binary_sensor.hpvc_show_inverter_slot_3",
+    "binary_sensor.hpvc_show_inverter_slot_4",
+    "binary_sensor.hpvc_show_inverter_slot_5",
+    "binary_sensor.hpvc_show_inverter_slot_6",
+    "binary_sensor.hpvc_show_inverter_slot_7",
+    "binary_sensor.hpvc_show_inverter_slot_8",
+    "binary_sensor.hpvc_show_inverter_slot_9",
+    "number.hpvc_battery_price_hysteresis",
+    "number.hpvc_cooldown_seconds",
+    "number.hpvc_export_start_threshold",
+    "number.hpvc_export_stop_threshold",
+    "number.hpvc_import_restore_threshold",
+    "number.hpvc_inverter_count",
+    "number.hpvc_pv10_action_step",
+    "number.hpvc_pv10_full_limit",
+    "number.hpvc_pv10_low_limit",
+    "number.hpvc_pv10_refresh_seconds",
+    "number.hpvc_pv1_action_step",
+    "number.hpvc_pv1_full_limit",
+    "number.hpvc_pv1_low_limit",
+    "number.hpvc_pv1_refresh_seconds",
+    "number.hpvc_pv2_action_step",
+    "number.hpvc_pv2_full_limit",
+    "number.hpvc_pv2_low_limit",
+    "number.hpvc_pv2_refresh_seconds",
+    "number.hpvc_pv3_action_step",
+    "number.hpvc_pv3_full_limit",
+    "number.hpvc_pv3_low_limit",
+    "number.hpvc_pv3_refresh_seconds",
+    "number.hpvc_pv4_action_step",
+    "number.hpvc_pv4_full_limit",
+    "number.hpvc_pv4_low_limit",
+    "number.hpvc_pv4_refresh_seconds",
+    "number.hpvc_pv5_action_step",
+    "number.hpvc_pv5_full_limit",
+    "number.hpvc_pv5_low_limit",
+    "number.hpvc_pv5_refresh_seconds",
+    "number.hpvc_pv6_action_step",
+    "number.hpvc_pv6_full_limit",
+    "number.hpvc_pv6_low_limit",
+    "number.hpvc_pv6_refresh_seconds",
+    "number.hpvc_pv7_action_step",
+    "number.hpvc_pv7_full_limit",
+    "number.hpvc_pv7_low_limit",
+    "number.hpvc_pv7_refresh_seconds",
+    "number.hpvc_pv8_action_step",
+    "number.hpvc_pv8_full_limit",
+    "number.hpvc_pv8_low_limit",
+    "number.hpvc_pv8_refresh_seconds",
+    "number.hpvc_pv9_action_step",
+    "number.hpvc_pv9_full_limit",
+    "number.hpvc_pv9_low_limit",
+    "number.hpvc_pv9_refresh_seconds",
+    "number.hpvc_pv_adjust_deadband",
+    "number.hpvc_pv_limiting_price",
+    "number.hpvc_pv_min_power_for_control",
+    "number.hpvc_pv_night_restore_power",
+    "select.hpvc_pv10_control_method",
+    "select.hpvc_pv10_limit_unit",
+    "select.hpvc_pv1_control_method",
+    "select.hpvc_pv1_limit_unit",
+    "select.hpvc_pv2_control_method",
+    "select.hpvc_pv2_limit_unit",
+    "select.hpvc_pv3_control_method",
+    "select.hpvc_pv3_limit_unit",
+    "select.hpvc_pv4_control_method",
+    "select.hpvc_pv4_limit_unit",
+    "select.hpvc_pv5_control_method",
+    "select.hpvc_pv5_limit_unit",
+    "select.hpvc_pv6_control_method",
+    "select.hpvc_pv6_limit_unit",
+    "select.hpvc_pv7_control_method",
+    "select.hpvc_pv7_limit_unit",
+    "select.hpvc_pv8_control_method",
+    "select.hpvc_pv8_limit_unit",
+    "select.hpvc_pv9_control_method",
+    "select.hpvc_pv9_limit_unit",
+    "select.hpvc_selected_inverter",
+    "sensor.hpvc_dashboard_ui_binary_sensor_hpvc_configuration_valid",
+    "sensor.hpvc_dashboard_ui_binary_sensor_hpvc_core_inputs_ready",
+    "sensor.hpvc_dashboard_ui_binary_sensor_hpvc_export_threshold_range_invalid",
+    "sensor.hpvc_dashboard_ui_binary_sensor_hpvc_external_release_active",
+    "sensor.hpvc_dashboard_ui_binary_sensor_hpvc_hbc_available",
+    "sensor.hpvc_dashboard_ui_binary_sensor_hpvc_maintenance_inverter_warning",
+    "sensor.hpvc_dashboard_ui_binary_sensor_hpvc_negative_price_mode",
+    "sensor.hpvc_dashboard_ui_effective_count",
+    "sensor.hpvc_dashboard_ui_input_boolean_hpvc_auto_resume_pending",
+    "sensor.hpvc_dashboard_ui_input_boolean_hpvc_onboarding_complete",
+    "sensor.hpvc_dashboard_ui_input_boolean_hpvc_report_generating",
+    "sensor.hpvc_dashboard_ui_input_boolean_hpvc_report_ready",
+    "sensor.hpvc_dashboard_ui_input_boolean_hpvc_update_available",
+    "sensor.hpvc_dashboard_ui_input_boolean_hpvc_update_in_progress",
+    "sensor.hpvc_dashboard_ui_input_boolean_hpvc_update_reload_required",
+    "sensor.hpvc_dashboard_ui_input_number_house_battery_count",
+    "sensor.hpvc_dashboard_ui_input_select_house_battery_strategy",
+    "sensor.hpvc_dashboard_ui_script_hpvc_restore_defaults",
+    "sensor.hpvc_dashboard_ui_sensor_hpvc_diag_hbc_strategy",
+    "sensor.hpvc_effective_inverter_runtime",
+    "sensor.hpvc_enphase_registry",
+    "sensor.hpvc_installed_version",
+    "sensor.hpvc_inverter_limit_entity_display",
+    "sensor.hpvc_inverter_limit_validation",
+    "sensor.hpvc_migration_state",
+    "sensor.hpvc_pv10_actual_limit",
+    "sensor.hpvc_pv10_auto_identity",
+    "sensor.hpvc_pv1_actual_limit",
+    "sensor.hpvc_pv1_auto_identity",
+    "sensor.hpvc_pv2_actual_limit",
+    "sensor.hpvc_pv2_auto_identity",
+    "sensor.hpvc_pv3_actual_limit",
+    "sensor.hpvc_pv3_auto_identity",
+    "sensor.hpvc_pv4_actual_limit",
+    "sensor.hpvc_pv4_auto_identity",
+    "sensor.hpvc_pv5_actual_limit",
+    "sensor.hpvc_pv5_auto_identity",
+    "sensor.hpvc_pv6_actual_limit",
+    "sensor.hpvc_pv6_auto_identity",
+    "sensor.hpvc_pv7_actual_limit",
+    "sensor.hpvc_pv7_auto_identity",
+    "sensor.hpvc_pv8_actual_limit",
+    "sensor.hpvc_pv8_auto_identity",
+    "sensor.hpvc_pv9_actual_limit",
+    "sensor.hpvc_pv9_auto_identity",
+    "sensor.hpvc_reason",
+    "sensor.hpvc_status",
+    "switch.hpvc_control_hbc_strategy",
+    "switch.hpvc_enabled",
+    "switch.hpvc_external_release_request",
+    "switch.hpvc_insights_enabled",
+    "switch.hpvc_negative_price_hbc_charge",
+    "switch.hpvc_notifications",
+    "switch.hpvc_pv10_control",
+    "switch.hpvc_pv1_control",
+    "switch.hpvc_pv2_control",
+    "switch.hpvc_pv3_control",
+    "switch.hpvc_pv4_control",
+    "switch.hpvc_pv5_control",
+    "switch.hpvc_pv6_control",
+    "switch.hpvc_pv7_control",
+    "switch.hpvc_pv8_control",
+    "switch.hpvc_pv9_control",
+    "text.hpvc_all_in_price_sensor",
+    "text.hpvc_grid_power_sensor",
+    "text.hpvc_market_price_sensor",
+    "text.hpvc_pv10_action",
+    "text.hpvc_pv10_fixed_data_json",
+    "text.hpvc_pv10_limit_number",
+    "text.hpvc_pv10_post_actions_json",
+    "text.hpvc_pv10_pre_actions_json",
+    "text.hpvc_pv10_readback_entity",
+    "text.hpvc_pv10_target_json",
+    "text.hpvc_pv10_value_field",
+    "text.hpvc_pv1_action",
+    "text.hpvc_pv1_fixed_data_json",
+    "text.hpvc_pv1_limit_number",
+    "text.hpvc_pv1_post_actions_json",
+    "text.hpvc_pv1_pre_actions_json",
+    "text.hpvc_pv1_readback_entity",
+    "text.hpvc_pv1_target_json",
+    "text.hpvc_pv1_value_field",
+    "text.hpvc_pv2_action",
+    "text.hpvc_pv2_fixed_data_json",
+    "text.hpvc_pv2_limit_number",
+    "text.hpvc_pv2_post_actions_json",
+    "text.hpvc_pv2_pre_actions_json",
+    "text.hpvc_pv2_readback_entity",
+    "text.hpvc_pv2_target_json",
+    "text.hpvc_pv2_value_field",
+    "text.hpvc_pv3_action",
+    "text.hpvc_pv3_fixed_data_json",
+    "text.hpvc_pv3_limit_number",
+    "text.hpvc_pv3_post_actions_json",
+    "text.hpvc_pv3_pre_actions_json",
+    "text.hpvc_pv3_readback_entity",
+    "text.hpvc_pv3_target_json",
+    "text.hpvc_pv3_value_field",
+    "text.hpvc_pv4_action",
+    "text.hpvc_pv4_fixed_data_json",
+    "text.hpvc_pv4_limit_number",
+    "text.hpvc_pv4_post_actions_json",
+    "text.hpvc_pv4_pre_actions_json",
+    "text.hpvc_pv4_readback_entity",
+    "text.hpvc_pv4_target_json",
+    "text.hpvc_pv4_value_field",
+    "text.hpvc_pv5_action",
+    "text.hpvc_pv5_fixed_data_json",
+    "text.hpvc_pv5_limit_number",
+    "text.hpvc_pv5_post_actions_json",
+    "text.hpvc_pv5_pre_actions_json",
+    "text.hpvc_pv5_readback_entity",
+    "text.hpvc_pv5_target_json",
+    "text.hpvc_pv5_value_field",
+    "text.hpvc_pv6_action",
+    "text.hpvc_pv6_fixed_data_json",
+    "text.hpvc_pv6_limit_number",
+    "text.hpvc_pv6_post_actions_json",
+    "text.hpvc_pv6_pre_actions_json",
+    "text.hpvc_pv6_readback_entity",
+    "text.hpvc_pv6_target_json",
+    "text.hpvc_pv6_value_field",
+    "text.hpvc_pv7_action",
+    "text.hpvc_pv7_fixed_data_json",
+    "text.hpvc_pv7_limit_number",
+    "text.hpvc_pv7_post_actions_json",
+    "text.hpvc_pv7_pre_actions_json",
+    "text.hpvc_pv7_readback_entity",
+    "text.hpvc_pv7_target_json",
+    "text.hpvc_pv7_value_field",
+    "text.hpvc_pv8_action",
+    "text.hpvc_pv8_fixed_data_json",
+    "text.hpvc_pv8_limit_number",
+    "text.hpvc_pv8_post_actions_json",
+    "text.hpvc_pv8_pre_actions_json",
+    "text.hpvc_pv8_readback_entity",
+    "text.hpvc_pv8_target_json",
+    "text.hpvc_pv8_value_field",
+    "text.hpvc_pv9_action",
+    "text.hpvc_pv9_fixed_data_json",
+    "text.hpvc_pv9_limit_number",
+    "text.hpvc_pv9_post_actions_json",
+    "text.hpvc_pv9_pre_actions_json",
+    "text.hpvc_pv9_readback_entity",
+    "text.hpvc_pv9_target_json",
+    "text.hpvc_pv9_value_field",
+    "text.hpvc_pv_power_sensor"
+  ],
+  "bindings": [
+    {
+      "source": "binary_sensor.hpvc_at_minimum_pv",
+      "target": null,
+      "attribute": "ui_binary_sensor_hpvc_at_minimum_pv",
+      "kind": "projection"
+    },
+    {
+      "source": "binary_sensor.hpvc_charge_priority_active",
+      "target": null,
+      "attribute": "ui_binary_sensor_hpvc_charge_priority_active",
+      "kind": "projection"
+    },
+    {
+      "source": "binary_sensor.hpvc_configuration_valid",
+      "target": null,
+      "attribute": "ui_binary_sensor_hpvc_configuration_valid",
+      "kind": "projection"
+    },
+    {
+      "source": "binary_sensor.hpvc_cooldown_active",
+      "target": null,
+      "attribute": "ui_binary_sensor_hpvc_cooldown_active",
+      "kind": "projection"
+    },
+    {
+      "source": "binary_sensor.hpvc_core_inputs_ready",
+      "target": null,
+      "attribute": "ui_binary_sensor_hpvc_core_inputs_ready",
+      "kind": "projection"
+    },
+    {
+      "source": "binary_sensor.hpvc_export_threshold_range_invalid",
+      "target": null,
+      "attribute": "ui_binary_sensor_hpvc_export_threshold_range_invalid",
+      "kind": "projection"
+    },
+    {
+      "source": "binary_sensor.hpvc_external_release_active",
+      "target": null,
+      "attribute": "ui_binary_sensor_hpvc_external_release_active",
+      "kind": "projection"
+    },
+    {
+      "source": "binary_sensor.hpvc_hbc_available",
+      "target": null,
+      "attribute": "ui_binary_sensor_hpvc_hbc_available",
+      "kind": "projection"
+    },
+    {
+      "source": "binary_sensor.hpvc_maintenance_inverter_warning",
+      "target": null,
+      "attribute": "ui_binary_sensor_hpvc_maintenance_inverter_warning",
+      "kind": "projection"
+    },
+    {
+      "source": "binary_sensor.hpvc_negative_price_mode",
+      "target": null,
+      "attribute": "ui_binary_sensor_hpvc_negative_price_mode",
+      "kind": "projection"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv10_auto_detected",
+      "target": "binary_sensor.hpvc_pv10_auto_detected",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv10_limit_range_invalid",
+      "target": "binary_sensor.hpvc_pv10_limit_range_invalid",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv10_max_power_locked",
+      "target": "binary_sensor.hpvc_pv10_max_power_locked",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv1_auto_detected",
+      "target": "binary_sensor.hpvc_pv1_auto_detected",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv1_limit_range_invalid",
+      "target": "binary_sensor.hpvc_pv1_limit_range_invalid",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv1_max_power_locked",
+      "target": "binary_sensor.hpvc_pv1_max_power_locked",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv2_auto_detected",
+      "target": "binary_sensor.hpvc_pv2_auto_detected",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv2_limit_range_invalid",
+      "target": "binary_sensor.hpvc_pv2_limit_range_invalid",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv2_max_power_locked",
+      "target": "binary_sensor.hpvc_pv2_max_power_locked",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv3_auto_detected",
+      "target": "binary_sensor.hpvc_pv3_auto_detected",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv3_limit_range_invalid",
+      "target": "binary_sensor.hpvc_pv3_limit_range_invalid",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv3_max_power_locked",
+      "target": "binary_sensor.hpvc_pv3_max_power_locked",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv4_auto_detected",
+      "target": "binary_sensor.hpvc_pv4_auto_detected",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv4_limit_range_invalid",
+      "target": "binary_sensor.hpvc_pv4_limit_range_invalid",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv4_max_power_locked",
+      "target": "binary_sensor.hpvc_pv4_max_power_locked",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv5_auto_detected",
+      "target": "binary_sensor.hpvc_pv5_auto_detected",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv5_limit_range_invalid",
+      "target": "binary_sensor.hpvc_pv5_limit_range_invalid",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv5_max_power_locked",
+      "target": "binary_sensor.hpvc_pv5_max_power_locked",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv6_auto_detected",
+      "target": "binary_sensor.hpvc_pv6_auto_detected",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv6_limit_range_invalid",
+      "target": "binary_sensor.hpvc_pv6_limit_range_invalid",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv6_max_power_locked",
+      "target": "binary_sensor.hpvc_pv6_max_power_locked",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv7_auto_detected",
+      "target": "binary_sensor.hpvc_pv7_auto_detected",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv7_limit_range_invalid",
+      "target": "binary_sensor.hpvc_pv7_limit_range_invalid",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv7_max_power_locked",
+      "target": "binary_sensor.hpvc_pv7_max_power_locked",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv8_auto_detected",
+      "target": "binary_sensor.hpvc_pv8_auto_detected",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv8_limit_range_invalid",
+      "target": "binary_sensor.hpvc_pv8_limit_range_invalid",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv8_max_power_locked",
+      "target": "binary_sensor.hpvc_pv8_max_power_locked",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv9_auto_detected",
+      "target": "binary_sensor.hpvc_pv9_auto_detected",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv9_limit_range_invalid",
+      "target": "binary_sensor.hpvc_pv9_limit_range_invalid",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv9_max_power_locked",
+      "target": "binary_sensor.hpvc_pv9_max_power_locked",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_pv_limited",
+      "target": null,
+      "attribute": "ui_binary_sensor_hpvc_pv_limited",
+      "kind": "projection"
+    },
+    {
+      "source": "binary_sensor.hpvc_required_inputs_ready",
+      "target": "binary_sensor.hpvc_required_inputs_ready",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_show_inverter_slot_10",
+      "target": "binary_sensor.hpvc_show_inverter_slot_10",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_show_inverter_slot_2",
+      "target": "binary_sensor.hpvc_show_inverter_slot_2",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_show_inverter_slot_3",
+      "target": "binary_sensor.hpvc_show_inverter_slot_3",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_show_inverter_slot_4",
+      "target": "binary_sensor.hpvc_show_inverter_slot_4",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_show_inverter_slot_5",
+      "target": "binary_sensor.hpvc_show_inverter_slot_5",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_show_inverter_slot_6",
+      "target": "binary_sensor.hpvc_show_inverter_slot_6",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_show_inverter_slot_7",
+      "target": "binary_sensor.hpvc_show_inverter_slot_7",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_show_inverter_slot_8",
+      "target": "binary_sensor.hpvc_show_inverter_slot_8",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "binary_sensor.hpvc_show_inverter_slot_9",
+      "target": "binary_sensor.hpvc_show_inverter_slot_9",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_boolean.hpvc_auto_resume_pending",
+      "target": null,
+      "attribute": "ui_input_boolean_hpvc_auto_resume_pending",
+      "kind": "projection"
+    },
+    {
+      "source": "input_boolean.hpvc_control_hbc_strategy",
+      "target": "switch.hpvc_control_hbc_strategy",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_boolean.hpvc_defaults_applied",
+      "target": null,
+      "attribute": "ui_input_boolean_hpvc_defaults_applied",
+      "kind": "projection"
+    },
+    {
+      "source": "input_boolean.hpvc_enabled",
+      "target": "switch.hpvc_enabled",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_boolean.hpvc_insights_enabled",
+      "target": "switch.hpvc_insights_enabled",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_boolean.hpvc_negative_price_hbc_charge",
+      "target": "switch.hpvc_negative_price_hbc_charge",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_boolean.hpvc_notifications",
+      "target": "switch.hpvc_notifications",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_boolean.hpvc_onboarding_complete",
+      "target": null,
+      "attribute": "ui_input_boolean_hpvc_onboarding_complete",
+      "kind": "projection"
+    },
+    {
+      "source": "input_boolean.hpvc_report_generating",
+      "target": null,
+      "attribute": "ui_input_boolean_hpvc_report_generating",
+      "kind": "projection"
+    },
+    {
+      "source": "input_boolean.hpvc_report_ready",
+      "target": null,
+      "attribute": "ui_input_boolean_hpvc_report_ready",
+      "kind": "projection"
+    },
+    {
+      "source": "input_boolean.hpvc_update_available",
+      "target": null,
+      "attribute": "ui_input_boolean_hpvc_update_available",
+      "kind": "projection"
+    },
+    {
+      "source": "input_boolean.hpvc_update_dashboard_manual",
+      "target": null,
+      "attribute": "ui_input_boolean_hpvc_update_dashboard_manual",
+      "kind": "projection"
+    },
+    {
+      "source": "input_boolean.hpvc_update_in_progress",
+      "target": null,
+      "attribute": "ui_input_boolean_hpvc_update_in_progress",
+      "kind": "projection"
+    },
+    {
+      "source": "input_boolean.hpvc_update_reload_required",
+      "target": null,
+      "attribute": "ui_input_boolean_hpvc_update_reload_required",
+      "kind": "projection"
+    },
+    {
+      "source": "input_button.hpvc_check_update",
+      "target": null,
+      "attribute": "ui_input_button_hpvc_check_update",
+      "kind": "projection"
+    },
+    {
+      "source": "input_button.hpvc_export_report",
+      "target": null,
+      "attribute": "ui_input_button_hpvc_export_report",
+      "kind": "projection"
+    },
+    {
+      "source": "input_button.hpvc_quick_reload",
+      "target": null,
+      "attribute": "ui_input_button_hpvc_quick_reload",
+      "kind": "projection"
+    },
+    {
+      "source": "input_button.hpvc_remove_flows",
+      "target": null,
+      "attribute": "ui_input_button_hpvc_remove_flows",
+      "kind": "projection"
+    },
+    {
+      "source": "input_button.hpvc_uninstall",
+      "target": null,
+      "attribute": "ui_input_button_hpvc_uninstall",
+      "kind": "projection"
+    },
+    {
+      "source": "input_button.hpvc_update",
+      "target": null,
+      "attribute": "ui_input_button_hpvc_update",
+      "kind": "projection"
+    },
+    {
+      "source": "input_number.house_battery_count",
+      "target": null,
+      "attribute": "ui_input_number_house_battery_count",
+      "kind": "projection"
+    },
+    {
+      "source": "input_number.hpvc_battery_price_hysteresis",
+      "target": "number.hpvc_battery_price_hysteresis",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_cooldown_seconds",
+      "target": "number.hpvc_cooldown_seconds",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_export_start_threshold",
+      "target": "number.hpvc_export_start_threshold",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_export_stop_threshold",
+      "target": "number.hpvc_export_stop_threshold",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_import_restore_threshold",
+      "target": "number.hpvc_import_restore_threshold",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_inverter_count",
+      "target": "number.hpvc_inverter_count",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv10_action_step",
+      "target": "number.hpvc_pv10_action_step",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv10_full_limit",
+      "target": "number.hpvc_pv10_full_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv10_low_limit",
+      "target": "number.hpvc_pv10_low_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv10_refresh_seconds",
+      "target": "number.hpvc_pv10_refresh_seconds",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv1_action_step",
+      "target": "number.hpvc_pv1_action_step",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv1_full_limit",
+      "target": "number.hpvc_pv1_full_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv1_low_limit",
+      "target": "number.hpvc_pv1_low_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv1_refresh_seconds",
+      "target": "number.hpvc_pv1_refresh_seconds",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv2_action_step",
+      "target": "number.hpvc_pv2_action_step",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv2_full_limit",
+      "target": "number.hpvc_pv2_full_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv2_low_limit",
+      "target": "number.hpvc_pv2_low_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv2_refresh_seconds",
+      "target": "number.hpvc_pv2_refresh_seconds",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv3_action_step",
+      "target": "number.hpvc_pv3_action_step",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv3_full_limit",
+      "target": "number.hpvc_pv3_full_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv3_low_limit",
+      "target": "number.hpvc_pv3_low_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv3_refresh_seconds",
+      "target": "number.hpvc_pv3_refresh_seconds",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv4_action_step",
+      "target": "number.hpvc_pv4_action_step",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv4_full_limit",
+      "target": "number.hpvc_pv4_full_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv4_low_limit",
+      "target": "number.hpvc_pv4_low_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv4_refresh_seconds",
+      "target": "number.hpvc_pv4_refresh_seconds",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv5_action_step",
+      "target": "number.hpvc_pv5_action_step",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv5_full_limit",
+      "target": "number.hpvc_pv5_full_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv5_low_limit",
+      "target": "number.hpvc_pv5_low_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv5_refresh_seconds",
+      "target": "number.hpvc_pv5_refresh_seconds",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv6_action_step",
+      "target": "number.hpvc_pv6_action_step",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv6_full_limit",
+      "target": "number.hpvc_pv6_full_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv6_low_limit",
+      "target": "number.hpvc_pv6_low_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv6_refresh_seconds",
+      "target": "number.hpvc_pv6_refresh_seconds",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv7_action_step",
+      "target": "number.hpvc_pv7_action_step",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv7_full_limit",
+      "target": "number.hpvc_pv7_full_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv7_low_limit",
+      "target": "number.hpvc_pv7_low_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv7_refresh_seconds",
+      "target": "number.hpvc_pv7_refresh_seconds",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv8_action_step",
+      "target": "number.hpvc_pv8_action_step",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv8_full_limit",
+      "target": "number.hpvc_pv8_full_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv8_low_limit",
+      "target": "number.hpvc_pv8_low_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv8_refresh_seconds",
+      "target": "number.hpvc_pv8_refresh_seconds",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv9_action_step",
+      "target": "number.hpvc_pv9_action_step",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv9_full_limit",
+      "target": "number.hpvc_pv9_full_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv9_low_limit",
+      "target": "number.hpvc_pv9_low_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv9_refresh_seconds",
+      "target": "number.hpvc_pv9_refresh_seconds",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv_adjust_deadband",
+      "target": "number.hpvc_pv_adjust_deadband",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv_limiting_price",
+      "target": "number.hpvc_pv_limiting_price",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv_min_power_for_control",
+      "target": "number.hpvc_pv_min_power_for_control",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_number.hpvc_pv_night_restore_power",
+      "target": "number.hpvc_pv_night_restore_power",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.house_battery_strategy",
+      "target": null,
+      "attribute": "ui_input_select_house_battery_strategy",
+      "kind": "projection"
+    },
+    {
+      "source": "input_select.hpvc_pv10_control_method",
+      "target": "select.hpvc_pv10_control_method",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv10_limit_unit",
+      "target": "select.hpvc_pv10_limit_unit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv1_control_method",
+      "target": "select.hpvc_pv1_control_method",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv1_limit_unit",
+      "target": "select.hpvc_pv1_limit_unit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv2_control_method",
+      "target": "select.hpvc_pv2_control_method",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv2_limit_unit",
+      "target": "select.hpvc_pv2_limit_unit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv3_control_method",
+      "target": "select.hpvc_pv3_control_method",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv3_limit_unit",
+      "target": "select.hpvc_pv3_limit_unit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv4_control_method",
+      "target": "select.hpvc_pv4_control_method",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv4_limit_unit",
+      "target": "select.hpvc_pv4_limit_unit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv5_control_method",
+      "target": "select.hpvc_pv5_control_method",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv5_limit_unit",
+      "target": "select.hpvc_pv5_limit_unit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv6_control_method",
+      "target": "select.hpvc_pv6_control_method",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv6_limit_unit",
+      "target": "select.hpvc_pv6_limit_unit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv7_control_method",
+      "target": "select.hpvc_pv7_control_method",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv7_limit_unit",
+      "target": "select.hpvc_pv7_limit_unit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv8_control_method",
+      "target": "select.hpvc_pv8_control_method",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv8_limit_unit",
+      "target": "select.hpvc_pv8_limit_unit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv9_control_method",
+      "target": "select.hpvc_pv9_control_method",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_pv9_limit_unit",
+      "target": "select.hpvc_pv9_limit_unit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_select.hpvc_selected_inverter",
+      "target": "select.hpvc_selected_inverter",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.house_battery_strategy_active_sub_strategy",
+      "target": null,
+      "attribute": "ui_input_text_house_battery_strategy_active_sub_strategy",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_all_in_price_sensor",
+      "target": "text.hpvc_all_in_price_sensor",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_grid_power_sensor",
+      "target": "text.hpvc_grid_power_sensor",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_insight_1",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_insight_1",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_insight_10",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_insight_10",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_insight_2",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_insight_2",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_insight_3",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_insight_3",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_insight_4",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_insight_4",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_insight_5",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_insight_5",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_insight_6",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_insight_6",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_insight_7",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_insight_7",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_insight_8",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_insight_8",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_insight_9",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_insight_9",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_last_action",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_last_action",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_last_update_check",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_last_update_check",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_latest_version",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_latest_version",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_market_price_sensor",
+      "target": "text.hpvc_market_price_sensor",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_node_red_flows_status",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_node_red_flows_status",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_pv10_action",
+      "target": "text.hpvc_pv10_action",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv10_fixed_data_json",
+      "target": "text.hpvc_pv10_fixed_data_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv10_post_actions_json",
+      "target": "text.hpvc_pv10_post_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv10_pre_actions_json",
+      "target": "text.hpvc_pv10_pre_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv10_readback_entity",
+      "target": "text.hpvc_pv10_readback_entity",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv10_target_json",
+      "target": "text.hpvc_pv10_target_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv10_value_field",
+      "target": "text.hpvc_pv10_value_field",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv1_action",
+      "target": "text.hpvc_pv1_action",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv1_fixed_data_json",
+      "target": "text.hpvc_pv1_fixed_data_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv1_post_actions_json",
+      "target": "text.hpvc_pv1_post_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv1_pre_actions_json",
+      "target": "text.hpvc_pv1_pre_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv1_readback_entity",
+      "target": "text.hpvc_pv1_readback_entity",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv1_target_json",
+      "target": "text.hpvc_pv1_target_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv1_value_field",
+      "target": "text.hpvc_pv1_value_field",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv2_action",
+      "target": "text.hpvc_pv2_action",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv2_fixed_data_json",
+      "target": "text.hpvc_pv2_fixed_data_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv2_post_actions_json",
+      "target": "text.hpvc_pv2_post_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv2_pre_actions_json",
+      "target": "text.hpvc_pv2_pre_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv2_readback_entity",
+      "target": "text.hpvc_pv2_readback_entity",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv2_target_json",
+      "target": "text.hpvc_pv2_target_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv2_value_field",
+      "target": "text.hpvc_pv2_value_field",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv3_action",
+      "target": "text.hpvc_pv3_action",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv3_fixed_data_json",
+      "target": "text.hpvc_pv3_fixed_data_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv3_post_actions_json",
+      "target": "text.hpvc_pv3_post_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv3_pre_actions_json",
+      "target": "text.hpvc_pv3_pre_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv3_readback_entity",
+      "target": "text.hpvc_pv3_readback_entity",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv3_target_json",
+      "target": "text.hpvc_pv3_target_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv3_value_field",
+      "target": "text.hpvc_pv3_value_field",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv4_action",
+      "target": "text.hpvc_pv4_action",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv4_fixed_data_json",
+      "target": "text.hpvc_pv4_fixed_data_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv4_post_actions_json",
+      "target": "text.hpvc_pv4_post_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv4_pre_actions_json",
+      "target": "text.hpvc_pv4_pre_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv4_readback_entity",
+      "target": "text.hpvc_pv4_readback_entity",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv4_target_json",
+      "target": "text.hpvc_pv4_target_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv4_value_field",
+      "target": "text.hpvc_pv4_value_field",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv5_action",
+      "target": "text.hpvc_pv5_action",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv5_fixed_data_json",
+      "target": "text.hpvc_pv5_fixed_data_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv5_post_actions_json",
+      "target": "text.hpvc_pv5_post_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv5_pre_actions_json",
+      "target": "text.hpvc_pv5_pre_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv5_readback_entity",
+      "target": "text.hpvc_pv5_readback_entity",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv5_target_json",
+      "target": "text.hpvc_pv5_target_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv5_value_field",
+      "target": "text.hpvc_pv5_value_field",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv6_action",
+      "target": "text.hpvc_pv6_action",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv6_fixed_data_json",
+      "target": "text.hpvc_pv6_fixed_data_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv6_post_actions_json",
+      "target": "text.hpvc_pv6_post_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv6_pre_actions_json",
+      "target": "text.hpvc_pv6_pre_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv6_readback_entity",
+      "target": "text.hpvc_pv6_readback_entity",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv6_target_json",
+      "target": "text.hpvc_pv6_target_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv6_value_field",
+      "target": "text.hpvc_pv6_value_field",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv7_action",
+      "target": "text.hpvc_pv7_action",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv7_fixed_data_json",
+      "target": "text.hpvc_pv7_fixed_data_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv7_post_actions_json",
+      "target": "text.hpvc_pv7_post_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv7_pre_actions_json",
+      "target": "text.hpvc_pv7_pre_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv7_readback_entity",
+      "target": "text.hpvc_pv7_readback_entity",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv7_target_json",
+      "target": "text.hpvc_pv7_target_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv7_value_field",
+      "target": "text.hpvc_pv7_value_field",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv8_action",
+      "target": "text.hpvc_pv8_action",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv8_fixed_data_json",
+      "target": "text.hpvc_pv8_fixed_data_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv8_post_actions_json",
+      "target": "text.hpvc_pv8_post_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv8_pre_actions_json",
+      "target": "text.hpvc_pv8_pre_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv8_readback_entity",
+      "target": "text.hpvc_pv8_readback_entity",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv8_target_json",
+      "target": "text.hpvc_pv8_target_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv8_value_field",
+      "target": "text.hpvc_pv8_value_field",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv9_action",
+      "target": "text.hpvc_pv9_action",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv9_fixed_data_json",
+      "target": "text.hpvc_pv9_fixed_data_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv9_post_actions_json",
+      "target": "text.hpvc_pv9_post_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv9_pre_actions_json",
+      "target": "text.hpvc_pv9_pre_actions_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv9_readback_entity",
+      "target": "text.hpvc_pv9_readback_entity",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv9_target_json",
+      "target": "text.hpvc_pv9_target_json",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv9_value_field",
+      "target": "text.hpvc_pv9_value_field",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_pv_power_sensor",
+      "target": "text.hpvc_pv_power_sensor",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_reason",
+      "target": "sensor.hpvc_reason",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "input_text.hpvc_status",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_status",
+      "kind": "projection"
+    },
+    {
+      "source": "input_text.hpvc_update_status",
+      "target": null,
+      "attribute": "ui_input_text_hpvc_update_status",
+      "kind": "projection"
+    },
+    {
+      "source": "number.hpvc_inverters",
+      "target": "number.hpvc_inverter_count",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "script.hpvc_next_inverter",
+      "target": null,
+      "attribute": "ui_script_hpvc_next_inverter",
+      "kind": "projection"
+    },
+    {
+      "source": "script.hpvc_previous_inverter",
+      "target": null,
+      "attribute": "ui_script_hpvc_previous_inverter",
+      "kind": "projection"
+    },
+    {
+      "source": "script.hpvc_restore_defaults",
+      "target": null,
+      "attribute": "ui_script_hpvc_restore_defaults",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.hbc_energy_prices_data",
+      "target": null,
+      "attribute": "ui_sensor_hbc_energy_prices_data",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.hpvc_daily_target_accuracy",
+      "target": null,
+      "attribute": "ui_sensor_hpvc_daily_target_accuracy",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.hpvc_daily_target_accuracy_samples",
+      "target": null,
+      "attribute": "ui_sensor_hpvc_daily_target_accuracy_samples",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.hpvc_diag_all_in_price",
+      "target": null,
+      "attribute": "ui_sensor_hpvc_diag_all_in_price",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.hpvc_diag_grid_power",
+      "target": null,
+      "attribute": "ui_sensor_hpvc_diag_grid_power",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.hpvc_diag_hbc_strategy",
+      "target": null,
+      "attribute": "ui_sensor_hpvc_diag_hbc_strategy",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.hpvc_diag_market_export_price",
+      "target": null,
+      "attribute": "ui_sensor_hpvc_diag_market_export_price",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.hpvc_diag_pv_power",
+      "target": null,
+      "attribute": "ui_sensor_hpvc_diag_pv_power",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.hpvc_effective_inverter_runtime",
+      "target": "sensor.hpvc_effective_inverter_runtime",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "sensor.hpvc_installed_version",
+      "target": "sensor.hpvc_installed_version",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "sensor.hpvc_inverter_limit_entity_display",
+      "target": "sensor.hpvc_inverter_limit_entity_display",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "sensor.hpvc_pv10_actual_limit",
+      "target": "sensor.hpvc_pv10_actual_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "sensor.hpvc_pv1_actual_limit",
+      "target": "sensor.hpvc_pv1_actual_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "sensor.hpvc_pv2_actual_limit",
+      "target": "sensor.hpvc_pv2_actual_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "sensor.hpvc_pv3_actual_limit",
+      "target": "sensor.hpvc_pv3_actual_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "sensor.hpvc_pv4_actual_limit",
+      "target": "sensor.hpvc_pv4_actual_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "sensor.hpvc_pv5_actual_limit",
+      "target": "sensor.hpvc_pv5_actual_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "sensor.hpvc_pv6_actual_limit",
+      "target": "sensor.hpvc_pv6_actual_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "sensor.hpvc_pv7_actual_limit",
+      "target": "sensor.hpvc_pv7_actual_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "sensor.hpvc_pv8_actual_limit",
+      "target": "sensor.hpvc_pv8_actual_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "sensor.hpvc_pv9_actual_limit",
+      "target": "sensor.hpvc_pv9_actual_limit",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "sensor.hpvc_target_control_response_impact",
+      "target": null,
+      "attribute": "ui_sensor_hpvc_target_control_response_impact",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.hpvc_target_house_load_changes_impact",
+      "target": null,
+      "attribute": "ui_sensor_hpvc_target_house_load_changes_impact",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.hpvc_target_other_impact",
+      "target": null,
+      "attribute": "ui_sensor_hpvc_target_other_impact",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.hpvc_target_pv_availability_impact",
+      "target": null,
+      "attribute": "ui_sensor_hpvc_target_pv_availability_impact",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.hpvc_total_hbc_charging_power",
+      "target": null,
+      "attribute": "ui_sensor_hpvc_total_hbc_charging_power",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.marstek_m1_ac_power",
+      "target": null,
+      "attribute": "ui_sensor_marstek_m1_ac_power",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.marstek_m1_battery_state_of_charge",
+      "target": null,
+      "attribute": "ui_sensor_marstek_m1_battery_state_of_charge",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.marstek_m2_ac_power",
+      "target": null,
+      "attribute": "ui_sensor_marstek_m2_ac_power",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.marstek_m2_battery_state_of_charge",
+      "target": null,
+      "attribute": "ui_sensor_marstek_m2_battery_state_of_charge",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.marstek_m3_ac_power",
+      "target": null,
+      "attribute": "ui_sensor_marstek_m3_ac_power",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.marstek_m3_battery_state_of_charge",
+      "target": null,
+      "attribute": "ui_sensor_marstek_m3_battery_state_of_charge",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.marstek_m4_ac_power",
+      "target": null,
+      "attribute": "ui_sensor_marstek_m4_ac_power",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.marstek_m4_battery_state_of_charge",
+      "target": null,
+      "attribute": "ui_sensor_marstek_m4_battery_state_of_charge",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.marstek_m5_ac_power",
+      "target": null,
+      "attribute": "ui_sensor_marstek_m5_ac_power",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.marstek_m5_battery_state_of_charge",
+      "target": null,
+      "attribute": "ui_sensor_marstek_m5_battery_state_of_charge",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.marstek_m6_ac_power",
+      "target": null,
+      "attribute": "ui_sensor_marstek_m6_ac_power",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.marstek_m6_battery_state_of_charge",
+      "target": null,
+      "attribute": "ui_sensor_marstek_m6_battery_state_of_charge",
+      "kind": "projection"
+    },
+    {
+      "source": "sensor.p1_meter_power",
+      "target": null,
+      "attribute": "ui_sensor_p1_meter_power",
+      "kind": "projection"
+    },
+    {
+      "source": "switch.hpvc_pv10_control",
+      "target": "switch.hpvc_pv10_control",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "switch.hpvc_pv1_control",
+      "target": "switch.hpvc_pv1_control",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "switch.hpvc_pv2_control",
+      "target": "switch.hpvc_pv2_control",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "switch.hpvc_pv3_control",
+      "target": "switch.hpvc_pv3_control",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "switch.hpvc_pv4_control",
+      "target": "switch.hpvc_pv4_control",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "switch.hpvc_pv5_control",
+      "target": "switch.hpvc_pv5_control",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "switch.hpvc_pv6_control",
+      "target": "switch.hpvc_pv6_control",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "switch.hpvc_pv7_control",
+      "target": "switch.hpvc_pv7_control",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "switch.hpvc_pv8_control",
+      "target": "switch.hpvc_pv8_control",
+      "attribute": null,
+      "kind": "native"
+    },
+    {
+      "source": "switch.hpvc_pv9_control",
+      "target": "switch.hpvc_pv9_control",
+      "attribute": null,
+      "kind": "native"
+    }
+  ]
+}

@@ -56,6 +56,10 @@ jobs:
         run: |
           set -o pipefail
           python -B validation/ownership-hardening/strict-requirements-check.py --source-root . | tee strict-ownership-results.log
+      - name: Dashboard data and parity regression suites
+        run: |
+          set -o pipefail
+          python -B -m unittest discover -s tests/foundation -p 'test_dashboard*.py' -v 2>&1 | tee dashboard-unit-results.log
       - name: Production-derived redacted fixture (local files only)
         run: |
           python -B audit_tools/site_audit.py --input tests/fixtures/site-audit-production-12-collisions-redacted.json --output-directory site-fixture-ci
@@ -78,10 +82,35 @@ jobs:
           PY
       - name: Install exact Home Assistant test environment
         run: python -m pip install -r ${{ matrix.requirements }}
+      - name: Install matching frontend dependency for backend config acceptance
+        run: |
+          python - <<'PY'
+          import json, subprocess, sys
+          from pathlib import Path
+          import homeassistant
+          manifest = Path(homeassistant.__file__).parent / 'components/frontend/manifest.json'
+          requirements = json.loads(manifest.read_text())['requirements']
+          print('Exact installed HA frontend requirements:', requirements, flush=True)
+          subprocess.run([sys.executable, '-m', 'pip', 'install', *requirements], check=True)
+          PY
+      - name: Dashboard frontend and chart execution
+        run: |
+          set -o pipefail
+          node scripts/test_dashboard_frontend.cjs | tee dashboard-frontend-results.log
+      - name: Dashboard template rendering
+        run: |
+          set -o pipefail
+          python -B scripts/test_dashboard_templates.py | tee dashboard-template-results.log
+      - name: Generated dashboard and native bindings
+        run: |
+          set -o pipefail
+          python -B scripts/validate_dashboard_parity.py | tee dashboard-validation-results.log
       - name: Record installed environment
         run: python -m pip freeze
       - name: Real Home Assistant acceptance
-        run: python -m pytest tests/ha -v --junitxml=acceptance-results.xml
+        run: |
+          set -o pipefail
+          python -m pytest tests/ha -v -rA --junitxml=acceptance-results.xml 2>&1 | tee ha-acceptance-results.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -89,6 +118,11 @@ jobs:
           path: |
             acceptance-results.xml
             foundation-results.log
+            dashboard-unit-results.log
+            dashboard-frontend-results.log
+            dashboard-template-results.log
+            dashboard-validation-results.log
+            ha-acceptance-results.log
             strict-ownership-results.log
             validation/ownership-hardening/strict-requirements-results.json
             site-fixture-ci/site-readiness.json

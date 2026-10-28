@@ -210,6 +210,17 @@ async def async_setup_entry(hass, entry):
             http_session_factory=http_session_factory,
             policy_runtime=policy_runtime,
         )
+        from .dashboard.data import DashboardObserver
+
+        coordinator.dashboard_observer = DashboardObserver(
+            coordinator,
+            prefix.with_name(prefix.name + "_dashboard.json"),
+            getattr(hass.config, "time_zone", "UTC"),
+        )
+        await coordinator.dashboard_observer.load()
+        owner.create_task(
+            coordinator.dashboard_observer.run(), "hpvc-dashboard-observations"
+        )
         from .execution.ha_executor import HaServiceExecutor
 
         coordinator.service_executor = HaServiceExecutor(hass)

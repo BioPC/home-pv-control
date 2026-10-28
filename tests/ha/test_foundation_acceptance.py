@@ -9,6 +9,7 @@ from homeassistant.loader import async_get_integration
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.hpvc.control.models import PlantConfiguration
+from custom_components.hpvc.dashboard.presentation import CONDITION_KEYS
 
 pytestmark = pytest.mark.asyncio
 
@@ -49,8 +50,9 @@ async def test_all_native_unique_ids_stable_across_reload(hass):
         (item.domain, item.unique_id): item.entity_id
         for item in er.async_entries_for_config_entry(registry, entry.entry_id)
     }
-    assert len(before) == 282
-    assert len(set(before.values())) == 282
+    # Original entities plus dashboard-only state mirrors for visibility.
+    assert len(before) == 282 + len(CONDITION_KEYS)
+    assert len(set(before.values())) == 282 + len(CONDITION_KEYS)
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     after = {

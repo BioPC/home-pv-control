@@ -1,0 +1,97 @@
+HPVC 2.0 DASHBOARD PARITY COMPLETION REPORT
+Local development only | 2026-10-28
+
+Final verdict: VISUAL_PARITY_INCOMPLETE
+
+Baseline: published commit 7c49d2691139dac45364dfa7eacc647bfd27e36f.
+No commit, push, release or GitHub change was made for this dashboard task.
+No production Home Assistant access, installation or handoff occurred.
+
+1. FILES CHANGED
+Four existing files changed:
+- custom_components/hpvc/sensor.py: read-only UI attributes on existing status sensor.
+- home assistant/hpvc_native_dashboard.json: reference-derived native dashboard.
+- scripts/build_native_dashboard.py: default parity generator, optional old compatibility layout.
+- tests/fixtures/dev8-preserved-baseline-sha256.json: only the authorized generated dashboard hash updated.
+Added: custom_components/hpvc/dashboard/{__init__.py,reference.json,bindings.json,builder.py,presentation.py,parity-lock.json,artifact-change.json}; frontend/hpvc-dashboard.js; docs/dashboard-parity.md; tests/dashboard/dashboard_fixture.py; tests/foundation/test_dashboard_parity.py; scripts/{validate_dashboard_parity.py,build_dashboard_review.py,test_dashboard_templates.py,test_dashboard_frontend.cjs}; review artifacts and this report.
+All 251 baseline files retained. All protected control, HBC, execution, recovery, migration, Node-RED and OpenDTU files compare unchanged. Original control tests are unchanged. Full source comparison: review/source-boundary.json.
+
+2. DASHBOARD FILES
+Reference: home assistant/hpvc_dashboard.yaml, unchanged and SHA-pinned.
+Generated: home assistant/hpvc_native_dashboard.json.
+Custom resource: frontend/hpvc-dashboard.js (not installed).
+Generation/setup/compatibility instructions: docs/dashboard-parity.md.
+Main then Settings, 10 then 8 sections. Existing card order retained; one Reports preview appended to Insights.
+
+3. ENTITY MAPPING
+289 literal source bindings, individually listed in review/entity-mapping.json and .csv. Entries identify native entity or read-only status attribute and mapping kind.
+Examples: input_boolean.hpvc_enabled -> switch.hpvc_enabled; input_number.hpvc_export_start_threshold -> number.hpvc_export_start_threshold; input_select.hpvc_selected_inverter -> select.hpvc_selected_inverter; input_text.hpvc_grid_power_sensor -> text.hpvc_grid_power_sensor.
+Dynamic slot prefixes input_number/input_select/input_text.hpvc_pv become number/select/text.hpvc_pv. Optional external HBC observations stay optional; permanent legacy HPVC YAML helpers are not read.
+Navigation scripts are replaced by selection-only frontend navigation. Legacy action/report/maintenance services are disabled. Registry-suffixed native IDs can be supplied via --mapping, without editing a registry.
+
+4. SECTION/CARD PARITY TABLE
+Exact per-path classifications: review/section-card-parity.csv and .json.
+Main 1 startup/status: intentionally different (monitoring-only wording).
+Main 2 Master Control: functionally equivalent configuration intent; report actions unavailable.
+Main 3 Control States: missing/blocker for executed history/Charge Priority.
+Main 4 HBC live status: functionally equivalent optional observed strategy/SOC/power.
+Main 5 Live Inputs: functionally equivalent native observations.
+Main 6 accuracy: missing/blocker, native collection unavailable.
+Main 7 Power Flow: intentionally different, requested 12h.
+Main 8 Power Flow with HBC: intentionally different, requested 12h.
+Main 9 Insights/Reports: missing/blocker, ten-section live preview only.
+Main 10 HBC price intervals: functionally equivalent configuration, 48h.
+Settings 1 Core Sensors: functionally equivalent native configuration.
+Settings 2 Inverters: functionally equivalent native selection/configuration and full-ID row.
+Settings 3 Power Flow Control: functionally equivalent native configuration.
+Settings 4 Control Tuning: functionally equivalent native configuration.
+Settings 5 Price Strategy: functionally equivalent native configuration.
+Settings 6 HBC: functionally equivalent optional UI; executed Charge Priority unavailable.
+Settings 7 and 8 Maintenance: intentionally different; legacy operations disabled.
+These are structural classifications, not live HA visual acceptance. Ancestor/section rows conservatively include child capability blockers.
+
+5. INVERTER RESULT
+Reference groupings, status icons and layout retained. Hoymiles Detected / Enphase Detected wording preserved. Total lists auto-detected before manual. Previous/next changes only native selected-inverter configuration and wraps within effective count. Zero controllers shows: No PV inverters available. HPVC is monitoring only.
+
+6. TWO-LINE LIMIT ENTITY RESULT
+Custom read-only row: line 1 Limit entity:, line 2 full entity ID. Lock-outline matches other read-only fields. Horizontal overflow, keyboard focus and full title preserved; no input/textarea or write action. Both HMS-2000/HMS-1000 long IDs checked. Isolated DOM-model verification passed; actual HA browser spacing remains unverified.
+
+7. GRAPH RESULT
+Both Power Flow variants use 12h, reference colors/names/grid/PV and optional battery. HBC Price Intervals remains 48h. Native attribute history starts when recorded; no legacy history migration. Missing/nonfinite/stale values produce gaps and empty current-value points, actual zero stays zero. All generated chart functions execute in isolated Node checks. Executed control timeline uses stepline frames with unknown gaps, not fabricated Normal/Charge/Limit activity.
+
+8. HBC UI RESULT
+Conditional Enable HBC, observed strategy/substrategy, battery SOC/power, negative-price setting and Charge Priority labels retained. No HBC decision or actuation changes. Executed Charge Priority state remains explicitly unavailable. Invalid/stale numeric observations are unavailable; a missing configured battery prevents a misleading partial total.
+
+9. ZERO/DEGRADED STATES
+11 synthetic scenarios: zero, one, multiple auto/manual, Hoymiles, Enphase, mixed Hoymiles/Enphase, HBC unavailable, stale, unavailable, monitoring-only, partial discovery. Zero hides inverter configuration rows; missing HBC hides its price graph. Review: review/fixture-results.json and fixture-template-review.html. Synthetic fixtures are not production readiness evidence.
+
+10. REGRESSION TOTALS
+Foundation: 1007 passed, 0 failures/errors (includes 22 new dashboard tests).
+Dashboard frontend/selection/chart assertions: 64 passed.
+Markdown template rendering: 704 passed across 11 scenarios, including hidden templates.
+Legacy behavioral regressions: 17 suites passed.
+Strict ownership: 14 passed; 3 manual-binding probes passed; physical/service/registry actions 0.
+Release integrity: 35 passed, 1 skipped (Bash shell syntax check unavailable on this Windows host).
+Metadata, site-audit tooling, migration bridge and pinned dashboard validation passed.
+Two initial legacy test runs failed on sandbox TEMP cleanup/rename; unchanged tests passed with workspace TEMP/TMP. Original and retry logs retained in review/validation.
+Real HA 2025.12/Python3.13 and 2026.10.4/Python3.14 matrix NOT rerun for this local UI task. Prior CI results are not claimed for the new UI files. Local tests used Python3.12 and Node24. No live HA frontend/pixel tests were performed.
+
+11. INTENTIONAL DIFFERENCES / EXACT REMAINING GAPS
+- Requested Power Flow 12h instead of reference 6h.
+- Native entity/attribute bindings, full-ID custom row, native selection-only navigation.
+- Monitoring-only development disclosure; no legacy automatic-enable promise.
+- Native report generation/export/publication and View report flow missing. Ten collapsible report sections provide only a live read-only preview (Executive Summary open; nine others collapsed).
+- Current-day native Insights and accuracy collection missing.
+- Executed Normal/Charge/Limit/cooldown history and Charge Priority state unavailable in this stage.
+- Legacy update/reload/remove/uninstall operations have no enabled native equivalent; controls disabled and maintenance wording explains this.
+- Attribute-based dashboard conditions target the HA2026.10.4 frontend. HA2025.12 frontend compatibility unresolved.
+- Actual HA custom-resource loading, card rendering, theme, spacing and pixel parity require isolated frontend acceptance. Side-by-side review is normalized JSON, not an HA screenshot.
+These important gaps prevent VISUAL_PARITY_APPROVED.
+
+12. PRODUCTION AUTHORIZATION
+production_transport_authorized = false.
+Permanent production veto unchanged. No dispatcher/executor/recovery, policy/allocation/HBC, ownership/handoff or inverter-write behavior changed. No production install, Node-RED change, OpenDTU command, hardware/HBC/registry write or GitHub publication was performed.
+
+13. FINAL VERDICT
+VISUAL_PARITY_INCOMPLETE
+The reference-derived UI and local regression evidence are reviewable in the package. The exact capability/frontend gaps in item 11 remain; this is not production approval or site readiness approval.

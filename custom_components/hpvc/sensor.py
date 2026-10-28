@@ -4,6 +4,7 @@ from homeassistant.components.sensor import SensorEntity
 from .const import VERSION, FOUNDATION_WRITE_BLOCK
 from .entity import HpvcEntity, Setting
 from .control.models import Quality, ControlMethod
+from .dashboard.presentation import CONDITION_KEYS, dashboard_attributes
 
 KEYS = (
     "migration_state",
@@ -90,6 +91,7 @@ def controller_ui(runtime):
 async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(
         [
+            *(HpvcDashboardCondition(entry.runtime_data, Setting("dashboard_" + key, "sensor"), key) for key in CONDITION_KEYS),
             *(HpvcSensor(entry.runtime_data, Setting(key, "sensor")) for key in KEYS),
             *(
                 HpvcSensor(
@@ -108,7 +110,22 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
+class HpvcDashboardCondition(HpvcEntity, SensorEntity):
+    """Native state mirrors keep Lovelace conditions compatible with HA 2025.12."""
+    def __init__(self, runtime, setting, attribute):
+        super().__init__(runtime, setting)
+        self.attribute = attribute
+
+    @property
+    def native_value(self):
+        return dashboard_attributes(self.coordinator, controller_ui(self.coordinator)).get(self.attribute)
+
+
 class HpvcSensor(HpvcEntity, SensorEntity):
+    # The dashboard store owns rolling history; Recorder need not copy the full
+    # payload every update. Power attributes remain recordable for Power Flow.
+    _unrecorded_attributes = frozenset({"ui_dashboard_data", "ui_report_sections", "ui_maintenance", "ui_source_attributes"})
+
     @property
     def native_unit_of_measurement(self):
         return "W" if self.setting.field == "actual_limit" else None
@@ -153,6 +170,8 @@ class HpvcSensor(HpvcEntity, SensorEntity):
         key = self.setting.key
         runtime = self.coordinator
         fleet = runtime.manager.current
+        if key == "status":
+            return dashboard_attributes(runtime, controller_ui(runtime))
         if self.setting.slot:
             row = fleet.by_slot(self.setting.slot)
             return {

@@ -1,0 +1,21 @@
+[
+  "ui_binary_sensor_hpvc_configuration_valid",
+  "ui_binary_sensor_hpvc_core_inputs_ready",
+  "ui_binary_sensor_hpvc_export_threshold_range_invalid",
+  "ui_binary_sensor_hpvc_external_release_active",
+  "ui_binary_sensor_hpvc_hbc_available",
+  "ui_binary_sensor_hpvc_maintenance_inverter_warning",
+  "ui_binary_sensor_hpvc_negative_price_mode",
+  "ui_effective_count",
+  "ui_input_boolean_hpvc_auto_resume_pending",
+  "ui_input_boolean_hpvc_onboarding_complete",
+  "ui_input_boolean_hpvc_report_generating",
+  "ui_input_boolean_hpvc_report_ready",
+  "ui_input_boolean_hpvc_update_available",
+  "ui_input_boolean_hpvc_update_in_progress",
+  "ui_input_boolean_hpvc_update_reload_required",
+  "ui_input_number_house_battery_count",
+  "ui_input_select_house_battery_strategy",
+  "ui_script_hpvc_restore_defaults",
+  "ui_sensor_hpvc_diag_hbc_strategy"
+]
