@@ -48,7 +48,9 @@ def phase(name, output):
 def synthetic(name, priority="Off"):
     """Display fixture only; these are never production/physical evidence."""
     now = time.time()
-    fixtures.NOW = now
+    # datetime timestamps round to microseconds. Keep observations safely before
+    # the sample instead of occasionally rounding a few nanoseconds into future.
+    fixtures.NOW = now - 1.0
     f = fixtures.fixture(name, native_data=True)
     # DOM fixtures do not run the native binary-sensor projections. Publish the
     # matching slot visibility explicitly for this isolated browser fixture.
@@ -120,6 +122,14 @@ def synthetic(name, priority="Off"):
             for i in range(192)
         ]
     attrs = dashboard_attributes(runtime, f["rows"], now=now)
+    if name not in ("stale", "unavailable"):
+        assert attrs["ui_sensor_hpvc_diag_grid_power"] == 0
+        assert attrs["ui_sensor_hpvc_diag_pv_power"] == 1234
+    if name not in ("stale", "unavailable", "hbc_unavailable"):
+        assert (
+            len(attrs["ui_source_attributes"]["sensor.hbc_energy_prices_data"]["marks"])
+            == 192
+        )
     f["states"]["sensor.hpvc_status"]["attributes"] = attrs
     f["states"]["binary_sensor.hpvc_physical_writes_authorized"] = {
         "state": "off",
@@ -478,6 +488,30 @@ async def test_actual_ha_frontend(
                             label=label,
                         )
                         cases.append(info)
+                        info["projection"] = await page.evaluate(
+                            """() => {const a=document.querySelector('home-assistant').hass.states['sensor.hpvc_status'].attributes;return {grid:a.ui_sensor_hpvc_diag_grid_power,pv:a.ui_sensor_hpvc_diag_pv_power,soc1:a.ui_sensor_marstek_m1_battery_state_of_charge,soc2:a.ui_sensor_marstek_m2_battery_state_of_charge,prices:(a.ui_source_attributes?.['sensor.hbc_energy_prices_data']?.marks||[]).length}}"""
+                        )
+                        if label == "native":
+                            expected_attrs = current["fixture"]["states"][
+                                "sensor.hpvc_status"
+                            ]["attributes"]
+                            assert info["projection"] == {
+                                "grid": expected_attrs[
+                                    "ui_sensor_hpvc_diag_grid_power"
+                                ],
+                                "pv": expected_attrs["ui_sensor_hpvc_diag_pv_power"],
+                                "soc1": expected_attrs[
+                                    "ui_sensor_marstek_m1_battery_state_of_charge"
+                                ],
+                                "soc2": expected_attrs[
+                                    "ui_sensor_marstek_m2_battery_state_of_charge"
+                                ],
+                                "prices": len(
+                                    expected_attrs["ui_source_attributes"][
+                                        "sensor.hbc_energy_prices_data"
+                                    ]["marks"]
+                                ),
+                            }, info["projection"]
                         info["control_legend_layout"] = await page.evaluate(
                             """() => {const rows=[];function walk(r){for(const e of r.querySelectorAll('*')){if(e.localName==='apexcharts-card'&&e._config?.header?.title==='HPVC control/state history'&&e.getBoundingClientRect().height>0){const b=e.getBoundingClientRect();rows.push({width:b.width,items:[...e.shadowRoot.querySelectorAll('.apexcharts-legend-series')].map(l=>{const q=l.getBoundingClientRect();return {text:l.textContent,left:q.left-b.left,right:q.right-b.left,overflow:q.left<b.left-2||q.right>b.right+2}})})}if(e.shadowRoot)walk(e.shadowRoot)}}walk(document);return rows}"""
                         )
