@@ -38,6 +38,9 @@ def synthetic(name, priority="Off"):
     fixtures.NOW = now
     f = fixtures.fixture(name, native_data=True)
     runtime = f["runtime"]
+    strategy = runtime.state_reader("input_select.house_battery_strategy")
+    if strategy is not None and priority in ("Waiting", "Active"):
+        strategy.state = "Charge"
     observer = runtime.dashboard_observer
     date = datetime.fromtimestamp(now, UTC).date().isoformat()
     points = []
@@ -90,10 +93,15 @@ def synthetic(name, priority="Off"):
         ]
     attrs = dashboard_attributes(runtime, f["rows"], now=now)
     f["states"]["sensor.hpvc_status"]["attributes"] = attrs
+    f["states"]["binary_sensor.hpvc_physical_writes_authorized"] = {
+        "state": "off",
+        "attributes": {"hpvc_test_fixture": True},
+    }
     for key in CONDITION_KEYS:
         value = attrs.get(key)
         f["states"]["sensor.hpvc_dashboard_" + key] = {
-            "state": "unknown" if value is None else str(value), "attributes": {}
+            "state": "unknown" if value is None else str(value),
+            "attributes": {},
         }
     # The canonical reference is served on the same HA, with fixture helpers only.
     for binding in CATALOG["bindings"]:
@@ -149,7 +157,7 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
         "http": {},
         "frontend": {},
         "history": {},
-        "recorder": {"db_url": "sqlite:///:memory:"},
+        "recorder": {"db_url": "sqlite:///" + hass.config.path("frontend-fixture.db")},
         "lovelace": {
             "mode": "yaml",
             "resources": [
@@ -351,6 +359,29 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                     for scenario in fixtures.SCENARIOS:
                         for view in (0, 1):
                             await capture("native", scenario, "light", 1440, view)
+                    await capture("native", "mixed", "light", 1440, 0)
+                    details = page.locator("details").filter(
+                        has=page.locator('summary:text-is("Executive Summary")')
+                    )
+                    assert await details.get_attribute("open") is not None
+                    for heading in (
+                        "Live Status",
+                        "Decision Evaluation",
+                        "Today’s Insights",
+                        "Power Control",
+                        "Today’s Accuracy",
+                        "HBC & Battery Status",
+                        "Inverters",
+                        "Sensor Health",
+                        "Control Settings",
+                    ):
+                        panel = page.locator("details").filter(
+                            has=page.locator("summary").filter(has_text=heading)
+                        )
+                        assert await panel.get_attribute("open") is None, heading
+                    await page.locator(
+                        'summary:text-is("HBC & Battery Status")'
+                    ).click()
                     for priority in ("Off", "Waiting", "Active", "unknown"):
                         current["fixture"] = synthetic("mixed", priority)
                         apply_fixture()
