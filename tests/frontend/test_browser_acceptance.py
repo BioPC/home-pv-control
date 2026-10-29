@@ -296,13 +296,15 @@ async def test_actual_ha_frontend(
         mark("real-ha-started-recorder-and-hpvc-loaded")
         origin = str(client.make_url("/")).rstrip("/")
         print("HPVC_BROWSER_SERVER", origin, flush=True)
-        current = {"fixture": synthetic("hoymiles"), "enabled": True}
+        current = {"fixture": synthetic("hoymiles"), "enabled": True, "frame": 0}
 
         def apply_entity(entity, row):
             old = hass.states.get(entity)
             attrs = dict(old.attributes) if old else {}
             attrs.update(row["attributes"])
             attrs["hpvc_test_fixture"] = True
+            if entity == "sensor.hpvc_status":
+                attrs["hpvc_fixture_frame"] = current["frame"]
             value = row["state"]
             if entity == "select.hpvc_selected_inverter":
                 value = entry.runtime_data.configuration.selected_inverter
@@ -450,6 +452,16 @@ async def test_actual_ha_frontend(
 
                     async def capture(label, scenario, theme, width, view):
                         current["fixture"] = synthetic(scenario)
+                        current["frame"] += 1
+                        apply_fixture()
+                        if await page.evaluate(
+                            "!!document.querySelector('home-assistant')?.hass"
+                        ):
+                            await page.wait_for_function(
+                                "(frame)=>document.querySelector('home-assistant')?.hass?.states?.['sensor.hpvc_status']?.attributes.hpvc_fixture_frame===frame",
+                                arg=current["frame"],
+                                timeout=30000,
+                            )
                         await page.set_viewport_size(
                             {"width": width, "height": 1000 if width > 600 else 844}
                         )
@@ -489,6 +501,7 @@ async def test_actual_ha_frontend(
                             """() => {const all=[];function walk(root){for(const e of root.querySelectorAll('*')){all.push(e);if(e.shadowRoot)walk(e.shadowRoot)}}walk(document);return {title:document.title,tags:[...new Set(all.map(e=>e.localName))],errors:all.filter(e=>e.localName==='hui-error-card').map(e=>e.innerText),text:all.filter(e=>e.localName==='ha-markdown').map(e=>e.shadowRoot?.textContent||e.textContent),dark:document.querySelector('home-assistant')?.hass?.themes?.darkMode,pageOverflow:document.body.scrollWidth>innerWidth+2,resources:[...document.querySelectorAll('script[src]')].map(e=>e.src).filter(s=>s.includes('hpvc-dashboard')),charts:all.filter(e=>e.localName==='apexcharts-card').length}}"""
                         )
                         info.update(
+                            fixture_frame=current["frame"],
                             name=name,
                             scenario=scenario,
                             theme=theme,
