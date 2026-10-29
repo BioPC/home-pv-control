@@ -40,6 +40,13 @@ def synthetic(name, priority="Off"):
     now = time.time()
     fixtures.NOW = now
     f = fixtures.fixture(name, native_data=True)
+    # DOM fixtures do not run the native binary-sensor projections. Publish the
+    # matching slot visibility explicitly for this isolated browser fixture.
+    for slot in range(2, 11):
+        f["states"][f"binary_sensor.hpvc_show_inverter_slot_{slot}"] = {
+            "state": "on" if len(f["rows"]) >= slot else "off",
+            "attributes": {},
+        }
     runtime = f["runtime"]
     strategy = runtime.state_reader("input_select.house_battery_strategy")
     if strategy is not None and priority in ("Waiting", "Active"):
@@ -364,6 +371,9 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                     await page.wait_for_timeout(1000)
                     assert entry.runtime_data.configuration.selected_inverter == "PV2"
                     assert len(service_calls) == before + 1
+                    await page.screenshot(
+                        path=str(OUT / "selected-pv2.png"), full_page=True
+                    )
                     assert (
                         await page.locator(
                             "hpvc-limit-entity-row:visible .value"
