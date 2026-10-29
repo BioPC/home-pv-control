@@ -183,6 +183,14 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=True
     ):
+        # The component-test HA fixture skips this real bootstrap helper.
+        from homeassistant.helpers.recorder import (
+            DATA_RECORDER,
+            async_initialize_recorder,
+        )
+
+        if DATA_RECORDER not in hass.data:
+            async_initialize_recorder(hass)
         assert await async_setup_component(hass, "frontend", config)
         assert await async_setup_component(hass, "history", config)
         entry = await start(hass)
