@@ -306,10 +306,21 @@ def parity_dashboard(actual_ids=None):
             if "content" in value:
                 value["content"] = rewrite(value["content"])
             if value.get("header", {}).get("title") == "HPVC control/state history":
+                # Bound legend wrapping independently of Apex's initial canvas
+                # width; HA 2026 sections can shrink after the chart mounts.
+                value["all_series_config"] = {"show": {"legend_value": False}}
+                value["apex_config"] = {
+                    "legend": {
+                        "width": 280,
+                        "horizontalAlign": "left",
+                        "fontSize": "12px",
+                        "itemMargin": {"horizontal": 4, "vertical": 3},
+                    }
+                }
                 value["series"].append(
                     {
                         "entity": eid(STATUS),
-                        "name": "Executed mode: Normal=0 / Charge=1 / Limit=2",
+                        "name": "Executed mode: Normal=0 Charge=1 Limit=2",
                         "type": "line",
                         "curve": "stepline",
                         "extend_to": False,

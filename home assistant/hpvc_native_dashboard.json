@@ -864,14 +864,30 @@
                   },
                   {
                     "entity": "sensor.hpvc_status",
-                    "name": "Executed mode: Normal=0 / Charge=1 / Limit=2",
+                    "name": "Executed mode: Normal=0 Charge=1 Limit=2",
                     "type": "line",
                     "curve": "stepline",
                     "extend_to": false,
                     "transform": "return x === null ? null : Number(x);",
                     "data_generator": "const points = entity.attributes.ui_dashboard_data?.history || []; const result = [];\nfor (let i=0; i<points.length; i++) { const p=points[i]; const value=({Normal:0,Charge:1,Limit:2})[p.mode] ?? null;\nresult.push([p.at*1000,value]); if (!points[i+1] || points[i+1].at > p.at+90) result.push([(p.at+90)*1000,null]); } return result;"
                   }
-                ]
+                ],
+                "all_series_config": {
+                  "show": {
+                    "legend_value": false
+                  }
+                },
+                "apex_config": {
+                  "legend": {
+                    "width": 280,
+                    "horizontalAlign": "left",
+                    "fontSize": "12px",
+                    "itemMargin": {
+                      "horizontal": 4,
+                      "vertical": 3
+                    }
+                  }
+                }
               }
             },
             {
@@ -942,14 +958,30 @@
                   },
                   {
                     "entity": "sensor.hpvc_status",
-                    "name": "Executed mode: Normal=0 / Charge=1 / Limit=2",
+                    "name": "Executed mode: Normal=0 Charge=1 Limit=2",
                     "type": "line",
                     "curve": "stepline",
                     "extend_to": false,
                     "transform": "return x === null ? null : Number(x);",
                     "data_generator": "const points = entity.attributes.ui_dashboard_data?.history || []; const result = [];\nfor (let i=0; i<points.length; i++) { const p=points[i]; const value=({Normal:0,Charge:1,Limit:2})[p.mode] ?? null;\nresult.push([p.at*1000,value]); if (!points[i+1] || points[i+1].at > p.at+90) result.push([(p.at+90)*1000,null]); } return result;"
                   }
-                ]
+                ],
+                "all_series_config": {
+                  "show": {
+                    "legend_value": false
+                  }
+                },
+                "apex_config": {
+                  "legend": {
+                    "width": 280,
+                    "horizontalAlign": "left",
+                    "fontSize": "12px",
+                    "itemMargin": {
+                      "horizontal": 4,
+                      "vertical": 3
+                    }
+                  }
+                }
               }
             }
           ],

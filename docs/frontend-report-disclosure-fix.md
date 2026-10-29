@@ -29,3 +29,13 @@ Convert that row kind to the same readonly attribute presentation as other
 projection rows. This changes display bindings only; it does not change the HBC
 state reader, strategy selection, policy or any write path. The real-browser
 fixture now asserts that the displayed sub-strategy is `Balanced`.
+
+## Control-history legend clipping
+
+After waiting for actual ApexCharts data idle, HA 2026.10.4 browser geometry
+showed legend items extending to 483.8 pixels inside a 437.3-pixel card. Bound
+the legend width to 280 pixels, omit redundant latest-value labels from that
+legend, and shorten the executed-mode key while retaining all three mode names
+and numeric mappings. Existing state rows and tooltips retain their values;
+unknown data, cooldown/settling and all historical samples remain unchanged.
+The browser test rejects legend items outside the card at every tested width.

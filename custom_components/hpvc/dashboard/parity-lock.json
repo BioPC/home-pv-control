@@ -1,5 +1,5 @@
 {
-  "native_structure_sha256": "1518ba711eb538e75ac15478943dd9f989a3d26c212d54f444448cd6e6c99ffc",
+  "native_structure_sha256": "03c3e880c928932d553f34d7078f5c7e83473eeef237946ed889a356319e9c79",
   "frontend_sha256_lf": "a7ac336a204fd0cd0abc2e11a0871fef82c287f7d10d28c9acb0bd5df301a215",
-  "notes": "Reports disclosure HTML and readonly projected row kinds corrected after actual HA screenshots; visual acceptance pending final matrix."
+  "notes": "Report disclosures, projected readonly rows and control legend wrapping corrected after real HA browser review; final acceptance requires the browser matrix."
 }
