@@ -37,8 +37,8 @@ pytestmark = pytest.mark.asyncio
 OUT = ROOT / "frontend-evidence"
 
 
-def phase(name):
-    (OUT / "phase.json").write_text(
+def phase(name, output):
+    (output / "phase.json").write_text(
         json.dumps({"phase": name, "at": time.time()}), encoding="utf-8"
     )
     print("HPVC_BROWSER_PHASE", name, flush=True)
@@ -191,10 +191,21 @@ def history_payload(f, entities=None):
     return result
 
 
-async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_enabled):
+@pytest.mark.parametrize(
+    "case_group",
+    ["interactions", "matrix-light", "matrix-dark", "fixtures-a", "fixtures-b"],
+)
+async def test_actual_ha_frontend(
+    hass, hass_client, hass_access_token, socket_enabled, case_group
+):
+    out = OUT / case_group
+
+    def mark(name):
+        phase(name, out)
+
     logging.getLogger("homeassistant.core").setLevel(logging.WARNING)
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
-    OUT.mkdir(exist_ok=True)
+    out.mkdir(parents=True, exist_ok=True)
     www = Path(hass.config.path("www"))
     www.mkdir(exist_ok=True)
     shutil.copyfile(ROOT / "frontend/hpvc-dashboard.js", www / "hpvc-dashboard.js")
@@ -254,7 +265,7 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
         if not hass.is_running:
             await hass.async_start()
         client = await hass_client()
-        phase("real-ha-started-recorder-and-hpvc-loaded")
+        mark("real-ha-started-recorder-and-hpvc-loaded")
         origin = str(client.make_url("/")).rstrip("/")
         print("HPVC_BROWSER_SERVER", origin, flush=True)
         current = {"fixture": synthetic("hoymiles"), "enabled": True}
@@ -409,7 +420,7 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                         await page.wait_for_timeout(1500)
                         name = f"{label}-{scenario}-{theme}-{width}-view{view}"
                         await page.screenshot(
-                            path=str(OUT / (name + ".png")), full_page=True
+                            path=str(out / (name + ".png")), full_page=True
                         )
                         info = await page.evaluate(
                             """() => {const all=[];function walk(root){for(const e of root.querySelectorAll('*')){all.push(e);if(e.shadowRoot)walk(e.shadowRoot)}}walk(document);return {title:document.title,tags:[...new Set(all.map(e=>e.localName))],errors:all.filter(e=>e.localName==='hui-error-card').map(e=>e.innerText),text:all.filter(e=>e.localName==='ha-markdown').map(e=>e.shadowRoot?.textContent||e.textContent),dark:document.querySelector('home-assistant')?.hass?.themes?.darkMode,pageOverflow:document.body.scrollWidth>innerWidth+2,resources:[...document.querySelectorAll('script[src]')].map(e=>e.src).filter(s=>s.includes('hpvc-dashboard')),charts:all.filter(e=>e.localName==='apexcharts-card').length}}"""
@@ -423,7 +434,7 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                             label=label,
                         )
                         cases.append(info)
-                        phase(name)
+                        mark(name)
                         print("HPVC_BROWSER_CAPTURE", name, flush=True)
                         assert not info["errors"], info["errors"]
                         assert info["dark"] == (theme == "dark"), info
@@ -432,123 +443,155 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                             "[object Object]" in text for text in info["text"]
                         ), name
 
-                    # Bootstrap first; remaining captures exercise both real views.
-                    await capture("native", "hoymiles", "light", 1440, 1)
-                    row = page.locator("hpvc-limit-entity-row:visible").first
-                    await row.wait_for(timeout=30000)
-                    assert await row.locator(".label").inner_text() == "Limit entity:"
-                    assert (
-                        await row.locator(".value").inner_text() == fixtures.LONG_IDS[0]
-                    )
-                    assert await row.locator("input,textarea").count() == 0
-                    assert (
-                        await row.locator("ha-icon").get_attribute("icon")
-                        == "mdi:lock-outline"
-                    )
-                    await row.screenshot(path=str(OUT / "limit-row-desktop.png"))
-                    before = len(service_calls)
-                    await page.locator(
-                        'hpvc-inverter-navigation:visible button[aria-label="Next inverter"]'
-                    ).click()
-                    await page.wait_for_timeout(1000)
-                    assert entry.runtime_data.configuration.selected_inverter == "PV2"
-                    assert len(service_calls) == before + 1
-                    await page.screenshot(
-                        path=str(OUT / "selected-pv2.png"), full_page=True
-                    )
-                    assert (
+                    if case_group == "interactions":
+                        # Bootstrap first; remaining captures exercise both real views.
+                        await capture("native", "hoymiles", "light", 1440, 1)
+                        row = page.locator("hpvc-limit-entity-row:visible").first
+                        await row.wait_for(timeout=30000)
+                        assert (
+                            await row.locator(".label").inner_text() == "Limit entity:"
+                        )
+                        assert (
+                            await row.locator(".value").inner_text()
+                            == fixtures.LONG_IDS[0]
+                        )
+                        assert await row.locator("input,textarea").count() == 0
+                        assert (
+                            await row.locator("ha-icon").get_attribute("icon")
+                            == "mdi:lock-outline"
+                        )
+                        await row.screenshot(path=str(out / "limit-row-desktop.png"))
+                        before = len(service_calls)
                         await page.locator(
-                            "hpvc-limit-entity-row:visible .value"
-                        ).inner_text()
-                        == fixtures.LONG_IDS[1]
-                    )
-                    await page.locator(
-                        'hpvc-inverter-navigation:visible button[aria-label="Previous inverter"]'
-                    ).click()
-                    await page.wait_for_timeout(500)
-                    assert len(service_calls) == before + 2
-                    for theme in ("light", "dark"):
-                        for width in (1440, 900, 390):
-                            for view in (0, 1):
-                                for label in ("reference", "native"):
-                                    await capture(label, "mixed", theme, width, view)
-                    for scenario in fixtures.SCENARIOS:
-                        for view in (0, 1):
-                            await capture("native", scenario, "light", 1440, view)
-                    await capture("native", "mixed", "light", 1440, 0)
-                    sub_strategy = page.locator("hui-attribute-row").filter(
-                        has_text="HBC sub-strategy"
-                    )
-                    await sub_strategy.wait_for()
-                    # HA entity rows render their value inside open shadow DOM.
-                    await sub_strategy.get_by_text("Balanced", exact=True).wait_for(
-                        state="visible"
-                    )
-                    details = page.locator("details").filter(
-                        has=page.locator('summary:text-is("Executive Summary")')
-                    )
-                    assert await details.get_attribute("open") is not None
-                    assert await details.locator("p").count() > 0
-                    assert await details.locator("p").first.is_visible()
-                    for heading in (
-                        "Live Status",
-                        "Decision Evaluation",
-                        "Today’s Insights",
-                        "Power Control",
-                        "Today’s Accuracy",
-                        "HBC & Battery Status",
-                        "Inverters",
-                        "Sensor Health",
-                        "Control Settings",
-                    ):
-                        panel = page.locator("details").filter(
-                            has=page.locator("summary").filter(has_text=heading)
+                            'hpvc-inverter-navigation:visible button[aria-label="Next inverter"]'
+                        ).click()
+                        await page.wait_for_timeout(1000)
+                        assert (
+                            entry.runtime_data.configuration.selected_inverter == "PV2"
                         )
-                        assert await panel.get_attribute("open") is None, heading
-                        assert await panel.locator("p").count() > 0, heading
-                        assert not await panel.locator("p").first.is_visible(), heading
-                        await panel.locator("summary").click()
-                        assert await panel.locator("p").first.is_visible(), heading
-                        await panel.locator("summary").click()
-                        assert not await panel.locator("p").first.is_visible(), heading
-                    await (
-                        page.locator("hui-markdown-card")
-                        .filter(has=details)
-                        .screenshot(path=str(OUT / "reports-initial-disclosures.png"))
-                    )
-                    await page.locator(
-                        'summary:text-is("HBC & Battery Status")'
-                    ).click()
-                    for priority in ("Off", "Waiting", "Active", "unknown"):
-                        current["fixture"] = synthetic("mixed", priority)
-                        apply_fixture()
-                        await page.wait_for_timeout(500)
+                        assert len(service_calls) == before + 1
                         await page.screenshot(
-                            path=str(OUT / f"priority-{priority}.png"), full_page=True
+                            path=str(out / "selected-pv2.png"), full_page=True
                         )
-                    await capture("native", "hoymiles", "dark", 390, 1)
-                    row = page.locator("hpvc-limit-entity-row:visible").first
-                    value = row.locator(".value")
-                    await value.focus()
-                    assert await value.get_attribute("tabindex") == "0"
-                    assert await value.get_attribute("title") == fixtures.LONG_IDS[0]
-                    await value.hover()
-                    await page.mouse.wheel(600, 0)
-                    await page.wait_for_timeout(300)
-                    scroll = await value.evaluate(
-                        "(e)=>({left:e.scrollLeft,width:e.clientWidth,full:e.scrollWidth})"
-                    )
-                    assert scroll["full"] > scroll["width"] and scroll["left"] > 0, (
-                        scroll
-                    )
-                    await row.screenshot(
-                        path=str(OUT / "limit-row-mobile-scrolled.png")
-                    )
+                        assert (
+                            await page.locator(
+                                "hpvc-limit-entity-row:visible .value"
+                            ).inner_text()
+                            == fixtures.LONG_IDS[1]
+                        )
+                        await page.locator(
+                            'hpvc-inverter-navigation:visible button[aria-label="Previous inverter"]'
+                        ).click()
+                        await page.wait_for_timeout(500)
+                        assert len(service_calls) == before + 2
+                    if case_group.startswith("matrix-"):
+                        for theme in (case_group.removeprefix("matrix-"),):
+                            for width in (1440, 900, 390):
+                                for view in (0, 1):
+                                    for label in ("reference", "native"):
+                                        await capture(
+                                            label, "mixed", theme, width, view
+                                        )
+                    if case_group.startswith("fixtures-"):
+                        for scenario in (
+                            fixtures.SCENARIOS[:6]
+                            if case_group == "fixtures-a"
+                            else fixtures.SCENARIOS[6:]
+                        ):
+                            for view in (0, 1):
+                                await capture("native", scenario, "light", 1440, view)
+                    if case_group == "interactions":
+                        await capture("native", "mixed", "light", 1440, 0)
+                        sub_strategy = page.locator("hui-attribute-row").filter(
+                            has_text="HBC sub-strategy"
+                        )
+                        await sub_strategy.wait_for()
+                        # HA entity rows render their value inside open shadow DOM.
+                        await sub_strategy.get_by_text("Balanced", exact=True).wait_for(
+                            state="visible"
+                        )
+                        details = page.locator("details").filter(
+                            has=page.locator('summary:text-is("Executive Summary")')
+                        )
+                        assert await details.get_attribute("open") is not None
+                        assert await details.locator("p").count() > 0
+                        assert await details.locator("p").first.is_visible()
+                        for heading in (
+                            "Live Status",
+                            "Decision Evaluation",
+                            "Today’s Insights",
+                            "Power Control",
+                            "Today’s Accuracy",
+                            "HBC & Battery Status",
+                            "Inverters",
+                            "Sensor Health",
+                            "Control Settings",
+                        ):
+                            panel = page.locator("details").filter(
+                                has=page.locator("summary").filter(has_text=heading)
+                            )
+                            assert await panel.get_attribute("open") is None, heading
+                            assert await panel.locator("p").count() > 0, heading
+                            assert not await panel.locator("p").first.is_visible(), (
+                                heading
+                            )
+                            await panel.locator("summary").click()
+                            assert await panel.locator("p").first.is_visible(), heading
+                            await panel.locator("summary").click()
+                            assert not await panel.locator("p").first.is_visible(), (
+                                heading
+                            )
+                        await (
+                            page.locator("hui-markdown-card")
+                            .filter(has=details)
+                            .screenshot(
+                                path=str(out / "reports-initial-disclosures.png")
+                            )
+                        )
+                        await page.locator(
+                            'summary:text-is("HBC & Battery Status")'
+                        ).click()
+                        for priority in ("Off", "Waiting", "Active", "unknown"):
+                            current["fixture"] = synthetic("mixed", priority)
+                            apply_fixture()
+                            await page.wait_for_timeout(500)
+                            await page.screenshot(
+                                path=str(out / f"priority-{priority}.png"),
+                                full_page=True,
+                            )
+                        await capture("native", "hoymiles", "dark", 390, 1)
+                        row = page.locator("hpvc-limit-entity-row:visible").first
+                        value = row.locator(".value")
+                        await value.focus()
+                        assert await value.get_attribute("tabindex") == "0"
+                        assert (
+                            await value.get_attribute("title") == fixtures.LONG_IDS[0]
+                        )
+                        await value.hover()
+                        await page.mouse.wheel(600, 0)
+                        await page.wait_for_timeout(300)
+                        scroll = await value.evaluate(
+                            "(e)=>({left:e.scrollLeft,width:e.clientWidth,full:e.scrollWidth})"
+                        )
+                        assert (
+                            scroll["full"] > scroll["width"] and scroll["left"] > 0
+                        ), scroll
+                        await row.screenshot(
+                            path=str(out / "limit-row-mobile-scrolled.png")
+                        )
+                    expected = {
+                        "interactions": 3,
+                        "matrix-light": 12,
+                        "matrix-dark": 12,
+                        "fixtures-a": 12,
+                        "fixtures-b": 10,
+                    }
+                    assert len(cases) == expected[case_group], (case_group, len(cases))
                     current["enabled"] = False
                     publisher.cancel()
                     await asyncio.gather(publisher, return_exceptions=True)
                     print("HPVC_BROWSER_DRAIN_BEFORE_RELOAD", flush=True)
-                    phase("drain-before-browser-reload")
+                    mark("drain-before-browser-reload")
                     await asyncio.wait_for(hass.async_block_till_done(), 30)
                     await page.evaluate(
                         "document.querySelector('home-assistant').hass.connection.close()"
@@ -566,20 +609,20 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                         responses
                     )
                     print("HPVC_BROWSER_DRAIN_BEFORE_DISCONNECT", flush=True)
-                    phase("drain-before-final-disconnect")
+                    mark("drain-before-final-disconnect")
                     await asyncio.wait_for(hass.async_block_till_done(), 30)
                     await page.evaluate(
                         "document.querySelector('home-assistant').hass.connection.close()"
                     )
                     await page.wait_for_timeout(1000)
                     runtime = entry.runtime_data
-                    phase("unload-native-entry")
+                    mark("unload-native-entry")
                     await asyncio.wait_for(
                         hass.config_entries.async_unload(entry.entry_id), 30
                     )
                     assert not runtime.owner.tasks
                     await page.wait_for_timeout(500)
-                    phase("reload-native-entry")
+                    mark("reload-native-entry")
                     assert await asyncio.wait_for(
                         hass.config_entries.async_setup(entry.entry_id), 30
                     )
@@ -587,19 +630,19 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                     await asyncio.wait_for(hass.async_block_till_done(), 30)
                     assert not entry.runtime_data.physical_writes_authorized
                     await browser.close()
-                    phase("browser-closed-native-reload-verified")
+                    mark("browser-closed-native-reload-verified")
         except BaseException:
-            (OUT / "failure-traceback.txt").write_text(
+            (out / "failure-traceback.txt").write_text(
                 traceback.format_exc(), encoding="utf-8"
             )
             if "page" in locals() and not page.is_closed():
                 try:
-                    await page.screenshot(path=str(OUT / "failure.png"), full_page=True)
-                    (OUT / "failure.html").write_text(
+                    await page.screenshot(path=str(out / "failure.png"), full_page=True)
+                    (out / "failure.html").write_text(
                         await page.content(), encoding="utf-8"
                     )
                 except PlaywrightError as capture_error:
-                    (OUT / "capture-error.txt").write_text(
+                    (out / "capture-error.txt").write_text(
                         str(capture_error), encoding="utf-8"
                     )
             raise
@@ -607,9 +650,10 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
             current["enabled"] = False
             publisher.cancel()
             await asyncio.gather(publisher, return_exceptions=True)
-            (OUT / "browser-results.json").write_text(
+            (out / "browser-results.json").write_text(
                 json.dumps(
                     {
+                        "case_group": case_group,
                         "cases": cases,
                         "errors": errors,
                         "warnings": warnings,
@@ -627,14 +671,14 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                 encoding="utf-8",
             )
             if entry.runtime_data:
-                phase("final-native-unload")
+                mark("final-native-unload")
                 await asyncio.wait_for(
                     hass.config_entries.async_unload(entry.entry_id), 30
                 )
-            phase("test-body-complete")
+            mark("test-body-complete")
             # Stop the real Recorder and HA while the isolated HTTP test server
             # still exists, rather than leaving worker shutdown to fixture order.
-            phase("stop-isolated-home-assistant")
+            mark("stop-isolated-home-assistant")
             await asyncio.wait_for(hass.async_stop(), 30)
-            phase("isolated-home-assistant-stopped")
+            mark("isolated-home-assistant-stopped")
     assert not errors, errors
