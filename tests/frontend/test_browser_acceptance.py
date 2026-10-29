@@ -31,6 +31,7 @@ from custom_components.hpvc.dashboard.presentation import (
     dashboard_attributes,
     ui_key,
 )
+from custom_components.hpvc.entity import HpvcEntity
 from tests.dashboard import dashboard_fixture as fixtures
 
 pytestmark = pytest.mark.asyncio
@@ -270,20 +271,48 @@ async def test_actual_ha_frontend(
         print("HPVC_BROWSER_SERVER", origin, flush=True)
         current = {"fixture": synthetic("hoymiles"), "enabled": True}
 
-        def apply_fixture():
-            f = current["fixture"]
-            for entity, row in f["states"].items():
-                attrs = (
-                    dict(hass.states.get(entity).attributes)
-                    if hass.states.get(entity)
-                    else {}
-                )
-                attrs.update(row["attributes"])
-                attrs["hpvc_test_fixture"] = True
-                value = row["state"]
-                if entity == "select.hpvc_selected_inverter":
-                    value = entry.runtime_data.configuration.selected_inverter
+        def apply_entity(entity, row):
+            old = hass.states.get(entity)
+            attrs = dict(old.attributes) if old else {}
+            attrs.update(row["attributes"])
+            attrs["hpvc_test_fixture"] = True
+            value = row["state"]
+            if entity == "select.hpvc_selected_inverter":
+                value = entry.runtime_data.configuration.selected_inverter
+            if old is None or old.state != str(value) or dict(old.attributes) != attrs:
                 hass.states.async_set(entity, value, attrs)
+
+        def apply_fixture():
+            for entity, row in current["fixture"]["states"].items():
+                apply_entity(entity, row)
+
+        # Display fixtures own presentation values during capture. Keep real
+        # selection/configuration services and restore every native publication
+        # callback before exercising the real unload/reload lifecycle.
+        runtime_under_test = entry.runtime_data
+        publication_swaps = []
+        for callback in tuple(runtime_under_test.listeners):
+            native_entity = getattr(callback, "__self__", None)
+            if not isinstance(native_entity, HpvcEntity):
+                continue
+
+            def publish_display(callback=callback, native_entity=native_entity):
+                row = current["fixture"]["states"].get(native_entity.entity_id)
+                if current["enabled"] and row is not None:
+                    apply_entity(native_entity.entity_id, row)
+                else:
+                    callback()
+
+            runtime_under_test.listeners.remove(callback)
+            runtime_under_test.listeners.add(publish_display)
+            publication_swaps.append((callback, publish_display))
+
+        def restore_publication():
+            for callback, replacement in publication_swaps:
+                runtime_under_test.listeners.discard(replacement)
+                if not runtime_under_test.owner.closed:
+                    runtime_under_test.listeners.add(callback)
+            publication_swaps.clear()
 
         async def publish_fixture():
             while current["enabled"]:
@@ -587,7 +616,6 @@ async def test_actual_ha_frontend(
                         "fixtures-b": 10,
                     }
                     assert len(cases) == expected[case_group], (case_group, len(cases))
-                    current["enabled"] = False
                     publisher.cancel()
                     await asyncio.gather(publisher, return_exceptions=True)
                     print("HPVC_BROWSER_DRAIN_BEFORE_RELOAD", flush=True)
@@ -615,6 +643,8 @@ async def test_actual_ha_frontend(
                         "document.querySelector('home-assistant').hass.connection.close()"
                     )
                     await page.wait_for_timeout(1000)
+                    current["enabled"] = False
+                    restore_publication()
                     runtime = entry.runtime_data
                     mark("unload-native-entry")
                     await asyncio.wait_for(
@@ -629,6 +659,9 @@ async def test_actual_ha_frontend(
                     print("HPVC_BROWSER_DRAIN_AFTER_RELOAD", flush=True)
                     await asyncio.wait_for(hass.async_block_till_done(), 30)
                     assert not entry.runtime_data.physical_writes_authorized
+                    mark("close-browser-context")
+                    await context.close()
+                    mark("close-browser")
                     await browser.close()
                     mark("browser-closed-native-reload-verified")
         except BaseException:
@@ -650,6 +683,7 @@ async def test_actual_ha_frontend(
             current["enabled"] = False
             publisher.cancel()
             await asyncio.gather(publisher, return_exceptions=True)
+            restore_publication()
             (out / "browser-results.json").write_text(
                 json.dumps(
                     {
@@ -676,6 +710,8 @@ async def test_actual_ha_frontend(
                     hass.config_entries.async_unload(entry.entry_id), 30
                 )
             mark("test-body-complete")
+            mark("close-isolated-http-client")
+            await asyncio.wait_for(client.close(), 30)
             # Stop the real Recorder and HA while the isolated HTTP test server
             # still exists, rather than leaving worker shutdown to fixture order.
             mark("stop-isolated-home-assistant")
