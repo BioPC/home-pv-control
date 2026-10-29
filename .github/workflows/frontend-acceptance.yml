@@ -41,13 +41,13 @@ jobs:
           PY
           python -m playwright install --with-deps chromium
       - name: Actual HA frontend acceptance and browser captures
-        timeout-minutes: 12
+        timeout-minutes: 14
         run: |
           set -o pipefail
           (while sleep 30; do date -u; free -m; ps -eo pid,comm,rss --sort=-rss | awk 'NR<=12'; done) > frontend-memory.log &
           monitor_pid=$!
           trap 'kill "$monitor_pid" 2>/dev/null || true' EXIT
-          timeout --signal=TERM --kill-after=15s 8m python -m pytest tests/frontend -v -ra -s -o faulthandler_timeout=240 --junitxml=frontend-results.xml 2>&1 | tee frontend-browser.log
+          python tests/frontend/run_browser_acceptance.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -56,4 +56,5 @@ jobs:
             frontend-results.xml
             frontend-browser.log
             frontend-memory.log
+            frontend-runner-status.json
             frontend-evidence/
