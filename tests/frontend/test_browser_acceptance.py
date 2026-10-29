@@ -286,7 +286,21 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                         + "));localStorage.setItem('selectedLanguage',JSON.stringify('en'));localStorage.setItem('dockedSidebar',JSON.stringify('always_hidden'));"
                     )
                     page = await context.new_page()
-                    page.on("pageerror", lambda error: errors.append(str(error)))
+                    page.on(
+                        "pageerror",
+                        lambda error: errors.append(error.stack or str(error)),
+                    )
+                    responses = []
+                    page.on(
+                        "response",
+                        lambda response: (
+                            responses.append(
+                                {"url": response.url, "status": response.status}
+                            )
+                            if "/local/" in response.url
+                            else None
+                        ),
+                    )
                     page.on(
                         "console",
                         lambda message: (
@@ -324,7 +338,17 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                             + "/"
                             + REFERENCE["views"][view]["path"]
                         )
-                        await page.goto(url, wait_until="domcontentloaded")
+                        # Exercise HA's normal SPA navigation without tearing down
+                        # an active state subscription on every display fixture.
+                        if await page.evaluate(
+                            "!!document.querySelector('home-assistant')?.hass"
+                        ):
+                            await page.evaluate(
+                                "(url)=>{history.pushState(null,'',url);window.dispatchEvent(new Event('location-changed'));}",
+                                url,
+                            )
+                        else:
+                            await page.goto(url, wait_until="domcontentloaded")
                         await page.wait_for_selector("hui-sections-view", timeout=60000)
                         await page.wait_for_timeout(1500)
                         name = f"{label}-{scenario}-{theme}-{width}-view{view}"
@@ -343,6 +367,7 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                             label=label,
                         )
                         cases.append(info)
+                        print("HPVC_BROWSER_CAPTURE", name, flush=True)
                         assert not info["errors"], info["errors"]
                         assert info["dark"] == (theme == "dark"), info
                         assert not info["pageOverflow"], name
@@ -441,14 +466,30 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                     await row.screenshot(
                         path=str(OUT / "limit-row-mobile-scrolled.png")
                     )
+                    current["enabled"] = False
+                    publisher.cancel()
+                    await asyncio.gather(publisher, return_exceptions=True)
+                    await hass.async_block_till_done()
+                    await page.evaluate(
+                        "document.querySelector('home-assistant').hass.connection.close()"
+                    )
+                    await page.wait_for_timeout(1000)
                     await page.reload(wait_until="domcontentloaded")
                     await page.wait_for_selector("hpvc-limit-entity-row", timeout=30000)
                     assert await page.evaluate(
                         "customElements.get('hpvc-limit-entity-row')!==undefined && customElements.get('hpvc-inverter-navigation')!==undefined"
                     )
-                    current["enabled"] = False
-                    publisher.cancel()
-                    await asyncio.gather(publisher, return_exceptions=True)
+                    assert await page.evaluate(
+                        "customElements.get('apexcharts-card')!==undefined"
+                    )
+                    assert responses and all(r["status"] == 200 for r in responses), (
+                        responses
+                    )
+                    await hass.async_block_till_done()
+                    await page.evaluate(
+                        "document.querySelector('home-assistant').hass.connection.close()"
+                    )
+                    await page.wait_for_timeout(1000)
                     runtime = entry.runtime_data
                     await hass.config_entries.async_unload(entry.entry_id)
                     assert not runtime.owner.tasks
@@ -483,6 +524,9 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                         "errors": errors,
                         "warnings": warnings,
                         "resources": requests,
+                        "resource_responses": responses
+                        if "responses" in locals()
+                        else [],
                         "service_calls": service_calls,
                         "production_transport_authorized": False,
                         "fixture_context": "Synthetic UI states and historical HTTP fixtures on actual isolated HA/frontend; not physical evidence",
