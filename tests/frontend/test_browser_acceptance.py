@@ -480,7 +480,10 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                         has_text="HBC sub-strategy"
                     )
                     await sub_strategy.wait_for()
-                    assert "Balanced" in await sub_strategy.inner_text()
+                    # HA entity rows render their value inside open shadow DOM.
+                    await sub_strategy.get_by_text("Balanced", exact=True).wait_for(
+                        state="visible"
+                    )
                     details = page.locator("details").filter(
                         has=page.locator('summary:text-is("Executive Summary")')
                     )
