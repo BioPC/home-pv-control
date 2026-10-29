@@ -44,7 +44,10 @@ jobs:
         timeout-minutes: 12
         run: |
           set -o pipefail
-          python -m pytest tests/frontend -v -ra -s --junitxml=frontend-results.xml 2>&1 | tee frontend-browser.log
+          (while sleep 30; do date -u; free -m; ps -eo pid,comm,rss --sort=-rss | awk 'NR<=12'; done) > frontend-memory.log &
+          monitor_pid=$!
+          trap 'kill "$monitor_pid" 2>/dev/null || true' EXIT
+          timeout --signal=TERM --kill-after=15s 8m python -m pytest tests/frontend -v -ra -s -o faulthandler_timeout=240 --junitxml=frontend-results.xml 2>&1 | tee frontend-browser.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -52,4 +55,5 @@ jobs:
           path: |
             frontend-results.xml
             frontend-browser.log
+            frontend-memory.log
             frontend-evidence/
