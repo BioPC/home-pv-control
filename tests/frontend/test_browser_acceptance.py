@@ -190,6 +190,7 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
     errors = []
     warnings = []
     requests = []
+    failed_requests = []
     service_calls = []
     cases = []
     with patch(
@@ -305,10 +306,20 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                         "console",
                         lambda message: (
                             (errors if message.type == "error" else warnings).append(
-                                message.text
+                                message.text + " " + json.dumps(message.location)
                             )
                             if message.type in ("error", "warning")
                             else None
+                        ),
+                    )
+                    page.on(
+                        "requestfailed",
+                        lambda request: failed_requests.append(
+                            {
+                                "url": request.url,
+                                "failure": request.failure,
+                                "type": request.resource_type,
+                            }
                         ),
                     )
                     page.on(
@@ -540,6 +551,7 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                         "resource_responses": responses
                         if "responses" in locals()
                         else [],
+                        "failed_requests": failed_requests,
                         "service_calls": service_calls,
                         "production_transport_authorized": False,
                         "fixture_context": "Synthetic UI states and historical HTTP fixtures on actual isolated HA/frontend; not physical evidence",
