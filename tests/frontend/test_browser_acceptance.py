@@ -58,6 +58,14 @@ def synthetic(name, priority="Off"):
             "attributes": {},
         }
     runtime = f["runtime"]
+    if name == "partial":
+        # Keep battery 1 valid while battery 2 telemetry is unavailable.
+        for entity in (
+            "sensor.marstek_m2_ac_power",
+            "sensor.marstek_m2_battery_state_of_charge",
+        ):
+            runtime.state_reader(entity).state = "unavailable"
+            f["states"][entity]["state"] = "unavailable"
     strategy = runtime.state_reader("input_select.house_battery_strategy")
     if strategy is not None and priority in ("Waiting", "Active"):
         strategy.state = "Charge"
