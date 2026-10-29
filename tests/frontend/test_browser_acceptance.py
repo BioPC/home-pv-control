@@ -11,6 +11,7 @@ import traceback
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from homeassistant.core import ServiceRegistry
@@ -28,6 +29,7 @@ from custom_components.hpvc.dashboard.presentation import (
     CATALOG,
     CONDITION_KEYS,
     dashboard_attributes,
+    ui_key,
 )
 from tests.dashboard import dashboard_fixture as fixtures
 
@@ -119,12 +121,14 @@ def synthetic(name, priority="Off"):
         value = row["state"] if row else attrs.get(binding["attribute"])
         f["states"][binding["source"]] = {
             "state": "unavailable" if value is None else str(value),
-            "attributes": dict(row.get("attributes", {})) if row else {},
+            "attributes": dict(row.get("attributes", {}))
+            if row
+            else dict(attrs.get("ui_source_attributes", {}).get(binding["source"], {})),
         }
     return f
 
 
-def history_payload(f):
+def history_payload(f, entities=None):
     now = time.time()
     states = []
     for i in range(145):
@@ -139,6 +143,11 @@ def history_payload(f):
             if 65 <= i <= 75
             else round(1200 + 400 * math.sin(i / 14)),
             ui_sensor_hpvc_total_hbc_charging_power=None if 65 <= i <= 75 else 300,
+            ui_binary_sensor_hpvc_pv_limited="unknown"
+            if 65 <= i <= 75
+            else "on"
+            if (i // 24) % 3 == 2
+            else "off",
         )
         at = datetime.fromtimestamp(now - 43200 + i * 300, UTC).isoformat()
         states.append(
@@ -150,7 +159,29 @@ def history_payload(f):
                 "last_updated": at,
             }
         )
-    return [states]
+    result = []
+    by_source = {b["source"]: b for b in CATALOG["bindings"]}
+    for entity in entities or ["sensor.hpvc_status"]:
+        if entity == "sensor.hpvc_status":
+            result.append(states)
+            continue
+        binding = by_source.get(entity, {})
+        attribute = binding.get("attribute") or ui_key(entity)
+        row = f["states"].get(entity, {"state": "unavailable", "attributes": {}})
+        result.append(
+            [
+                {
+                    **s,
+                    "entity_id": entity,
+                    "state": "unavailable"
+                    if s["attributes"].get(attribute) is None
+                    else str(s["attributes"][attribute]),
+                    "attributes": row["attributes"],
+                }
+                for s in states
+            ]
+        )
+    return result
 
 
 async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_enabled):
@@ -332,7 +363,13 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                     )
 
                     async def historical(route):
-                        await route.fulfill(json=history_payload(current["fixture"]))
+                        query = parse_qs(urlsplit(route.request.url).query)
+                        entities = query.get(
+                            "filter_entity_id", ["sensor.hpvc_status"]
+                        )[0].split(",")
+                        await route.fulfill(
+                            json=history_payload(current["fixture"], entities)
+                        )
 
                     await page.route("**/api/history/period/**", historical)
 
@@ -493,7 +530,8 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                     current["enabled"] = False
                     publisher.cancel()
                     await asyncio.gather(publisher, return_exceptions=True)
-                    await hass.async_block_till_done()
+                    print("HPVC_BROWSER_DRAIN_BEFORE_RELOAD", flush=True)
+                    await asyncio.wait_for(hass.async_block_till_done(), 30)
                     await page.evaluate(
                         "document.querySelector('home-assistant').hass.connection.close()"
                     )
@@ -509,7 +547,8 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                     assert responses and all(r["status"] == 200 for r in responses), (
                         responses
                     )
-                    await hass.async_block_till_done()
+                    print("HPVC_BROWSER_DRAIN_BEFORE_DISCONNECT", flush=True)
+                    await asyncio.wait_for(hass.async_block_till_done(), 30)
                     await page.evaluate(
                         "document.querySelector('home-assistant').hass.connection.close()"
                     )
@@ -519,7 +558,8 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                     assert not runtime.owner.tasks
                     await page.wait_for_timeout(500)
                     assert await hass.config_entries.async_setup(entry.entry_id)
-                    await hass.async_block_till_done()
+                    print("HPVC_BROWSER_DRAIN_AFTER_RELOAD", flush=True)
+                    await asyncio.wait_for(hass.async_block_till_done(), 30)
                     assert not entry.runtime_data.physical_writes_authorized
                     await browser.close()
         except BaseException:
