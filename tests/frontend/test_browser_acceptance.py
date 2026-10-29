@@ -547,9 +547,13 @@ async def test_actual_ha_frontend(
                             ),
                             encoding="utf-8",
                         )
-                        # HA entity rows render their value inside open shadow DOM.
-                        await sub_strategy.get_by_text("Balanced", exact=True).wait_for(
-                            state="visible"
+                        # ha-attribute-value renders a direct shadow-root text
+                        # node, rather than a descendant element for get_by_text.
+                        displayed_value = sub_strategy.locator("ha-attribute-value")
+                        await displayed_value.wait_for(state="visible")
+                        await displayed_value.evaluate("e=>e.updateComplete")
+                        assert "Balanced" in await displayed_value.evaluate(
+                            "e=>e.shadowRoot.textContent"
                         )
                         details = page.locator("details").filter(
                             has=page.locator('summary:text-is("Executive Summary")')
