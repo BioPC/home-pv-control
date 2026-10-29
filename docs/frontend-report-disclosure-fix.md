@@ -19,3 +19,13 @@ dashboard hash; all other preserved hashes retain their baseline values.
 The browser test now checks actual paragraph containment, hidden/visible states
 and expansion/collapse for all nine closed sections. Browser and complete
 regression matrix results must still pass before visual approval.
+
+## HBC sub-strategy binding correction
+
+The actual native captures also showed the HBC sub-strategy row displaying the
+overall HPVC status instead of the external HBC sub-strategy. The source row used
+`simple-entity`, which was not converted to an attribute row for projected data.
+Convert that row kind to the same readonly attribute presentation as other
+projection rows. This changes display bindings only; it does not change the HBC
+state reader, strategy selection, policy or any write path. The real-browser
+fixture now asserts that the displayed sub-strategy is `Balanced`.

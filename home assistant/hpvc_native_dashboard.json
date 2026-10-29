@@ -1426,7 +1426,7 @@
                     "attribute": "ui_sensor_hpvc_diag_hbc_strategy"
                   },
                   {
-                    "type": "simple-entity",
+                    "type": "attribute",
                     "entity": "sensor.hpvc_status",
                     "name": "HBC sub-strategy",
                     "icon": "mdi:battery-sync",
@@ -1438,7 +1438,8 @@
                     },
                     "double_tap_action": {
                       "action": "none"
-                    }
+                    },
+                    "attribute": "ui_input_text_house_battery_strategy_active_sub_strategy"
                   },
                   {
                     "type": "conditional",

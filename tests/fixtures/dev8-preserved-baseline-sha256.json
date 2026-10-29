@@ -38,7 +38,7 @@
   "custom_components/hpvc/storage.py": "21c3e61376e9f2dbc85900368d69608cb1ea983c441e6ee01bbb75587e40242b",
   "home assistant/hpvc_config.yaml": "aeccabe1fd95809fd0afcc239c9919812bea129e880e4c24d9ee71f6fd03c08b",
   "home assistant/hpvc_dashboard.yaml": "6c51ff542a145d28d7a1ef21849149a42ce8d29012a009d4edc07daa5555704b",
-  "home assistant/hpvc_native_dashboard.json": "ef1be3c60d797c8e68ab4828bcd6e066ac21382731b87f66ea5a84c3c63b375f",
+  "home assistant/hpvc_native_dashboard.json": "c93e08eb4ade088c8a4b160a21840cd5c6408c188e83de0e9b14c9494ca3b55b",
   "node-red/hpvc_flow.json": "b83d0ceaedc66cce7a6be870dc9a376f053b9b831717e4649d80bc8e8fe35ba7",
   "tests/fixtures/dispatch-v1.6-characterization.json": "b57b2f93dc15421bc1fa114930f6ada5fd9d9a4ceff06fcf5eba9b4f1f2df542",
   "tests/fixtures/dispatch-v1.6-driver.cjs": "6fd5d638ab1dbd935a848a2650dfdf60a7b654d1d506f67625edc95e56f5e8e3",

@@ -1,5 +1,5 @@
 {
-  "native_structure_sha256": "c3df46e276411101e44d6a863fa3e0d431da0988d4788c5db1105c923a795ff3",
+  "native_structure_sha256": "1518ba711eb538e75ac15478943dd9f989a3d26c212d54f444448cd6e6c99ffc",
   "frontend_sha256_lf": "a7ac336a204fd0cd0abc2e11a0871fef82c287f7d10d28c9acb0bd5df301a215",
-  "notes": "Report disclosure HTML corrected after actual HA screenshot review; final visual acceptance remains pending."
+  "notes": "Reports disclosure HTML and readonly projected row kinds corrected after actual HA screenshots; visual acceptance pending final matrix."
 }

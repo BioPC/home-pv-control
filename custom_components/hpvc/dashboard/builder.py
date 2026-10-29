@@ -171,7 +171,7 @@ def parity_dashboard(actual_ids=None):
                         if "above" in node or "below" in node
                         else "state",
                     )
-                elif node.get("type") == "attribute" or (
+                elif node.get("type") in ("attribute", "simple-entity") or (
                     "type" not in node
                     and ("/entities/" in path or path.endswith("/row"))
                 ):
