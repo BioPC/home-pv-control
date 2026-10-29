@@ -535,6 +535,18 @@ async def test_actual_ha_frontend(
                             has_text="HBC sub-strategy"
                         )
                         await sub_strategy.wait_for()
+                        await sub_strategy.screenshot(
+                            path=str(out / "hbc-sub-strategy-row.png")
+                        )
+                        (out / "hbc-sub-strategy-dom.json").write_text(
+                            json.dumps(
+                                await sub_strategy.evaluate(
+                                    "(e)=>{const parts=[];function walk(n){if(n.shadowRoot){parts.push(n.shadowRoot.innerHTML);walk(n.shadowRoot)}for(const c of n.children||[])walk(c)}walk(e);return parts}"
+                                ),
+                                indent=2,
+                            ),
+                            encoding="utf-8",
+                        )
                         # HA entity rows render their value inside open shadow DOM.
                         await sub_strategy.get_by_text("Balanced", exact=True).wait_for(
                             state="visible"
