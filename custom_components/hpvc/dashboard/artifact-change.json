@@ -1,6 +1,6 @@
 {
   "path": "home assistant/hpvc_native_dashboard.json",
   "before_sha256_lf": "ad425aac51cabd9624691b66e1a1a3357d7fc1baf8ad25679d6487ca31d19079",
-  "after_sha256_lf": "990012d2698961164b53e82ee435df972de0f7e508758929993d208f56f2921a",
-  "reason": "UI-only corrections observed in actual HA captures: contain report paragraphs in details, render projected simple-entity rows as readonly attributes, and constrain control-history legend wrapping. Historical data and all control/HBC behavior remain unchanged."
+  "after_sha256_lf": "400af35477c6b6648670e1946f4b9d98247ae2adbba27b292c76cd6bdd27c844",
+  "reason": "UI-only fixes from actual HA captures: report disclosure containment, projected attribute row kinds, control legend wrapping, and truthful stale-price empty text. No policy, HBC, history or physical authorization behavior change."
 }

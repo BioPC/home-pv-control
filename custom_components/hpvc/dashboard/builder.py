@@ -189,6 +189,10 @@ def parity_dashboard(actual_ids=None):
         if node.get("type") == "attribute":
             result["icon"] = "mdi:lock-outline"
         if node.get("type") == "custom:apexcharts-card":
+            if "HBC Price Intervals" in node.get("header", {}).get("title", ""):
+                result.setdefault("apex_config", {}).setdefault("noData", {})[
+                    "text"
+                ] = "Price data unavailable or stale"
             if node.get("header", {}).get("title", "").endswith("Power Flow"):
                 result["graph_span"] = "12h"
             for before, series in zip(node.get("series", []), result.get("series", [])):

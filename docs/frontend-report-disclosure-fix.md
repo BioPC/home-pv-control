@@ -39,3 +39,10 @@ legend, and shorten the executed-mode key while retaining all three mode names
 and numeric mappings. Existing state rows and tooltips retain their values;
 unknown data, cooldown/settling and all historical samples remain unchanged.
 The browser test rejects legend items outside the card at every tested width.
+
+## Stale price empty-state label
+
+The actual stale-data capture showed an idle, empty HBC price graph labelled
+`Loading...`. Set its Apex no-data text to `Price data unavailable or stale` so
+finished loading is distinguished from absent fresh price data. No prices,
+freshness decisions, history values or HBC behavior are changed.

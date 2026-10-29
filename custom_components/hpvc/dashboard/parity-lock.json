@@ -1,5 +1,5 @@
 {
-  "native_structure_sha256": "03c3e880c928932d553f34d7078f5c7e83473eeef237946ed889a356319e9c79",
+  "native_structure_sha256": "28b4a119587a05c607a845f70961d9724085c449be1f1706f0087a1ced751bd4",
   "frontend_sha256_lf": "a7ac336a204fd0cd0abc2e11a0871fef82c287f7d10d28c9acb0bd5df301a215",
-  "notes": "Report disclosures, projected readonly rows and control legend wrapping corrected after real HA browser review; final acceptance requires the browser matrix."
+  "notes": "Four UI-only corrections from real HA review: report disclosures, projected row kinds, legend wrapping and stale price empty text. Final browser matrix determines acceptance."
 }

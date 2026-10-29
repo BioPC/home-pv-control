@@ -2520,6 +2520,9 @@
               "followCursor": true,
               "theme": false,
               "custom": "EVAL:function({ series, seriesIndex, dataPointIndex, w }) {\n\n  const priceSeriesIndex =\n    w &&\n    w.config &&\n    w.config.series\n      ? w.config.series.findIndex(s => s.name === 'Price')\n      : -1;\n\n  const index =\n    priceSeriesIndex >= 0\n      ? priceSeriesIndex\n      : seriesIndex;\n\n  const value =\n    series[index] &&\n    dataPointIndex >= 0 &&\n    dataPointIndex < series[index].length\n      ? Number(series[index][dataPointIndex])\n      : NaN;\n\n  const point =\n    w &&\n    w.config &&\n    w.config.series &&\n    w.config.series[index] &&\n    w.config.series[index].data &&\n    dataPointIndex >= 0\n      ? w.config.series[index].data[dataPointIndex]\n      : null;\n\n  const colour =\n    point && point.fillColor\n      ? point.fillColor\n      : '#9e9e9e';\n\n  const display =\n    Number.isFinite(value)\n      ? value.toFixed(1) + ' ct/kWh'\n      : '—';\n\n  return (\n    '<div style=\"display:flex;align-items:center;gap:7px;padding:7px 9px;font-size:10px;width:max-content;box-sizing:border-box;background:color-mix(in srgb,var(--ha-card-background,var(--card-background-color)) 35%,transparent);backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px);border-radius:6px;border:1px solid var(--divider-color);color:var(--primary-text-color);font-family:inherit;box-shadow:none;font-weight:700;\">' +\n      '<span style=\"display:inline-block;width:10px;height:10px;border-radius:50%;background:' +\n      colour +\n      ';flex-shrink:0;\"></span>' +\n      '<span style=\"color:var(--secondary-text-color);\">Price</span>' +\n      '<span>' +\n      display +\n      '</span>' +\n    '</div>'\n  );\n}\n"
+            },
+            "noData": {
+              "text": "Price data unavailable or stale"
             }
           },
           "series": [
