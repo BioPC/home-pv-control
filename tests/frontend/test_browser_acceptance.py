@@ -163,18 +163,27 @@ def history_payload(f, entities=None):
         attrs.pop("ui_report_sections", None)
         attrs.update(
             ui_sensor_hpvc_diag_grid_power=None
-            if 65 <= i <= 75
+            if 65 <= i <= 75 or f["scenario"] in ("stale", "unavailable") and i >= 140
             else round(350 * math.sin(i / 9)),
             ui_sensor_hpvc_diag_pv_power=None
-            if 65 <= i <= 75
+            if 65 <= i <= 75 or f["scenario"] in ("stale", "unavailable") and i >= 140
             else round(1200 + 400 * math.sin(i / 14)),
-            ui_sensor_hpvc_total_hbc_charging_power=None if 65 <= i <= 75 else 300,
+            ui_sensor_hpvc_total_hbc_charging_power=None
+            if 65 <= i <= 75 or f["scenario"] == "stale" and i >= 140
+            else 300,
             ui_binary_sensor_hpvc_pv_limited="unknown"
             if 65 <= i <= 75
             else "on"
             if (i // 24) % 3 == 2
             else "off",
         )
+        if i == 144:
+            for key in (
+                "ui_sensor_hpvc_diag_grid_power",
+                "ui_sensor_hpvc_diag_pv_power",
+                "ui_sensor_hpvc_total_hbc_charging_power",
+            ):
+                attrs[key] = f["states"]["sensor.hpvc_status"]["attributes"][key]
         at = datetime.fromtimestamp(now - 43200 + i * 300, UTC).isoformat()
         states.append(
             {
@@ -512,6 +521,31 @@ async def test_actual_ha_frontend(
                                     ]["marks"]
                                 ),
                             }, info["projection"]
+                            info["power_flow_headers"] = await page.evaluate(
+                                """() => {const result=[];function walk(r){for(const e of r.querySelectorAll('*')){if(e.localName==='apexcharts-card'&&e._config?.header?.title?.endsWith('Power Flow')&&e.getBoundingClientRect().height>0)result.push(e._config.series.flatMap((s,i)=>s.show.in_header?[{name:s.name,value:Number.isFinite(e._headerState?.[i])?e._headerState[i]:null}]:[]));if(e.shadowRoot)walk(e.shadowRoot)}}walk(document);return result}"""
+                            )
+                            grid = expected_attrs["ui_sensor_hpvc_diag_grid_power"]
+                            expected_headers = {
+                                "Import": max(grid, 0) if grid is not None else None,
+                                "Export": max(-grid, 0) if grid is not None else None,
+                                "Solar": expected_attrs["ui_sensor_hpvc_diag_pv_power"],
+                                "Charge": expected_attrs[
+                                    "ui_sensor_hpvc_total_hbc_charging_power"
+                                ],
+                            }
+                            for header in info["power_flow_headers"]:
+                                for cell in header:
+                                    assert (
+                                        cell["value"] == expected_headers[cell["name"]]
+                                    ), (name, cell, expected_headers)
+                            if scenario == "stale" and view == 0:
+                                await (
+                                    page.locator("apexcharts-card")
+                                    .filter(has_text="HBC Price Intervals")
+                                    .locator("text")
+                                    .filter(has_text="Price data unavailable or stale")
+                                    .wait_for(state="visible")
+                                )
                         info["control_legend_layout"] = await page.evaluate(
                             """() => {const rows=[];function walk(r){for(const e of r.querySelectorAll('*')){if(e.localName==='apexcharts-card'&&e._config?.header?.title==='HPVC control/state history'&&e.getBoundingClientRect().height>0){const b=e.getBoundingClientRect();rows.push({width:b.width,items:[...e.shadowRoot.querySelectorAll('.apexcharts-legend-series')].map(l=>{const q=l.getBoundingClientRect();return {text:l.textContent,left:q.left-b.left,right:q.right-b.left,overflow:q.left<b.left-2||q.right>b.right+2}})})}if(e.shadowRoot)walk(e.shadowRoot)}}walk(document);return rows}"""
                         )
