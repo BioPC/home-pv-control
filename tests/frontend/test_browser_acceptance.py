@@ -476,6 +476,11 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                         for view in (0, 1):
                             await capture("native", scenario, "light", 1440, view)
                     await capture("native", "mixed", "light", 1440, 0)
+                    sub_strategy = page.locator("hui-attribute-row").filter(
+                        has_text="HBC sub-strategy"
+                    )
+                    await sub_strategy.wait_for()
+                    assert "Balanced" in await sub_strategy.inner_text()
                     details = page.locator("details").filter(
                         has=page.locator('summary:text-is("Executive Summary")')
                     )
