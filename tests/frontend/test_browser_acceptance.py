@@ -454,7 +454,14 @@ async def test_actual_ha_frontend(
                         else:
                             await page.goto(url, wait_until="domcontentloaded")
                         await page.wait_for_selector("hui-sections-view", timeout=60000)
-                        await page.wait_for_timeout(1500)
+                        # The pinned ApexCharts card defaults to a 1500 ms
+                        # update delay. Wait past that and for actual data idle.
+                        await page.wait_for_timeout(2000)
+                        await page.wait_for_function(
+                            """() => {const cards=[];function walk(r){for(const e of r.querySelectorAll('*')){if(e.localName==='apexcharts-card'&&e.getBoundingClientRect().width>0&&e.getBoundingClientRect().height>0)cards.push(e);if(e.shadowRoot)walk(e.shadowRoot)}}walk(document);return cards.every(c=>c._dataLoaded&&!c._updating)}""",
+                            timeout=30000,
+                        )
+                        await page.wait_for_timeout(600)
                         name = f"{label}-{scenario}-{theme}-{width}-view{view}"
                         await page.screenshot(
                             path=str(out / (name + ".png")), full_page=True
@@ -471,11 +478,19 @@ async def test_actual_ha_frontend(
                             label=label,
                         )
                         cases.append(info)
+                        info["control_legend_layout"] = await page.evaluate(
+                            """() => {const rows=[];function walk(r){for(const e of r.querySelectorAll('*')){if(e.localName==='apexcharts-card'&&e._config?.header?.title==='HPVC control/state history'&&e.getBoundingClientRect().height>0){const b=e.getBoundingClientRect();rows.push({width:b.width,items:[...e.shadowRoot.querySelectorAll('.apexcharts-legend-series')].map(l=>{const q=l.getBoundingClientRect();return {text:l.textContent,left:q.left-b.left,right:q.right-b.left,overflow:q.left<b.left-2||q.right>b.right+2}})})}if(e.shadowRoot)walk(e.shadowRoot)}}walk(document);return rows}"""
+                        )
                         mark(name)
                         print("HPVC_BROWSER_CAPTURE", name, flush=True)
                         assert not info["errors"], info["errors"]
                         assert info["dark"] == (theme == "dark"), info
                         assert not info["pageOverflow"], name
+                        assert not any(
+                            item["overflow"]
+                            for chart in info["control_legend_layout"]
+                            for item in chart["items"]
+                        ), info["control_legend_layout"]
                         assert not any(
                             "[object Object]" in text for text in info["text"]
                         ), name
