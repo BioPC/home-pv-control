@@ -50,11 +50,14 @@ def live_report():
             "{% set sections = state_attr('sensor.hpvc_status','ui_report_sections') or {} %}"
             "{% if " + repr(heading) + " in sections %}"
             "{% for label, value in sections[" + repr(heading) + "].items() %}"
-            "**{{ label | replace('_', ' ') }}:** {{ value if value is not none else 'Unavailable' }}\n\n"
+            "<p><strong>{{ label | replace('_', ' ') | e }}:</strong> "
+            "{{ (value if value is not none else 'Unavailable') | e }}</p>"
             "{% endfor %}{% else %}Unavailable: native report observer has not supplied a fresh snapshot.{% endif %}"
         )
         sections.append(
-            f"<details{' open' if index == 0 else ''}><summary>{heading}</summary>\n\n{body}\n\n</details>"
+            # Keep each disclosure in one HTML block. HA sanitizes Markdown
+            # tokens separately, so blank-line Markdown bodies escape details.
+            f"<details{' open' if index == 0 else ''}><summary>{heading}</summary>{body}</details>"
         )
     return {"type": "markdown", "title": "Reports", "content": "\n\n".join(sections)}
 

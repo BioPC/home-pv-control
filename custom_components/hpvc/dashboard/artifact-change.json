@@ -1,6 +1,6 @@
 {
   "path": "home assistant/hpvc_native_dashboard.json",
-  "before_sha256_lf": "993515824744d4bc808628590118c518ac94e60bd5ee4f05412f6b3976620244",
-  "after_sha256_lf": "ad425aac51cabd9624691b66e1a1a3357d7fc1baf8ad25679d6487ca31d19079",
-  "reason": "Dashboard data bindings and ordinary native-state visibility; HA entity count assertion includes 19 new presentation sensors. Control sources and control tests unchanged."
+  "before_sha256_lf": "ad425aac51cabd9624691b66e1a1a3357d7fc1baf8ad25679d6487ca31d19079",
+  "after_sha256_lf": "ef1be3c60d797c8e68ab4828bcd6e066ac21382731b87f66ea5a84c3c63b375f",
+  "reason": "UI-only fix observed in real HA browser captures: retain report body paragraphs inside each details element so closed sections hide their content. No report data or control behavior changed."
 }
