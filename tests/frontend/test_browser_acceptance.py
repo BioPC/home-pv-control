@@ -423,6 +423,8 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                         has=page.locator('summary:text-is("Executive Summary")')
                     )
                     assert await details.get_attribute("open") is not None
+                    assert await details.locator("p").count() > 0
+                    assert await details.locator("p").first.is_visible()
                     for heading in (
                         "Live Status",
                         "Decision Evaluation",
@@ -438,6 +440,17 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                             has=page.locator("summary").filter(has_text=heading)
                         )
                         assert await panel.get_attribute("open") is None, heading
+                        assert await panel.locator("p").count() > 0, heading
+                        assert not await panel.locator("p").first.is_visible(), heading
+                        await panel.locator("summary").click()
+                        assert await panel.locator("p").first.is_visible(), heading
+                        await panel.locator("summary").click()
+                        assert not await panel.locator("p").first.is_visible(), heading
+                    await (
+                        page.locator("hui-markdown-card")
+                        .filter(has=details)
+                        .screenshot(path=str(OUT / "reports-initial-disclosures.png"))
+                    )
                     await page.locator(
                         'summary:text-is("HBC & Battery Status")'
                     ).click()
