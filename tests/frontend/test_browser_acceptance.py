@@ -629,4 +629,9 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                     hass.config_entries.async_unload(entry.entry_id), 30
                 )
             phase("test-body-complete")
+            # Stop the real Recorder and HA while the isolated HTTP test server
+            # still exists, rather than leaving worker shutdown to fixture order.
+            phase("stop-isolated-home-assistant")
+            await asyncio.wait_for(hass.async_stop(), 30)
+            phase("isolated-home-assistant-stopped")
     assert not errors, errors
