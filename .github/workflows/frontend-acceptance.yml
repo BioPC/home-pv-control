@@ -41,6 +41,7 @@ jobs:
           PY
           python -m playwright install --with-deps chromium
       - name: Actual HA frontend acceptance and browser captures
+        timeout-minutes: 12
         run: |
           set -o pipefail
           python -m pytest tests/frontend -v -ra -s --junitxml=frontend-results.xml 2>&1 | tee frontend-browser.log

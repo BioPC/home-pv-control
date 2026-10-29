@@ -37,6 +37,13 @@ pytestmark = pytest.mark.asyncio
 OUT = ROOT / "frontend-evidence"
 
 
+def phase(name):
+    (OUT / "phase.json").write_text(
+        json.dumps({"phase": name, "at": time.time()}), encoding="utf-8"
+    )
+    print("HPVC_BROWSER_PHASE", name, flush=True)
+
+
 def synthetic(name, priority="Off"):
     """Display fixture only; these are never production/physical evidence."""
     now = time.time()
@@ -247,6 +254,7 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
         if not hass.is_running:
             await hass.async_start()
         client = await hass_client()
+        phase("real-ha-started-recorder-and-hpvc-loaded")
         origin = str(client.make_url("/")).rstrip("/")
         print("HPVC_BROWSER_SERVER", origin, flush=True)
         current = {"fixture": synthetic("hoymiles"), "enabled": True}
@@ -415,6 +423,7 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                             label=label,
                         )
                         cases.append(info)
+                        phase(name)
                         print("HPVC_BROWSER_CAPTURE", name, flush=True)
                         assert not info["errors"], info["errors"]
                         assert info["dark"] == (theme == "dark"), info
@@ -531,6 +540,7 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                     publisher.cancel()
                     await asyncio.gather(publisher, return_exceptions=True)
                     print("HPVC_BROWSER_DRAIN_BEFORE_RELOAD", flush=True)
+                    phase("drain-before-browser-reload")
                     await asyncio.wait_for(hass.async_block_till_done(), 30)
                     await page.evaluate(
                         "document.querySelector('home-assistant').hass.connection.close()"
@@ -548,20 +558,28 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                         responses
                     )
                     print("HPVC_BROWSER_DRAIN_BEFORE_DISCONNECT", flush=True)
+                    phase("drain-before-final-disconnect")
                     await asyncio.wait_for(hass.async_block_till_done(), 30)
                     await page.evaluate(
                         "document.querySelector('home-assistant').hass.connection.close()"
                     )
                     await page.wait_for_timeout(1000)
                     runtime = entry.runtime_data
-                    await hass.config_entries.async_unload(entry.entry_id)
+                    phase("unload-native-entry")
+                    await asyncio.wait_for(
+                        hass.config_entries.async_unload(entry.entry_id), 30
+                    )
                     assert not runtime.owner.tasks
                     await page.wait_for_timeout(500)
-                    assert await hass.config_entries.async_setup(entry.entry_id)
+                    phase("reload-native-entry")
+                    assert await asyncio.wait_for(
+                        hass.config_entries.async_setup(entry.entry_id), 30
+                    )
                     print("HPVC_BROWSER_DRAIN_AFTER_RELOAD", flush=True)
                     await asyncio.wait_for(hass.async_block_till_done(), 30)
                     assert not entry.runtime_data.physical_writes_authorized
                     await browser.close()
+                    phase("browser-closed-native-reload-verified")
         except BaseException:
             (OUT / "failure-traceback.txt").write_text(
                 traceback.format_exc(), encoding="utf-8"
@@ -601,5 +619,9 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                 encoding="utf-8",
             )
             if entry.runtime_data:
-                await hass.config_entries.async_unload(entry.entry_id)
+                phase("final-native-unload")
+                await asyncio.wait_for(
+                    hass.config_entries.async_unload(entry.entry_id), 30
+                )
+            phase("test-body-complete")
     assert not errors, errors
