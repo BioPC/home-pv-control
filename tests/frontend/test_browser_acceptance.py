@@ -2,10 +2,12 @@
 
 import asyncio
 import json
+import logging
 import math
 import shutil
 import sys
 import time
+import traceback
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
@@ -13,6 +15,7 @@ from unittest.mock import patch
 import pytest
 from homeassistant.core import ServiceRegistry
 from homeassistant.setup import async_setup_component
+from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import async_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -144,6 +147,8 @@ def history_payload(f):
 
 
 async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_enabled):
+    logging.getLogger("homeassistant.core").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
     OUT.mkdir(exist_ok=True)
     www = Path(hass.config.path("www"))
     www.mkdir(exist_ok=True)
@@ -193,6 +198,12 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
             async_initialize_recorder(hass)
         assert await async_setup_component(hass, "frontend", config)
         assert await async_setup_component(hass, "history", config)
+        for domain in ("persistent_notification", "labs"):
+            assert await async_setup_component(hass, domain, config)
+        from homeassistant.const import __version__ as ha_version
+
+        if tuple(map(int, ha_version.split(".")[:2])) >= (2026, 2):
+            assert await async_setup_component(hass, "brands", config)
         entry = await start(hass)
         if not hass.is_running:
             await hass.async_start()
@@ -228,6 +239,11 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
 
         async def guarded(self, domain, service, service_data=None, *args, **kwargs):
             data = service_data or {}
+            # Real HA frontend diagnostics write only to this isolated HA log.
+            if (domain, service) == ("system_log", "write"):
+                return await original(
+                    self, domain, service, service_data, *args, **kwargs
+                )
             service_calls.append({"domain": domain, "service": service, "data": data})
             assert (domain, service, data.get("entity_id")) == (
                 "select",
@@ -432,11 +448,19 @@ async def test_actual_ha_frontend(hass, hass_client, hass_access_token, socket_e
                     assert not entry.runtime_data.physical_writes_authorized
                     await browser.close()
         except BaseException:
-            if "page" in locals():
-                await page.screenshot(path=str(OUT / "failure.png"), full_page=True)
-                (OUT / "failure.html").write_text(
-                    await page.content(), encoding="utf-8"
-                )
+            (OUT / "failure-traceback.txt").write_text(
+                traceback.format_exc(), encoding="utf-8"
+            )
+            if "page" in locals() and not page.is_closed():
+                try:
+                    await page.screenshot(path=str(OUT / "failure.png"), full_page=True)
+                    (OUT / "failure.html").write_text(
+                        await page.content(), encoding="utf-8"
+                    )
+                except PlaywrightError as capture_error:
+                    (OUT / "capture-error.txt").write_text(
+                        str(capture_error), encoding="utf-8"
+                    )
             raise
         finally:
             current["enabled"] = False
