@@ -4398,7 +4398,29 @@ automation:
     entity_id: input_boolean.hpvc_enabled
     state: 'on'
   - condition: template
-    value_template: "{{ not is_state('sensor.hpvc_node_red_runtime_health', 'Ready') }}"
+    # Smart Update restores the saved master state while reload_required is ON.
+    # That flag continues to gate PV writes during activation. Do not race the
+    # verifier by immediately undoing its authorized preparation acknowledgement.
+    # After the gate clears, tolerate only the brief health-template refresh gap
+    # with *all five* Node-RED heartbeats fresh; any stale/missing tab fails closed.
+    value_template: >-
+      {% set health_ready = is_state('sensor.hpvc_node_red_runtime_health', 'Ready') %}
+      {% set pending = is_state('input_boolean.hpvc_update_reload_required', 'on') %}
+      {% set update_done = is_state('input_boolean.hpvc_update_in_progress', 'off') %}
+      {% set message = states('input_text.hpvc_update_status') %}
+      {% set correct_version = is_state('sensor.hpvc_installed_version', '1.6.1') %}
+      {% set names = ['inputs', 'engine', 'outputs', 'reports', 'maintenance'] %}
+      {% set now_s = as_timestamp(now()) %}
+      {% set ns = namespace(all_fresh=true) %}
+      {% for name in names %}
+        {% set epoch = states('input_number.hpvc_health_' ~ name ~ '_epoch') | float(0) %}
+        {% if epoch <= 0 or now_s - epoch < 0 or now_s - epoch >= 30 %}
+          {% set ns.all_fresh = false %}
+        {% endif %}
+      {% endfor %}
+      {% set preparing = pending and message.startswith('Quick Reload activation ready;') %}
+      {% set settling = not pending and message.startswith('Quick Reload complete;') %}
+      {{ not health_ready and not (correct_version and update_done and ns.all_fresh and (preparing or settling)) }}
   action:
   - service: input_boolean.turn_off
     target:
