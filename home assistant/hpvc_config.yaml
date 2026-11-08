@@ -624,139 +624,174 @@ input_select:
   hpvc_selected_inverter:
     name: HPVC Selected Inverter
     options:
-      - PV1
-      - PV2
-      - PV3
-      - PV4
-      - PV5
-      - PV6
-      - PV7
-      - PV8
-      - PV9
-      - PV10
+    - PV1
+    - PV2
+    - PV3
+    - PV4
+    - PV5
+    - PV6
+    - PV7
+    - PV8
+    - PV9
+    - PV10
     initial: PV1
     icon: mdi:solar-panel
   hpvc_pv1_control_method:
     name: PV1 Control Method
     options:
-      - Number entity
-      - Action/service
+    - Number entity
+    - Action/service
     icon: mdi:transit-connection-variant
   hpvc_pv2_control_method:
     name: PV2 Control Method
     options:
-      - Number entity
-      - Action/service
+    - Number entity
+    - Action/service
     icon: mdi:transit-connection-variant
   hpvc_pv3_control_method:
     name: PV3 Control Method
     options:
-      - Number entity
-      - Action/service
+    - Number entity
+    - Action/service
     icon: mdi:transit-connection-variant
   hpvc_pv4_control_method:
     name: PV4 Control Method
     options:
-      - Number entity
-      - Action/service
+    - Number entity
+    - Action/service
     icon: mdi:transit-connection-variant
   hpvc_pv5_control_method:
     name: PV5 Control Method
     options:
-      - Number entity
-      - Action/service
+    - Number entity
+    - Action/service
     icon: mdi:transit-connection-variant
   hpvc_pv6_control_method:
     name: PV6 Control Method
     options:
-      - Number entity
-      - Action/service
+    - Number entity
+    - Action/service
     icon: mdi:transit-connection-variant
   hpvc_pv7_control_method:
     name: PV7 Control Method
     options:
-      - Number entity
-      - Action/service
+    - Number entity
+    - Action/service
     icon: mdi:transit-connection-variant
   hpvc_pv8_control_method:
     name: PV8 Control Method
     options:
-      - Number entity
-      - Action/service
+    - Number entity
+    - Action/service
     icon: mdi:transit-connection-variant
   hpvc_pv9_control_method:
     name: PV9 Control Method
     options:
-      - Number entity
-      - Action/service
+    - Number entity
+    - Action/service
     icon: mdi:transit-connection-variant
   hpvc_pv10_control_method:
     name: PV10 Control Method
     options:
-      - Number entity
-      - Action/service
+    - Number entity
+    - Action/service
     icon: mdi:transit-connection-variant
   hpvc_pv1_limit_unit:
     name: PV1 Limit Unit
     options:
-      - Watts
-      - Percent
+    - Watts
+    - Percent
     icon: mdi:gauge
   hpvc_pv2_limit_unit:
     name: PV2 Limit Unit
     options:
-      - Watts
-      - Percent
+    - Watts
+    - Percent
     icon: mdi:gauge
   hpvc_pv3_limit_unit:
     name: PV3 Limit Unit
     options:
-      - Watts
-      - Percent
+    - Watts
+    - Percent
     icon: mdi:gauge
   hpvc_pv4_limit_unit:
     name: PV4 Limit Unit
     options:
-      - Watts
-      - Percent
+    - Watts
+    - Percent
     icon: mdi:gauge
   hpvc_pv5_limit_unit:
     name: PV5 Limit Unit
     options:
-      - Watts
-      - Percent
+    - Watts
+    - Percent
     icon: mdi:gauge
   hpvc_pv6_limit_unit:
     name: PV6 Limit Unit
     options:
-      - Watts
-      - Percent
+    - Watts
+    - Percent
     icon: mdi:gauge
   hpvc_pv7_limit_unit:
     name: PV7 Limit Unit
     options:
-      - Watts
-      - Percent
+    - Watts
+    - Percent
     icon: mdi:gauge
   hpvc_pv8_limit_unit:
     name: PV8 Limit Unit
     options:
-      - Watts
-      - Percent
+    - Watts
+    - Percent
     icon: mdi:gauge
   hpvc_pv9_limit_unit:
     name: PV9 Limit Unit
     options:
-      - Watts
-      - Percent
+    - Watts
+    - Percent
     icon: mdi:gauge
   hpvc_pv10_limit_unit:
     name: PV10 Limit Unit
     options:
-      - Watts
-      - Percent
+    - Watts
+    - Percent
     icon: mdi:gauge
 input_number:
+  hpvc_health_inputs_epoch:
+    name: HPVC Inputs Flow Health Epoch
+    min: 0
+    max: 4102444800
+    step: 1
+    mode: box
+    initial: 0
+  hpvc_health_engine_epoch:
+    name: HPVC Engine Flow Health Epoch
+    min: 0
+    max: 4102444800
+    step: 1
+    mode: box
+    initial: 0
+  hpvc_health_outputs_epoch:
+    name: HPVC Outputs Flow Health Epoch
+    min: 0
+    max: 4102444800
+    step: 1
+    mode: box
+    initial: 0
+  hpvc_health_reports_epoch:
+    name: HPVC Reports Flow Health Epoch
+    min: 0
+    max: 4102444800
+    step: 1
+    mode: box
+    initial: 0
+  hpvc_health_maintenance_epoch:
+    name: HPVC Maintenance Flow Health Epoch
+    min: 0
+    max: 4102444800
+    step: 1
+    mode: box
+    initial: 0
   hpvc_engine_heartbeat_epoch:
     name: HPVC Engine Heartbeat Epoch
     min: 0
@@ -1189,6 +1224,111 @@ input_button:
     icon: mdi:reload
 
 template:
+- trigger:
+  - platform: time_pattern
+    seconds: "/5"
+  - platform: state
+    entity_id:
+      - input_number.hpvc_health_inputs_epoch
+      - input_number.hpvc_health_engine_epoch
+      - input_number.hpvc_health_outputs_epoch
+      - input_number.hpvc_health_reports_epoch
+      - input_number.hpvc_health_maintenance_epoch
+      - input_text.hpvc_node_red_flows_status
+      - input_boolean.hpvc_update_reload_required
+  sensor:
+  - name: HPVC Node-RED Runtime Health
+    default_entity_id: sensor.hpvc_node_red_runtime_health
+    unique_id: hpvc_node_red_runtime_health
+    icon: mdi:source-branch-check
+    state: >-
+      {% set names = ['inputs', 'engine', 'outputs', 'reports', 'maintenance'] %} {% set ns = namespace(live=0, seen=0) %} {% set now_s
+      = as_timestamp(now()) %} {% for name in names %}
+        {% set epoch = states('input_number.hpvc_health_' ~ name ~ '_epoch') | float(0) %}
+        {% if epoch > 0 %}
+          {% set ns.seen = ns.seen + 1 %}
+          {% if 0 <= now_s - epoch < 30 %}
+            {% set ns.live = ns.live + 1 %}
+          {% endif %}
+        {% endif %}
+      {% endfor %} {% if is_state('input_text.hpvc_node_red_flows_status', 'Preparing removal') %}
+        Preparing removal
+      {% elif is_state('input_text.hpvc_node_red_flows_status', 'Preparing uninstall') %}
+        Preparing uninstall
+      {% elif is_state('input_text.hpvc_node_red_flows_status', 'Restoring inverter limits') %}
+        Restoring inverter limits
+      {% elif is_state('input_text.hpvc_node_red_flows_status', 'Restoration failed') %}
+        Restoration failed
+      {% elif is_state('input_text.hpvc_node_red_flows_status', 'Restoration timed out') %}
+        Restoration timed out
+      {% elif is_state('input_text.hpvc_node_red_flows_status', 'Uninstalling') %}
+        Uninstalling
+      {% elif is_state('input_text.hpvc_node_red_flows_status', 'Removing') %}
+        Removing
+      {% elif is_state('input_text.hpvc_node_red_flows_status', 'Needs attention') %}
+        Needs attention
+      {% elif is_state('input_text.hpvc_node_red_flows_status', 'Removed') %}
+        Removed
+      {% elif is_state('input_boolean.hpvc_update_reload_required', 'on') %}
+        Updating
+      {% elif ns.live == names | count %}
+        Ready
+      {% elif ns.live > 0 %}
+        Incomplete
+      {% elif ns.seen > 0 %}
+        Stale
+      {% else %}
+        Missing
+      {% endif %}
+    attributes:
+      tabs_reporting: >-
+        {% set names = ['inputs', 'engine', 'outputs', 'reports', 'maintenance'] %}
+        {% set ns = namespace(live=[]) %}
+        {% set now_s = as_timestamp(now()) %}
+        {% for name in names %}
+          {% set epoch = states('input_number.hpvc_health_' ~ name ~ '_epoch') | float(0) %}
+          {% if epoch > 0 and 0 <= now_s - epoch < 30 %}
+            {% set ns.live = ns.live + [name] %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.live | join(', ') }}
+      tabs_missing_or_stale: >-
+        {% set names = ['inputs', 'engine', 'outputs', 'reports', 'maintenance'] %}
+        {% set ns = namespace(missing=[]) %}
+        {% set now_s = as_timestamp(now()) %}
+        {% for name in names %}
+          {% set epoch = states('input_number.hpvc_health_' ~ name ~ '_epoch') | float(0) %}
+          {% if epoch <= 0 or now_s - epoch < 0 or now_s - epoch >= 30 %}
+            {% set ns.missing = ns.missing + [name] %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.missing | join(', ') }}
+- trigger:
+  - platform: time_pattern
+    seconds: "/5"
+  - platform: state
+    entity_id: input_number.hpvc_health_maintenance_epoch
+  binary_sensor:
+  - name: HPVC Maintenance Flow Available
+    default_entity_id: binary_sensor.hpvc_maintenance_flow_available
+    unique_id: hpvc_maintenance_flow_available
+    icon: mdi:tools
+    state: >-
+      {% set epoch = states('input_number.hpvc_health_maintenance_epoch') | float(0) %}
+      {% set age = as_timestamp(now()) - epoch %}
+      {{ epoch > 0 and 0 <= age < 30 }}
+- sensor:
+  - name: HPVC Display Status
+    default_entity_id: sensor.hpvc_display_status
+    unique_id: hpvc_display_status
+    icon: mdi:solar-power-variant
+    state: >-
+       {% set runtime = states('sensor.hpvc_node_red_runtime_health') %}
+       {% if runtime != 'Ready' %}
+         {{ 'Disabled' if is_state('input_boolean.hpvc_enabled', 'off') else 'HPVC offline' }}
+       {% else %}
+         {{ states('input_text.hpvc_status') }}
+       {% endif %}
 - binary_sensor:
   - name: HPVC Unresolved Removed Inverter
     default_entity_id: binary_sensor.hpvc_unresolved_removed_inverter
@@ -1405,7 +1545,8 @@ template:
         {% set row = rows[0] if rows is sequence and rows is not string and rows is not mapping and rows | count > 0 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv1_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv1_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv1_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv1_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv1_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {{ e if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else '' }}
       pv1_last_reported_ms: >-
@@ -1414,7 +1555,8 @@ template:
         {% set row = rows[0] if rows is sequence and rows is not string and rows is not mapping and rows | count > 0 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv1_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv1_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv1_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv1_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv1_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
         {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
@@ -1424,7 +1566,8 @@ template:
         {% set row = rows[1] if rows is sequence and rows is not string and rows is not mapping and rows | count > 1 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv2_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv2_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv2_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv2_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv2_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {{ e if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else '' }}
       pv2_last_reported_ms: >-
@@ -1433,7 +1576,8 @@ template:
         {% set row = rows[1] if rows is sequence and rows is not string and rows is not mapping and rows | count > 1 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv2_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv2_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv2_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv2_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv2_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
         {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
@@ -1443,7 +1587,8 @@ template:
         {% set row = rows[2] if rows is sequence and rows is not string and rows is not mapping and rows | count > 2 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv3_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv3_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv3_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv3_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv3_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {{ e if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else '' }}
       pv3_last_reported_ms: >-
@@ -1452,7 +1597,8 @@ template:
         {% set row = rows[2] if rows is sequence and rows is not string and rows is not mapping and rows | count > 2 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv3_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv3_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv3_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv3_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv3_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
         {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
@@ -1462,7 +1608,8 @@ template:
         {% set row = rows[3] if rows is sequence and rows is not string and rows is not mapping and rows | count > 3 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv4_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv4_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv4_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv4_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv4_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {{ e if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else '' }}
       pv4_last_reported_ms: >-
@@ -1471,7 +1618,8 @@ template:
         {% set row = rows[3] if rows is sequence and rows is not string and rows is not mapping and rows | count > 3 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv4_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv4_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv4_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv4_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv4_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
         {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
@@ -1481,7 +1629,8 @@ template:
         {% set row = rows[4] if rows is sequence and rows is not string and rows is not mapping and rows | count > 4 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv5_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv5_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv5_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv5_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv5_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {{ e if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else '' }}
       pv5_last_reported_ms: >-
@@ -1490,7 +1639,8 @@ template:
         {% set row = rows[4] if rows is sequence and rows is not string and rows is not mapping and rows | count > 4 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv5_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv5_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv5_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv5_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv5_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
         {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
@@ -1500,7 +1650,8 @@ template:
         {% set row = rows[5] if rows is sequence and rows is not string and rows is not mapping and rows | count > 5 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv6_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv6_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv6_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv6_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv6_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {{ e if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else '' }}
       pv6_last_reported_ms: >-
@@ -1509,7 +1660,8 @@ template:
         {% set row = rows[5] if rows is sequence and rows is not string and rows is not mapping and rows | count > 5 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv6_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv6_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv6_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv6_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv6_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
         {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
@@ -1519,7 +1671,8 @@ template:
         {% set row = rows[6] if rows is sequence and rows is not string and rows is not mapping and rows | count > 6 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv7_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv7_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv7_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv7_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv7_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {{ e if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else '' }}
       pv7_last_reported_ms: >-
@@ -1528,7 +1681,8 @@ template:
         {% set row = rows[6] if rows is sequence and rows is not string and rows is not mapping and rows | count > 6 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv7_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv7_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv7_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv7_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv7_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
         {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
@@ -1538,7 +1692,8 @@ template:
         {% set row = rows[7] if rows is sequence and rows is not string and rows is not mapping and rows | count > 7 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv8_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv8_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv8_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv8_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv8_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {{ e if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else '' }}
       pv8_last_reported_ms: >-
@@ -1547,7 +1702,8 @@ template:
         {% set row = rows[7] if rows is sequence and rows is not string and rows is not mapping and rows | count > 7 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv8_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv8_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv8_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv8_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv8_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
         {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
@@ -1557,7 +1713,8 @@ template:
         {% set row = rows[8] if rows is sequence and rows is not string and rows is not mapping and rows | count > 8 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv9_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv9_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv9_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv9_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv9_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {{ e if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else '' }}
       pv9_last_reported_ms: >-
@@ -1566,7 +1723,8 @@ template:
         {% set row = rows[8] if rows is sequence and rows is not string and rows is not mapping and rows | count > 8 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv9_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv9_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv9_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv9_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv9_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
         {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
@@ -1576,7 +1734,8 @@ template:
         {% set row = rows[9] if rows is sequence and rows is not string and rows is not mapping and rows | count > 9 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv10_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv10_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv10_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv10_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv10_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {{ e if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else '' }}
       pv10_last_reported_ms: >-
@@ -1585,7 +1744,8 @@ template:
         {% set row = rows[9] if rows is sequence and rows is not string and rows is not mapping and rows | count > 9 else '' %}
         {% set parts = row.split('|') if row is string else [] %}
         {% set method = states('input_select.hpvc_pv10_control_method') | trim %}
-        {% set fallback = (states('input_text.hpvc_pv10_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv10_readback_entity')) | trim | lower %}
+        {% set fallback = (states('input_text.hpvc_pv10_limit_number') if method == 'Number entity' else states('input_text.hpvc_pv10_readback_entity'))
+        | trim | lower %}
         {% set e = (parts[0] | trim | lower) if parts | count >= 6 else fallback %}
         {% set st = states[e] if e | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') else none %}
         {{ ((as_timestamp(st.last_reported, 0) if st is not none else 0) * 1000) | int }}
@@ -1696,7 +1856,8 @@ template:
         {% endif %}
       {% endfor %}
       {# Auto-discovered OpenDTU/Hoymiles absolute Watt limiters from the shared registry cache. #}
-      {% set od = namespace(candidates=state_attr('sensor.hpvc_enphase_registry', 'opendtu_controllers') or [], seen=[], limits=[]) %}
+      {% set od = namespace(candidates=state_attr('sensor.hpvc_enphase_registry', 'opendtu_controllers') or [], seen=[], limits=[])
+      %}
       {% for ent in states.number | map(attribute='entity_id') | list | sort %}
         {% if ent | regex_match('^number[.].+_limit_nonpersistent_absolute$') and ent not in registry_entities %}
           {% set unit = state_attr(ent, 'unit_of_measurement') | default('', true) | lower %}
@@ -1777,14 +1938,16 @@ template:
           {% if ent | regex_match('^number[.].+_limit_nonpersistent_absolute$') and ent not in registry_entities %}
             {% set unit = state_attr(ent, 'unit_of_measurement') | default('', true) | lower %}
             {% set native_max = state_attr(ent, 'max') | float(0) %}
-            {% if unit in ['w','watt','watts'] and native_max > 0 %}{% set od.candidates = od.candidates + [dict(limit_entity=ent)] %}{% endif %}
+            {% if unit in ['w','watt','watts'] and native_max > 0 %}{% set od.candidates = od.candidates + [dict(limit_entity=ent)]
+        %}{% endif %}
           {% endif %}
         {% endfor %}
         {% for controller in od.candidates %}
           {% set ent = controller.limit_entity %}
           {% set unit = state_attr(ent, 'unit_of_measurement') | default('', true) | lower %}
           {% set native_max = state_attr(ent, 'max') | float(0) %}
-          {% if ent not in od.seen and (states | selectattr('entity_id', 'eq', ent) | list | count > 0) and unit in ['w','watt','watts'] %}
+          {% if ent not in od.seen and (states | selectattr('entity_id', 'eq', ent) | list | count > 0) and unit in ['w','watt','watts']
+        %}
             {% set od.seen = od.seen + [ent] %}
           {% endif %}
         {% endfor %}
@@ -1792,7 +1955,8 @@ template:
       runtime_json: >-
         {% set count = states('input_number.hpvc_inverter_count') | int(0) %}
         {% set count = 0 if count < 0 else 10 if count > 10 else count %}
-        {% set ns = namespace(discovered=[], manual_limits=[], owned_devices=[], unknown_manual=false, manual_present=false, auto=[], auto_i=0, slots=[]) %}
+        {% set ns = namespace(discovered=[], manual_limits=[], owned_devices=[], unknown_manual=false, manual_present=false, auto=[],
+        auto_i=0, slots=[]) %}
         {# Registry pairs are shared by the independent Node-RED registry refresh. #}
         {% set dp = namespace(candidates=state_attr('sensor.hpvc_enphase_registry', 'controllers') or [], seen=[]) %}
         {% set registry_entities = state_attr('sensor.hpvc_enphase_registry', 'registry_entities') or [] %}
@@ -1821,7 +1985,8 @@ template:
           {% endif %}
         {% endfor %}
         {# Auto-discovered OpenDTU/Hoymiles absolute Watt limiters from the shared registry cache. #}
-        {% set od = namespace(candidates=state_attr('sensor.hpvc_enphase_registry', 'opendtu_controllers') or [], seen=[], limits=[]) %}
+        {% set od = namespace(candidates=state_attr('sensor.hpvc_enphase_registry', 'opendtu_controllers') or [], seen=[], limits=[])
+        %}
         {% for ent in states.number | map(attribute='entity_id') | list | sort %}
         {% if ent | regex_match('^number[.].+_limit_nonpersistent_absolute$') and ent not in registry_entities %}
           {% set unit = state_attr(ent, 'unit_of_measurement') | default('', true) | lower %}
@@ -1851,7 +2016,8 @@ template:
           {# Only user-owned configured controllers can block uncertain discovery.
              Automatically mirrored slots are not independent manual owners. #}
           {% set auto_managed = is_state('input_boolean.hpvc_pv' ~ i ~ '_auto_managed', 'on') %}
-          {% set real_manual = not auto_managed and ((method == 'Number entity' and limit | regex_match('^number[.][a-z0-9_]+$')) or (method == 'Action/service' and (action != '' or readback != ''))) %}
+          {% set real_manual = not auto_managed and ((method == 'Number entity' and limit | regex_match('^number[.][a-z0-9_]+$')) or
+        (method == 'Action/service' and (action != '' or readback != ''))) %}
           {% if real_manual %}
             {% set ns.manual_present = true %}
             {% if not device %}{% set ns.unknown_manual = true %}{% endif %}
@@ -1898,12 +2064,14 @@ template:
             {% set enphase_range_ok = auto_kind != 'enphase' or auto_identity == '' or auto_identity == ('enphase|' ~ ent) %}
             {% set native_full_ns = namespace(value=(full if enphase_range_ok else 0)) %}
             {% for controller in od.candidates if controller.limit_entity == ent %}
-              {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set native_full_ns.value = controller.max_power | float(0) %}{% endif %}
+              {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set native_full_ns.value = controller.max_power
+        | float(0) %}{% endif %}
             {% endfor %}
             {% set native_full = native_full_ns.value %}
             {% set native_low = state_attr(ent, 'min') | float(0) %}
             {% set effective_low = (low if enphase_range_ok else 0) if auto_kind == 'enphase' else [native_low, low] | max %}
-            {% set ns.slots = ns.slots + [ent ~ '|Watts|' ~ native_full ~ '|' ~ effective_low ~ '|' ~ auto_kind ~ '|Number entity|auto'] %}
+            {% set ns.slots = ns.slots + [ent ~ '|Watts|' ~ native_full ~ '|' ~ effective_low ~ '|' ~ auto_kind ~ '|Number entity|auto']
+        %}
             {% set ns.auto_i = ns.auto_i + 1 %}
           {% elif method == 'Number entity' and migrated.matches | count == 1 %}
             {% set ent = migrated.matches[0] %}
@@ -1916,19 +2084,22 @@ template:
             {% set auto_identity_raw = states('input_text.hpvc_pv' ~ i ~ '_auto_identity') | trim | lower %}
             {% set auto_identity = '' if auto_identity_raw in ['unknown', 'unavailable', 'none'] else auto_identity_raw %}
             {% set slot_auto_managed = is_state('input_boolean.hpvc_pv' ~ i ~ '_auto_managed', 'on') %}
-            {% set enphase_range_ok = auto_kind != 'enphase' or not slot_auto_managed or auto_identity == '' or auto_identity == ('enphase|' ~ limit) %}
+            {% set enphase_range_ok = auto_kind != 'enphase' or not slot_auto_managed or auto_identity == '' or auto_identity == ('enphase|'
+        ~ limit) %}
             {% set native_full_ns = namespace(value=(full if enphase_range_ok else 0)) %}
             {# Preserve an existing user-owned full-power ceiling. API power
                is for genuinely auto-managed slots, not upgraded manual slots. #}
             {% if slot_auto_managed or full <= 0 %}
               {% for controller in od.candidates if controller.limit_entity == limit %}
-                {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set native_full_ns.value = controller.max_power | float(0) %}{% endif %}
+                {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set native_full_ns.value = controller.max_power
+        | float(0) %}{% endif %}
               {% endfor %}
             {% endif %}
             {% set native_full = native_full_ns.value %}
             {% set native_low = state_attr(limit, 'min') | float(0) %}
             {% set effective_low = (low if enphase_range_ok else 0) if auto_kind == 'enphase' else [native_low, low] | max %}
-            {% set ns.slots = ns.slots + [limit ~ '|Watts|' ~ native_full ~ '|' ~ effective_low ~ '|' ~ auto_kind ~ '|Number entity|auto'] %}
+            {% set ns.slots = ns.slots + [limit ~ '|Watts|' ~ native_full ~ '|' ~ effective_low ~ '|' ~ auto_kind ~ '|Number entity|auto']
+        %}
           {% elif method == 'Number entity' %}
             {% set ns.slots = ns.slots + [limit ~ '|' ~ unit ~ '|' ~ full ~ '|' ~ low ~ '|manual-number|Number entity|manual'] %}
           {% elif method == 'Action/service' %}
@@ -1947,20 +2118,24 @@ template:
             {% set enphase_range_ok = auto_kind != 'enphase' or auto_identity == '' or auto_identity == ('enphase|' ~ ent) %}
             {% set native_full_ns = namespace(value=(slot_full if enphase_range_ok else 0)) %}
             {% for controller in od.candidates if controller.limit_entity == ent %}
-              {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set native_full_ns.value = controller.max_power | float(0) %}{% endif %}
+              {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set native_full_ns.value = controller.max_power
+        | float(0) %}{% endif %}
             {% endfor %}
             {% set native_full = native_full_ns.value %}
             {% set native_low = state_attr(ent, 'min') | float(0) %}
             {% set slot_low = states('input_number.hpvc_pv' ~ slot ~ '_low_limit') | float(0) %}
-            {% set effective_low = (slot_low if enphase_range_ok else 0) if auto_kind == 'enphase' else [native_low, slot_low] | max %}
-            {% set ns.slots = ns.slots + [ent ~ '|Watts|' ~ native_full ~ '|' ~ effective_low ~ '|' ~ auto_kind ~ '|Number entity|auto'] %}
+            {% set effective_low = (slot_low if enphase_range_ok else 0) if auto_kind == 'enphase' else [native_low, slot_low] | max
+        %}
+            {% set ns.slots = ns.slots + [ent ~ '|Watts|' ~ native_full ~ '|' ~ effective_low ~ '|' ~ auto_kind ~ '|Number entity|auto']
+        %}
           {% endif %}
         {% endfor %}
         {{ ns.slots | to_json }}
       controller_ui_json: >-
         {% set count = states('input_number.hpvc_inverter_count') | int(0) %}
         {% set count = 0 if count < 0 else 10 if count > 10 else count %}
-        {% set ns = namespace(discovered=[], manual_limits=[], owned_devices=[], unknown_manual=false, manual_present=false, auto=[], auto_i=0, slots=[]) %}
+        {% set ns = namespace(discovered=[], manual_limits=[], owned_devices=[], unknown_manual=false, manual_present=false, auto=[],
+        auto_i=0, slots=[]) %}
         {# Registry pairs are shared by the independent Node-RED registry refresh. #}
         {% set dp = namespace(candidates=state_attr('sensor.hpvc_enphase_registry', 'controllers') or [], seen=[]) %}
         {% set registry_entities = state_attr('sensor.hpvc_enphase_registry', 'registry_entities') or [] %}
@@ -1989,7 +2164,8 @@ template:
           {% endif %}
         {% endfor %}
         {# Auto-discovered OpenDTU/Hoymiles absolute Watt limiters from the shared registry cache. #}
-        {% set od = namespace(candidates=state_attr('sensor.hpvc_enphase_registry', 'opendtu_controllers') or [], seen=[], limits=[]) %}
+        {% set od = namespace(candidates=state_attr('sensor.hpvc_enphase_registry', 'opendtu_controllers') or [], seen=[], limits=[])
+        %}
         {% for ent in states.number | map(attribute='entity_id') | list | sort %}
         {% if ent | regex_match('^number[.].+_limit_nonpersistent_absolute$') and ent not in registry_entities %}
           {% set unit = state_attr(ent, 'unit_of_measurement') | default('', true) | lower %}
@@ -2019,7 +2195,8 @@ template:
           {# Only user-owned configured controllers can block uncertain discovery.
              Automatically mirrored slots are not independent manual owners. #}
           {% set auto_managed = is_state('input_boolean.hpvc_pv' ~ i ~ '_auto_managed', 'on') %}
-          {% set real_manual = not auto_managed and ((method == 'Number entity' and limit | regex_match('^number[.][a-z0-9_]+$')) or (method == 'Action/service' and (action != '' or readback != ''))) %}
+          {% set real_manual = not auto_managed and ((method == 'Number entity' and limit | regex_match('^number[.][a-z0-9_]+$')) or
+        (method == 'Action/service' and (action != '' or readback != ''))) %}
           {% if real_manual %}
             {% set ns.manual_present = true %}
             {% if not device %}{% set ns.unknown_manual = true %}{% endif %}
@@ -2066,12 +2243,14 @@ template:
             {% set enphase_range_ok = auto_kind != 'enphase' or auto_identity == '' or auto_identity == ('enphase|' ~ ent) %}
             {% set native_full_ns = namespace(value=(full if enphase_range_ok else 0)) %}
             {% for controller in od.candidates if controller.limit_entity == ent %}
-              {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set native_full_ns.value = controller.max_power | float(0) %}{% endif %}
+              {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set native_full_ns.value = controller.max_power
+        | float(0) %}{% endif %}
             {% endfor %}
             {% set native_full = native_full_ns.value %}
             {% set native_low = state_attr(ent, 'min') | float(0) %}
             {% set effective_low = (low if enphase_range_ok else 0) if auto_kind == 'enphase' else [native_low, low] | max %}
-            {% set ns.slots = ns.slots + [ent ~ '|Watts|' ~ native_full ~ '|' ~ effective_low ~ '|' ~ auto_kind ~ '|Number entity|auto'] %}
+            {% set ns.slots = ns.slots + [ent ~ '|Watts|' ~ native_full ~ '|' ~ effective_low ~ '|' ~ auto_kind ~ '|Number entity|auto']
+        %}
             {% set ns.auto_i = ns.auto_i + 1 %}
           {% elif method == 'Number entity' and migrated.matches | count == 1 %}
             {% set ent = migrated.matches[0] %}
@@ -2084,19 +2263,22 @@ template:
             {% set auto_identity_raw = states('input_text.hpvc_pv' ~ i ~ '_auto_identity') | trim | lower %}
             {% set auto_identity = '' if auto_identity_raw in ['unknown', 'unavailable', 'none'] else auto_identity_raw %}
             {% set slot_auto_managed = is_state('input_boolean.hpvc_pv' ~ i ~ '_auto_managed', 'on') %}
-            {% set enphase_range_ok = auto_kind != 'enphase' or not slot_auto_managed or auto_identity == '' or auto_identity == ('enphase|' ~ limit) %}
+            {% set enphase_range_ok = auto_kind != 'enphase' or not slot_auto_managed or auto_identity == '' or auto_identity == ('enphase|'
+        ~ limit) %}
             {% set native_full_ns = namespace(value=(full if enphase_range_ok else 0)) %}
             {# Preserve an existing user-owned full-power ceiling. API power
                is for genuinely auto-managed slots, not upgraded manual slots. #}
             {% if slot_auto_managed or full <= 0 %}
               {% for controller in od.candidates if controller.limit_entity == limit %}
-                {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set native_full_ns.value = controller.max_power | float(0) %}{% endif %}
+                {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set native_full_ns.value = controller.max_power
+        | float(0) %}{% endif %}
               {% endfor %}
             {% endif %}
             {% set native_full = native_full_ns.value %}
             {% set native_low = state_attr(limit, 'min') | float(0) %}
             {% set effective_low = (low if enphase_range_ok else 0) if auto_kind == 'enphase' else [native_low, low] | max %}
-            {% set ns.slots = ns.slots + [limit ~ '|Watts|' ~ native_full ~ '|' ~ effective_low ~ '|' ~ auto_kind ~ '|Number entity|auto'] %}
+            {% set ns.slots = ns.slots + [limit ~ '|Watts|' ~ native_full ~ '|' ~ effective_low ~ '|' ~ auto_kind ~ '|Number entity|auto']
+        %}
           {% elif method == 'Number entity' %}
             {% set ns.slots = ns.slots + [limit ~ '|' ~ unit ~ '|' ~ full ~ '|' ~ low ~ '|manual-number|Number entity|manual'] %}
           {% elif method == 'Action/service' %}
@@ -2115,13 +2297,16 @@ template:
             {% set enphase_range_ok = auto_kind != 'enphase' or auto_identity == '' or auto_identity == ('enphase|' ~ ent) %}
             {% set native_full_ns = namespace(value=(slot_full if enphase_range_ok else 0)) %}
             {% for controller in od.candidates if controller.limit_entity == ent %}
-              {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set native_full_ns.value = controller.max_power | float(0) %}{% endif %}
+              {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set native_full_ns.value = controller.max_power
+        | float(0) %}{% endif %}
             {% endfor %}
             {% set native_full = native_full_ns.value %}
             {% set native_low = state_attr(ent, 'min') | float(0) %}
             {% set slot_low = states('input_number.hpvc_pv' ~ slot ~ '_low_limit') | float(0) %}
-            {% set effective_low = (slot_low if enphase_range_ok else 0) if auto_kind == 'enphase' else [native_low, slot_low] | max %}
-            {% set ns.slots = ns.slots + [ent ~ '|Watts|' ~ native_full ~ '|' ~ effective_low ~ '|' ~ auto_kind ~ '|Number entity|auto'] %}
+            {% set effective_low = (slot_low if enphase_range_ok else 0) if auto_kind == 'enphase' else [native_low, slot_low] | max
+        %}
+            {% set ns.slots = ns.slots + [ent ~ '|Watts|' ~ native_full ~ '|' ~ effective_low ~ '|' ~ auto_kind ~ '|Number entity|auto']
+        %}
           {% endif %}
         {% endfor %}
         {% set ui = namespace(rows=[]) %}
@@ -2139,7 +2324,8 @@ template:
           {% set max_lock = namespace(value=false) %}
           {% if source == 'auto' and kind == 'opendtu' %}
             {% for controller in od.candidates if controller.limit_entity == ent %}
-              {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set max_lock.value = true %}{% endif %}
+              {% if controller.max_power is defined and controller.max_power | float(0) > 0 %}{% set max_lock.value = true %}{% endif
+        %}
             {% endfor %}
           {% endif %}
           {% set action = states(p ~ 'action') | trim | lower %}
@@ -2161,8 +2347,10 @@ template:
                 {% set enable = controller.enable_entity %}
                 {% set mode = controller.mode_entity %}
                 {% set options = state_attr(mode, 'options') or [] %}
-                {% set pair.found = 'Production' in options and 'Export' in options and (states | selectattr('entity_id', 'eq', enable) | list | count > 0) and (states | selectattr('entity_id', 'eq', mode) | list | count > 0) %}
-                {% set v.live = v.live and states(enable) in ['on','off'] and states(mode) not in ['unknown','unavailable','none',''] %}
+                {% set pair.found = 'Production' in options and 'Export' in options and (states | selectattr('entity_id', 'eq', enable)
+        | list | count > 0) and (states | selectattr('entity_id', 'eq', mode) | list | count > 0) %}
+                {% set v.live = v.live and states(enable) in ['on','off'] and states(mode) not in ['unknown','unavailable','none','']
+        %}
               {% endfor %}
               {% set v.valid = v.valid and pair.found %}
             {% elif ent | regex_match('^number[.].+_dpel_limit$') %}
@@ -2176,10 +2364,14 @@ template:
             {% set post = states(p ~ 'post_actions_json') | from_json(none) %}
             {% set step = states('input_number.hpvc_pv' ~ i ~ '_action_step') | float(-1) %}
             {% set refresh = states('input_number.hpvc_pv' ~ i ~ '_refresh_seconds') | float(-1) %}
-            {% set v.valid = v.valid and action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') and states(p ~ 'value_field') | trim not in ['','unknown','unavailable'] and fixed is mapping and target is mapping and pre is sequence and pre is not string and pre is not mapping and post is sequence and post is not string and post is not mapping and step >= 0 and step <= (100 if unit == 'Percent' else full) and refresh >= 0 %}
+            {% set v.valid = v.valid and action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') and states(p ~ 'value_field') | trim not
+        in ['','unknown','unavailable'] and fixed is mapping and target is mapping and pre is sequence and pre is not string and pre
+        is not mapping and post is sequence and post is not string and post is not mapping and step >= 0 and step <= (100 if unit ==
+        'Percent' else full) and refresh >= 0 %}
             {% if v.valid %}
               {% for item in pre + post %}
-                {% if item is not mapping or item.action is not defined or not item.action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$') %}{% set v.valid = false %}{% endif %}
+                {% if item is not mapping or item.action is not defined or not item.action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')
+        %}{% set v.valid = false %}{% endif %}
               {% endfor %}
             {% endif %}
             {% if rb != '' %}
@@ -2189,7 +2381,8 @@ template:
           {% else %}
             {% set v.valid = false %}
           {% endif %}
-          {% if unit == 'Percent' and is_number(states(ent)) and (states(ent) | float < 0 or states(ent) | float > 100) %}{% set v.valid = false %}{% endif %}
+          {% if unit == 'Percent' and is_number(states(ent)) and (states(ent) | float < 0 or states(ent) | float > 100) %}{% set v.valid
+        = false %}{% endif %}
           {# Keep the earliest assignment as owner; only later assignments conflict. #}
           {% set own_helpers = states | selectattr('entity_id', 'eq', p ~ 'limit_number') | list %}
           {% set own_time = (own_helpers[0].last_changed | default('') | string) if own_helpers else '' %}
@@ -2210,11 +2403,15 @@ template:
           {% endif %}
           {% set duplicate = method == 'Number entity' and ent != '' and owner.slot != i %}
           {% if duplicate %}{% set v.valid = false %}{% endif %}
-          {% set status = 'Not configured' if empty else 'Incomplete' if not v.valid else 'Unavailable' if not v.live else 'Configured' if method == 'Action/service' else 'Detected' %}
+          {% set status = 'Not configured' if empty else 'Incomplete' if not v.valid else 'Unavailable' if not v.live else 'Configured'
+        if method == 'Action/service' else 'Detected' %}
           {% if duplicate %}
-            {% set ui.rows = ui.rows + [dict(status=status, valid=false, source=source, kind=kind, control_method=method, limit_entity=ent, limit_unit=unit, max_power=full, min_power=low, max_power_locked=max_lock.value, reason='Limit entity already assigned to PV' ~ owner.slot)] %}
+            {% set ui.rows = ui.rows + [dict(status=status, valid=false, source=source, kind=kind, control_method=method, limit_entity=ent,
+        limit_unit=unit, max_power=full, min_power=low, max_power_locked=max_lock.value, reason='Limit entity already assigned to PV'
+        ~ owner.slot)] %}
           {% else %}
-            {% set ui.rows = ui.rows + [dict(status=status, valid=v.valid and not empty, source=source, kind=kind, control_method=method, limit_entity=ent, limit_unit=unit, max_power=full, min_power=low, max_power_locked=max_lock.value)] %}
+            {% set ui.rows = ui.rows + [dict(status=status, valid=v.valid and not empty, source=source, kind=kind, control_method=method,
+        limit_entity=ent, limit_unit=unit, max_power=full, min_power=low, max_power_locked=max_lock.value)] %}
           {% endif %}
         {% endfor %}
         {{ ui.rows | to_json }}
@@ -2222,7 +2419,7 @@ template:
     default_entity_id: sensor.hpvc_installed_version
     unique_id: hpvc_installed_version
     icon: mdi:tag
-    state: "1.6.0"
+    state: "1.6.1"
   # Explicit default_entity_id is intentional for this renamed v1.3.0 sensor so
   # fresh installs use the documented entity ID; all HPVC template entities use
   # explicit default_entity_id values so Smart Update can verify activation deterministically.
@@ -2233,7 +2430,8 @@ template:
     icon: mdi:cash
     availability: >-
       {% set ent = states('input_text.hpvc_market_price_sensor') %}
-      {{ ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', ''] and (ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) and is_number(states(ent)) }}
+      {{ ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', ''] and (ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+      and is_number(states(ent)) }}
     state: >-
       {% set ent = states('input_text.hpvc_market_price_sensor') %}
       {{ states(ent) | float }}
@@ -2244,7 +2442,8 @@ template:
     icon: mdi:cash-multiple
     availability: >-
       {% set ent = states('input_text.hpvc_all_in_price_sensor') %}
-      {{ ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', ''] and (ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) and is_number(states(ent)) }}
+      {{ ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', ''] and (ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+      and is_number(states(ent)) }}
     state: >-
       {% set ent = states('input_text.hpvc_all_in_price_sensor') %}
       {{ states(ent) | float }}
@@ -2257,7 +2456,8 @@ template:
     icon: mdi:transmission-tower
     availability: >-
       {% set ent = states('input_text.hpvc_grid_power_sensor') %}
-      {{ ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', ''] and (ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) and is_number(states(ent)) }}
+      {{ ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', ''] and (ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+      and is_number(states(ent)) }}
     state: >-
       {% set ent = states('input_text.hpvc_grid_power_sensor') %}
       {{ states(ent) | float | round(0) }}
@@ -2270,7 +2470,8 @@ template:
     icon: mdi:solar-power
     availability: >-
       {% set ent = states('input_text.hpvc_pv_power_sensor') %}
-      {{ ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', ''] and (ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) and is_number(states(ent)) }}
+      {{ ent not in ['unknown', 'unavailable', 'none', 'select_entity_first', ''] and (ent | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$'))
+      and is_number(states(ent)) }}
     state: >-
       {% set ent = states('input_text.hpvc_pv_power_sensor') %}
       {{ states(ent) | float | round(0) }}
@@ -2479,13 +2680,15 @@ template:
     icon: mdi:solar-panel
     availability: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[0] if runtime | count >= 1 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {{ parts | count >= 6 and parts[0] != '' and parts[1] in ['Watts', 'Percent'] and is_number(states(parts[0])) }}
     state: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[0] if runtime | count >= 1 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {% set ent = parts[0] if parts | count >= 6 else '' %}
@@ -2506,13 +2709,15 @@ template:
     icon: mdi:solar-panel
     availability: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[1] if runtime | count >= 2 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {{ parts | count >= 6 and parts[0] != '' and parts[1] in ['Watts', 'Percent'] and is_number(states(parts[0])) }}
     state: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[1] if runtime | count >= 2 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {% set ent = parts[0] if parts | count >= 6 else '' %}
@@ -2533,13 +2738,15 @@ template:
     icon: mdi:solar-panel
     availability: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[2] if runtime | count >= 3 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {{ parts | count >= 6 and parts[0] != '' and parts[1] in ['Watts', 'Percent'] and is_number(states(parts[0])) }}
     state: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[2] if runtime | count >= 3 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {% set ent = parts[0] if parts | count >= 6 else '' %}
@@ -2560,13 +2767,15 @@ template:
     icon: mdi:solar-panel
     availability: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[3] if runtime | count >= 4 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {{ parts | count >= 6 and parts[0] != '' and parts[1] in ['Watts', 'Percent'] and is_number(states(parts[0])) }}
     state: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[3] if runtime | count >= 4 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {% set ent = parts[0] if parts | count >= 6 else '' %}
@@ -2587,13 +2796,15 @@ template:
     icon: mdi:solar-panel
     availability: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[4] if runtime | count >= 5 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {{ parts | count >= 6 and parts[0] != '' and parts[1] in ['Watts', 'Percent'] and is_number(states(parts[0])) }}
     state: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[4] if runtime | count >= 5 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {% set ent = parts[0] if parts | count >= 6 else '' %}
@@ -2614,13 +2825,15 @@ template:
     icon: mdi:solar-panel
     availability: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[5] if runtime | count >= 6 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {{ parts | count >= 6 and parts[0] != '' and parts[1] in ['Watts', 'Percent'] and is_number(states(parts[0])) }}
     state: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[5] if runtime | count >= 6 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {% set ent = parts[0] if parts | count >= 6 else '' %}
@@ -2641,13 +2854,15 @@ template:
     icon: mdi:solar-panel
     availability: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[6] if runtime | count >= 7 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {{ parts | count >= 6 and parts[0] != '' and parts[1] in ['Watts', 'Percent'] and is_number(states(parts[0])) }}
     state: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[6] if runtime | count >= 7 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {% set ent = parts[0] if parts | count >= 6 else '' %}
@@ -2668,13 +2883,15 @@ template:
     icon: mdi:solar-panel
     availability: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[7] if runtime | count >= 8 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {{ parts | count >= 6 and parts[0] != '' and parts[1] in ['Watts', 'Percent'] and is_number(states(parts[0])) }}
     state: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[7] if runtime | count >= 8 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {% set ent = parts[0] if parts | count >= 6 else '' %}
@@ -2695,13 +2912,15 @@ template:
     icon: mdi:solar-panel
     availability: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[8] if runtime | count >= 9 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {{ parts | count >= 6 and parts[0] != '' and parts[1] in ['Watts', 'Percent'] and is_number(states(parts[0])) }}
     state: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[8] if runtime | count >= 9 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {% set ent = parts[0] if parts | count >= 6 else '' %}
@@ -2722,13 +2941,15 @@ template:
     icon: mdi:solar-panel
     availability: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[9] if runtime | count >= 10 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {{ parts | count >= 6 and parts[0] != '' and parts[1] in ['Watts', 'Percent'] and is_number(states(parts[0])) }}
     state: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set entry = runtime[9] if runtime | count >= 10 else '' %}
       {% set parts = entry.split('|') if entry else [] %}
       {% set ent = parts[0] if parts | count >= 6 else '' %}
@@ -2786,9 +3007,11 @@ template:
           {% set numeric = is_number(full_raw) and is_number(low_raw) %}
           {% set full = full_raw | float(0) %}
           {% set low = low_raw | float(0) %}
-          {% set status = 'unknown' if not numeric else 'min_above_max' if low > full else 'min_equal_max' if low == full else 'valid' %}
+          {% set status = 'unknown' if not numeric else 'min_above_max' if low > full else 'min_equal_max' if low == full else 'valid'
+        %}
           {% set effective = low if numeric else 0 %}
-          {% set ns.rows = ns.rows + [dict(slot=i, status=status, configured_max=full, configured_min=low, effective_min=effective, valid=(status in ['valid', 'min_equal_max']))] %}
+          {% set ns.rows = ns.rows + [dict(slot=i, status=status, configured_max=full, configured_min=low, effective_min=effective,
+        valid=(status in ['valid', 'min_equal_max']))] %}
         {% endfor %}
         {{ ns.rows | to_json }}
 
@@ -2864,7 +3087,8 @@ template:
       max_power: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
-        {{ (rows[0].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count >= 1 else '' }}
+        {{ (rows[0].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count
+        >= 1 else '' }}
       max_power_locked: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
@@ -2895,7 +3119,8 @@ template:
       max_power: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
-        {{ (rows[1].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count >= 2 else '' }}
+        {{ (rows[1].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count
+        >= 2 else '' }}
       max_power_locked: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
@@ -2926,7 +3151,8 @@ template:
       max_power: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
-        {{ (rows[2].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count >= 3 else '' }}
+        {{ (rows[2].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count
+        >= 3 else '' }}
       max_power_locked: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
@@ -2957,7 +3183,8 @@ template:
       max_power: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
-        {{ (rows[3].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count >= 4 else '' }}
+        {{ (rows[3].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count
+        >= 4 else '' }}
       max_power_locked: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
@@ -2988,7 +3215,8 @@ template:
       max_power: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
-        {{ (rows[4].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count >= 5 else '' }}
+        {{ (rows[4].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count
+        >= 5 else '' }}
       max_power_locked: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
@@ -3019,7 +3247,8 @@ template:
       max_power: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
-        {{ (rows[5].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count >= 6 else '' }}
+        {{ (rows[5].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count
+        >= 6 else '' }}
       max_power_locked: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
@@ -3050,7 +3279,8 @@ template:
       max_power: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
-        {{ (rows[6].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count >= 7 else '' }}
+        {{ (rows[6].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count
+        >= 7 else '' }}
       max_power_locked: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
@@ -3081,7 +3311,8 @@ template:
       max_power: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
-        {{ (rows[7].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count >= 8 else '' }}
+        {{ (rows[7].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count
+        >= 8 else '' }}
       max_power_locked: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
@@ -3112,7 +3343,8 @@ template:
       max_power: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
-        {{ (rows[8].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count >= 9 else '' }}
+        {{ (rows[8].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count
+        >= 9 else '' }}
       max_power_locked: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
@@ -3143,7 +3375,8 @@ template:
       max_power: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
-        {{ (rows[9].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count >= 10 else '' }}
+        {{ (rows[9].max_power | float(0) | round(0) | int | string) ~ ' W' if rows is sequence and rows is not string and rows | count
+        >= 10 else '' }}
       max_power_locked: >-
         {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'controller_ui_json') %}
         {% set rows = raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) %}
@@ -3358,7 +3591,8 @@ template:
             {% endif %}
           {% endif %}
         {% endfor %}
-        {# Safety-critical validation discovers native DPEL directly instead of depending on another template entity's startup order. #}
+        {# Safety-critical validation discovers native DPEL directly instead of depending on another template entity's startup order.
+      #}
         {% set enphase = namespace(count=0) %}
         {# Registry pairs are shared by the independent Node-RED registry refresh. #}
         {% set dp = namespace(candidates=state_attr('sensor.hpvc_enphase_registry', 'controllers') or [], seen=[]) %}
@@ -3392,12 +3626,14 @@ template:
         {% for controller in od_candidates %}
           {% set ent = controller.limit_entity %}
           {% set unit = state_attr(ent, 'unit_of_measurement') | default('', true) | lower %}
-          {% if ent not in opendtu.seen and is_number(states(ent)) and unit in ['w','watt','watts'] and state_attr(ent, 'max') | float(0) > 0 %}
+          {% if ent not in opendtu.seen and is_number(states(ent)) and unit in ['w','watt','watts'] and state_attr(ent, 'max') | float(0)
+      > 0 %}
             {% set opendtu.seen = opendtu.seen + [ent] %}{% set opendtu.count = opendtu.count + 1 %}
           {% endif %}
         {% endfor %}
         {% for ent in states.number | map(attribute='entity_id') | list | sort %}
-          {% if ent | regex_match('^number[.].+_limit_nonpersistent_absolute$') and ent not in registry_entities and ent not in opendtu.seen %}
+          {% if ent | regex_match('^number[.].+_limit_nonpersistent_absolute$') and ent not in registry_entities and ent not in opendtu.seen
+      %}
             {% set unit = state_attr(ent, 'unit_of_measurement') | default('', true) | lower %}
             {% if unit in ['w','watt','watts'] and state_attr(ent, 'max') | float(0) > 0 %}
               {% set opendtu.seen = opendtu.seen + [ent] %}{% set opendtu.count = opendtu.count + 1 %}
@@ -3530,13 +3766,15 @@ template:
       {% for ent in states.number | map(attribute='entity_id') | list | sort %}
         {% if ent | regex_match('^number[.].+_limit_nonpersistent_absolute$') and ent not in registry_entities %}
           {% set unit = state_attr(ent, 'unit_of_measurement') | default('', true) | lower %}
-          {% if unit in ['w','watt','watts'] and state_attr(ent, 'max') | float(0) > 0 %}{% set od.candidates = od.candidates + [dict(limit_entity=ent)] %}{% endif %}
+          {% if unit in ['w','watt','watts'] and state_attr(ent, 'max') | float(0) > 0 %}{% set od.candidates = od.candidates + [dict(limit_entity=ent)]
+      %}{% endif %}
         {% endif %}
       {% endfor %}
       {% for controller in od.candidates %}
         {% set ent = controller.limit_entity %}
         {% set unit = state_attr(ent, 'unit_of_measurement') | default('', true) | lower %}
-        {% if ent not in od.seen and (states | selectattr('entity_id','eq',ent) | list | count > 0) and unit in ['w','watt','watts'] and state_attr(ent,'max') | float(0) > 0 %}
+        {% if ent not in od.seen and (states | selectattr('entity_id','eq',ent) | list | count > 0) and unit in ['w','watt','watts']
+      and state_attr(ent,'max') | float(0) > 0 %}
           {% set od.seen = od.seen + [ent] %}
           {% set ns.configured_usable = ns.configured_usable + 1 %}
           {% if is_number(states(ent)) %}{% set ns.usable = ns.usable + 1 %}{% endif %}
@@ -3646,13 +3884,15 @@ template:
         {% for controller in od_candidates %}
           {% set ent = controller.limit_entity %}
           {% set unit = state_attr(ent, 'unit_of_measurement') | default('', true) | lower %}
-          {% if ent not in odrt.seen and (states | selectattr('entity_id','eq',ent) | list | count > 0) and unit in ['w','watt','watts'] and state_attr(ent,'max') | float(0) > 0 %}
+          {% if ent not in odrt.seen and (states | selectattr('entity_id','eq',ent) | list | count > 0) and unit in ['w','watt','watts']
+        and state_attr(ent,'max') | float(0) > 0 %}
             {% set odrt.seen = odrt.seen + [ent] %}{% set odrt.configured = odrt.configured + 1 %}
             {% if not night_restore and not is_number(states(ent)) %}{% set ns.items = ns.items + [ent] %}{% endif %}
           {% endif %}
         {% endfor %}
         {% for ent in states.number | map(attribute='entity_id') | list | sort %}
-          {% if ent | regex_match('^number[.].+_limit_nonpersistent_absolute$') and ent not in registry_entities and ent not in odrt.seen %}
+          {% if ent | regex_match('^number[.].+_limit_nonpersistent_absolute$') and ent not in registry_entities and ent not in odrt.seen
+        %}
             {% set unit = state_attr(ent, 'unit_of_measurement') | default('', true) | lower %}
             {% if unit in ['w','watt','watts'] and state_attr(ent,'max') | float(0) > 0 %}
               {% set odrt.seen = odrt.seen + [ent] %}{% set odrt.configured = odrt.configured + 1 %}
@@ -3670,7 +3910,8 @@ template:
     icon: mdi:solar-power-variant-outline
     state: >-
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set ns = namespace(missing=0) %}
       {% for entry in runtime %}
         {% set parts = entry.split('|') %}
@@ -3680,13 +3921,15 @@ template:
           {% if parts[0] == '' or not is_number(states(parts[0])) %}{% set ns.missing = ns.missing + 1 %}{% endif %}
         {% elif parts[4] in ['manual-number','opendtu'] %}
           {% set ent = parts[0] %}
-          {% if ent == '' or not (ent | regex_match('^number[.][a-z0-9_]+$')) or not is_number(states(ent)) %}{% set ns.missing = ns.missing + 1 %}{% endif %}
+          {% if ent == '' or not (ent | regex_match('^number[.][a-z0-9_]+$')) or not is_number(states(ent)) %}{% set ns.missing = ns.missing
+      + 1 %}{% endif %}
         {% elif parts[4] == 'manual-action' %}
           {% set slot = loop.index %}
           {% set action = states('input_text.hpvc_pv' ~ slot ~ '_action') | trim | lower %}
           {% set value_field = states('input_text.hpvc_pv' ~ slot ~ '_value_field') | trim %}
           {% set readback = parts[0] %}
-          {% if not (action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) or value_field == '' or readback == '' or not is_number(states(readback)) %}
+          {% if not (action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) or value_field == '' or readback == '' or not is_number(states(readback))
+      %}
             {% set ns.missing = ns.missing + 1 %}
           {% endif %}
         {% endif %}
@@ -3695,7 +3938,8 @@ template:
     attributes:
       affected_inverters: >-
         {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-        {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+        {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence
+        else []) %}
         {% set ns = namespace(items=[]) %}
         {% for entry in runtime %}
           {% set parts = entry.split('|') %}
@@ -3708,7 +3952,8 @@ template:
             {% set slot = loop.index %}
             {% set action = states('input_text.hpvc_pv' ~ slot ~ '_action') | trim | lower %}
             {% set value_field = states('input_text.hpvc_pv' ~ slot ~ '_value_field') | trim %}
-            {% set bad = not (action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) or value_field == '' or parts[0] == '' or not is_number(states(parts[0])) %}
+            {% set bad = not (action | regex_match('^[a-z0-9_]+[.][a-z0-9_]+$')) or value_field == '' or parts[0] == '' or not is_number(states(parts[0]))
+        %}
           {% endif %}
           {% if bad %}{% set ns.items = ns.items + ['PV' ~ loop.index] %}{% endif %}
         {% endfor %}
@@ -3737,70 +3982,80 @@ template:
     unique_id: hpvc_pv1_max_power_locked
     icon: mdi:lock-outline
     state: >-
-      {{ is_state('binary_sensor.hpvc_pv1_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv1_auto_detected', 'max_power_locked') | bool(false)) }}
+      {{ is_state('binary_sensor.hpvc_pv1_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv1_auto_detected', 'max_power_locked')
+      | bool(false)) }}
 
   - name: HPVC PV2 Max Power Locked
     default_entity_id: binary_sensor.hpvc_pv2_max_power_locked
     unique_id: hpvc_pv2_max_power_locked
     icon: mdi:lock-outline
     state: >-
-      {{ is_state('binary_sensor.hpvc_pv2_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv2_auto_detected', 'max_power_locked') | bool(false)) }}
+      {{ is_state('binary_sensor.hpvc_pv2_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv2_auto_detected', 'max_power_locked')
+      | bool(false)) }}
 
   - name: HPVC PV3 Max Power Locked
     default_entity_id: binary_sensor.hpvc_pv3_max_power_locked
     unique_id: hpvc_pv3_max_power_locked
     icon: mdi:lock-outline
     state: >-
-      {{ is_state('binary_sensor.hpvc_pv3_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv3_auto_detected', 'max_power_locked') | bool(false)) }}
+      {{ is_state('binary_sensor.hpvc_pv3_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv3_auto_detected', 'max_power_locked')
+      | bool(false)) }}
 
   - name: HPVC PV4 Max Power Locked
     default_entity_id: binary_sensor.hpvc_pv4_max_power_locked
     unique_id: hpvc_pv4_max_power_locked
     icon: mdi:lock-outline
     state: >-
-      {{ is_state('binary_sensor.hpvc_pv4_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv4_auto_detected', 'max_power_locked') | bool(false)) }}
+      {{ is_state('binary_sensor.hpvc_pv4_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv4_auto_detected', 'max_power_locked')
+      | bool(false)) }}
 
   - name: HPVC PV5 Max Power Locked
     default_entity_id: binary_sensor.hpvc_pv5_max_power_locked
     unique_id: hpvc_pv5_max_power_locked
     icon: mdi:lock-outline
     state: >-
-      {{ is_state('binary_sensor.hpvc_pv5_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv5_auto_detected', 'max_power_locked') | bool(false)) }}
+      {{ is_state('binary_sensor.hpvc_pv5_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv5_auto_detected', 'max_power_locked')
+      | bool(false)) }}
 
   - name: HPVC PV6 Max Power Locked
     default_entity_id: binary_sensor.hpvc_pv6_max_power_locked
     unique_id: hpvc_pv6_max_power_locked
     icon: mdi:lock-outline
     state: >-
-      {{ is_state('binary_sensor.hpvc_pv6_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv6_auto_detected', 'max_power_locked') | bool(false)) }}
+      {{ is_state('binary_sensor.hpvc_pv6_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv6_auto_detected', 'max_power_locked')
+      | bool(false)) }}
 
   - name: HPVC PV7 Max Power Locked
     default_entity_id: binary_sensor.hpvc_pv7_max_power_locked
     unique_id: hpvc_pv7_max_power_locked
     icon: mdi:lock-outline
     state: >-
-      {{ is_state('binary_sensor.hpvc_pv7_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv7_auto_detected', 'max_power_locked') | bool(false)) }}
+      {{ is_state('binary_sensor.hpvc_pv7_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv7_auto_detected', 'max_power_locked')
+      | bool(false)) }}
 
   - name: HPVC PV8 Max Power Locked
     default_entity_id: binary_sensor.hpvc_pv8_max_power_locked
     unique_id: hpvc_pv8_max_power_locked
     icon: mdi:lock-outline
     state: >-
-      {{ is_state('binary_sensor.hpvc_pv8_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv8_auto_detected', 'max_power_locked') | bool(false)) }}
+      {{ is_state('binary_sensor.hpvc_pv8_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv8_auto_detected', 'max_power_locked')
+      | bool(false)) }}
 
   - name: HPVC PV9 Max Power Locked
     default_entity_id: binary_sensor.hpvc_pv9_max_power_locked
     unique_id: hpvc_pv9_max_power_locked
     icon: mdi:lock-outline
     state: >-
-      {{ is_state('binary_sensor.hpvc_pv9_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv9_auto_detected', 'max_power_locked') | bool(false)) }}
+      {{ is_state('binary_sensor.hpvc_pv9_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv9_auto_detected', 'max_power_locked')
+      | bool(false)) }}
 
   - name: HPVC PV10 Max Power Locked
     default_entity_id: binary_sensor.hpvc_pv10_max_power_locked
     unique_id: hpvc_pv10_max_power_locked
     icon: mdi:lock-outline
     state: >-
-      {{ is_state('binary_sensor.hpvc_pv10_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv10_auto_detected', 'max_power_locked') | bool(false)) }}
+      {{ is_state('binary_sensor.hpvc_pv10_auto_detected', 'on') and (state_attr('binary_sensor.hpvc_pv10_auto_detected', 'max_power_locked')
+      | bool(false)) }}
   - name: HPVC HBC Available
     default_entity_id: binary_sensor.hpvc_hbc_available
     unique_id: hpvc_hbc_available
@@ -3839,7 +4094,8 @@ template:
       {% set db = states('input_number.hpvc_pv_adjust_deadband') | float(25) %}
       {% set debug = states('input_text.hpvc_last_targets_json') | from_json(default={}) %}
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set ns = namespace(limited=debug.get('lim', false)) %}
       {% for entry in runtime %}
         {% set parts = entry.split('|') %}
@@ -3862,8 +4118,7 @@ template:
     default_entity_id: binary_sensor.hpvc_cooldown_active
     unique_id: hpvc_cooldown_active
     icon: mdi:timer-sand
-    state: '{% set data = states(''input_text.hpvc_last_targets_json'') | from_json(default={})
-      %} {{ data.get(''cd'', false) }}
+    state: '{% set data = states(''input_text.hpvc_last_targets_json'') | from_json(default={}) %} {{ data.get(''cd'', false) }}
 
       '
   - name: HPVC Negative Price Mode
@@ -3887,7 +4142,8 @@ template:
       {% set min_tol = 1 %}
       {% set debug = states('input_text.hpvc_last_targets_json') | from_json(default={}) %}
       {% set runtime_raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
-      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else []) %}
+      {% set runtime = (runtime_raw | from_json(default=[])) if runtime_raw is string else (runtime_raw if runtime_raw is sequence else
+      []) %}
       {% set ns = namespace(any=false, all_min=true, missing=false) %}
       {% for entry in runtime %}
         {% set parts = entry.split('|') %}
@@ -3913,7 +4169,7 @@ template:
     default_entity_id: sensor.hpvc_inverter_limit_entity_display
     unique_id: hpvc_inverter_limit_entity_display
     icon: mdi:lock
-    state: "\u200B"
+    state: "​"
     attributes:
       pv1_limit_entity: >-
         {% if is_state('binary_sensor.hpvc_pv1_auto_detected', 'on') %}
@@ -4015,35 +4271,37 @@ script:
     alias: HPVC Previous Inverter
     mode: restart
     sequence:
-      - variables:
-          current: >-
-            {{ states('input_select.hpvc_selected_inverter') | replace('PV', '') | int(1) }}
-          count: >-
-            {% set effective = states('sensor.hpvc_effective_inverter_runtime') | int(1) %} {{ 1 if effective < 1 else 10 if effective > 10 else effective }}
-          target: >-
-            {{ count if current <= 1 or current > count else current - 1 }}
-      - service: input_select.select_option
-        target:
-          entity_id: input_select.hpvc_selected_inverter
-        data:
-          option: "PV{{ target }}"
+    - variables:
+        current: >-
+          {{ states('input_select.hpvc_selected_inverter') | replace('PV', '') | int(1) }}
+        count: >-
+          {% set effective = states('sensor.hpvc_effective_inverter_runtime') | int(1) %} {{ 1 if effective < 1 else 10 if effective
+          > 10 else effective }}
+        target: >-
+          {{ count if current <= 1 or current > count else current - 1 }}
+    - service: input_select.select_option
+      target:
+        entity_id: input_select.hpvc_selected_inverter
+      data:
+        option: "PV{{ target }}"
 
   hpvc_next_inverter:
     alias: HPVC Next Inverter
     mode: restart
     sequence:
-      - variables:
-          current: >-
-            {{ states('input_select.hpvc_selected_inverter') | replace('PV', '') | int(1) }}
-          count: >-
-            {% set effective = states('sensor.hpvc_effective_inverter_runtime') | int(1) %} {{ 1 if effective < 1 else 10 if effective > 10 else effective }}
-          target: >-
-            {{ 1 if current < 1 or current >= count else current + 1 }}
-      - service: input_select.select_option
-        target:
-          entity_id: input_select.hpvc_selected_inverter
-        data:
-          option: "PV{{ target }}"
+    - variables:
+        current: >-
+          {{ states('input_select.hpvc_selected_inverter') | replace('PV', '') | int(1) }}
+        count: >-
+          {% set effective = states('sensor.hpvc_effective_inverter_runtime') | int(1) %} {{ 1 if effective < 1 else 10 if effective
+          > 10 else effective }}
+        target: >-
+          {{ 1 if current < 1 or current >= count else current + 1 }}
+    - service: input_select.select_option
+      target:
+        entity_id: input_select.hpvc_selected_inverter
+      data:
+        option: "PV{{ target }}"
 
   hpvc_restore_defaults:
     alias: Restore defaults
@@ -4119,32 +4377,60 @@ script:
         entity_id: input_button.hpvc_defaults_restored_event
 
 automation:
+- id: hpvc_block_enable_without_runtime
+  alias: HPVC · Safety · Keep master off when Node-RED runtime not Ready
+  description: >-
+    Prevents master enable from another dashboard or automation while HPVC
+    flows are missing, removed, stale, incomplete, or in maintenance.
+    Does not clear inverter restoration obligations.
+  mode: restart
+  trigger:
+  - platform: homeassistant
+    event: start
+  - platform: state
+    entity_id:
+    - input_boolean.hpvc_enabled
+    - sensor.hpvc_node_red_runtime_health
+  - platform: time_pattern
+    seconds: '/5'
+  condition:
+  - condition: state
+    entity_id: input_boolean.hpvc_enabled
+    state: 'on'
+  - condition: template
+    value_template: "{{ not is_state('sensor.hpvc_node_red_runtime_health', 'Ready') }}"
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.hpvc_enabled
+      - input_boolean.hpvc_auto_resume_pending
 - id: hpvc_external_release_lease_watchdog
   alias: HPVC · Safety · External Release Lease Watchdog
   mode: restart
   trigger:
-    - platform: time_pattern
-      seconds: '/1'
-    - platform: homeassistant
-      event: start
+  - platform: time_pattern
+    seconds: '/1'
+  - platform: homeassistant
+    event: start
   condition:
-    - condition: state
-      entity_id: input_boolean.hpvc_external_release_lease_valid
-      state: 'on'
-    - condition: template
-      value_template: >-
-        {% set now_s = as_timestamp(now()) | float(0) %}
-        {% set hb = states('input_number.hpvc_engine_heartbeat_epoch') | float(0) %}
-        {% set verified = states('input_number.hpvc_external_release_verified_epoch') | float(0) %}
-        {% set hb_age = now_s - hb %}
-        {% set verified_age = now_s - verified %}
-        {{ hb <= 0 or verified <= 0
-           or hb_age < 0 or hb_age >= 30
-           or verified_age < 0 or verified_age >= 30 }}
+  - condition: state
+    entity_id: input_boolean.hpvc_external_release_lease_valid
+    state: 'on'
+  - condition: template
+    value_template: >-
+      {% set now_s = as_timestamp(now()) | float(0) %}
+      {% set hb = states('input_number.hpvc_engine_heartbeat_epoch') | float(0) %}
+      {% set verified = states('input_number.hpvc_external_release_verified_epoch') | float(0) %}
+      {% set hb_age = now_s - hb %}
+      {% set verified_age = now_s - verified %}
+      {{ hb <= 0 or verified <= 0
+         or hb_age < 0 or hb_age >= 30
+         or verified_age < 0 or verified_age >= 30 }}
   action:
-    - service: input_boolean.turn_off
-      target:
-        entity_id: input_boolean.hpvc_external_release_lease_valid
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.hpvc_external_release_lease_valid
 - id: hpvc_collapse_legacy_empty_inverter_placeholder
   alias: HPVC · Setup · Collapse legacy empty inverter placeholder
   mode: single
@@ -4215,7 +4501,8 @@ automation:
       sequence:
       - variables:
           slot: "{{ repeat.index }}"
-          row: "{{ validation_rows[(repeat.index | int) - 1] if validation_rows is sequence and validation_rows is not string and validation_rows | count >= (repeat.index | int) else dict(status='unknown') }}"
+          row: "{{ validation_rows[(repeat.index | int) - 1] if validation_rows is sequence and validation_rows is not string and validation_rows
+            | count >= (repeat.index | int) else dict(status='unknown') }}"
       - if:
         - condition: template
           value_template: "{{ row.status | default('unknown') == 'min_above_max' }}"
@@ -4249,12 +4536,14 @@ automation:
             {{ raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) }}
       - variables:
           runtime_entry: >-
-            {{ runtime_rows[(slot | int) - 1] if runtime_rows is sequence and runtime_rows is not string and (runtime_rows | count) >= (slot | int) else '' }}
+            {{ runtime_rows[(slot | int) - 1] if runtime_rows is sequence and runtime_rows is not string and (runtime_rows | count)
+            >= (slot | int) else '' }}
       - variables:
           runtime_parts: >-
             {{ runtime_entry.split('|') if runtime_entry is string else [] }}
           is_auto: >-
-            {{ runtime_entry is string and (runtime_entry.split('|') | count) >= 7 and runtime_entry.split('|')[6] | trim == 'auto' and runtime_entry.split('|')[0] | trim != '' }}
+            {{ runtime_entry is string and (runtime_entry.split('|') | count) >= 7 and runtime_entry.split('|')[6] | trim == 'auto'
+            and runtime_entry.split('|')[0] | trim != '' }}
       - condition: template
         value_template: "{{ is_auto }}"
       # An effective migration is NOT permission to rewrite the user's saved
@@ -4314,7 +4603,8 @@ automation:
             option: "{{ runtime_parts[5] }}"
       - if:
         - condition: template
-          value_template: "{{ states('input_text.hpvc_pv' ~ slot ~ '_limit_number') | trim | lower != runtime_parts[0] | trim | lower }}"
+          value_template: "{{ states('input_text.hpvc_pv' ~ slot ~ '_limit_number') | trim | lower != runtime_parts[0] | trim | lower
+            }}"
         then:
         - service: input_text.set_value
           target:
@@ -4332,7 +4622,8 @@ automation:
             option: "{{ runtime_parts[1] }}"
       - if:
         - condition: template
-          value_template: "{{ runtime_parts[4] | trim != 'enphase' and (states('input_number.hpvc_pv' ~ slot ~ '_full_limit') | float(0) - (runtime_parts[2] | float(0))) | abs > 0.5 }}"
+          value_template: "{{ runtime_parts[4] | trim != 'enphase' and (states('input_number.hpvc_pv' ~ slot ~ '_full_limit') | float(0)
+            - (runtime_parts[2] | float(0))) | abs > 0.5 }}"
         then:
         - service: input_number.set_value
           target:
@@ -4341,7 +4632,8 @@ automation:
             value: "{{ runtime_parts[2] | float(0) }}"
       - if:
         - condition: template
-          value_template: "{{ runtime_parts[4] | trim != 'enphase' and (states('input_number.hpvc_pv' ~ slot ~ '_low_limit') | float(0) - (runtime_parts[3] | float(0))) | abs > 0.5 }}"
+          value_template: "{{ runtime_parts[4] | trim != 'enphase' and (states('input_number.hpvc_pv' ~ slot ~ '_low_limit') | float(0)
+            - (runtime_parts[3] | float(0))) | abs > 0.5 }}"
         then:
         - service: input_number.set_value
           target:
@@ -4357,11 +4649,13 @@ automation:
             {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
             {{ raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) }}
           current_entry: >-
-            {{ runtime_rows[(repeat.index | int) - 1] if runtime_rows is sequence and runtime_rows is not string and (runtime_rows | count) >= (repeat.index | int) else '' }}
+            {{ runtime_rows[(repeat.index | int) - 1] if runtime_rows is sequence and runtime_rows is not string and (runtime_rows |
+            count) >= (repeat.index | int) else '' }}
       - variables:
           current_parts: "{{ current_entry.split('|') if current_entry is string else [] }}"
           currently_auto: >-
-            {{ current_entry is string and (current_entry.split('|') | count) >= 7 and current_entry.split('|')[6] | trim == 'auto' }}
+            {{ current_entry is string and (current_entry.split('|') | count) >= 7 and current_entry.split('|')[6] | trim == 'auto'
+            }}
       - variables:
           previous_limit: "{{ states('input_text.hpvc_pv' ~ slot ~ '_limit_number') | trim | lower }}"
           previous_identity: >-
@@ -4402,7 +4696,9 @@ automation:
         {% set ns = namespace(value=states('input_number.hpvc_inverter_count') | int(0), trimming=true) %}
         {% for i in range(10, 0, -1) %}
           {% if i <= ns.value and ns.trimming %}
-            {% set cleaned_auto = is_state('input_boolean.hpvc_pv' ~ i ~ '_auto_managed', 'on') and states('input_text.hpvc_pv' ~ i ~ '_limit_number') | trim == '' and states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim == '' and states('input_text.hpvc_pv' ~ i ~ '_action') | trim == '' %}
+            {% set cleaned_auto = is_state('input_boolean.hpvc_pv' ~ i ~ '_auto_managed', 'on') and states('input_text.hpvc_pv' ~ i
+        ~ '_limit_number') | trim == '' and states('input_text.hpvc_pv' ~ i ~ '_readback_entity') | trim == '' and states('input_text.hpvc_pv'
+        ~ i ~ '_action') | trim == '' %}
             {% if cleaned_auto %}{% set ns.value = i - 1 %}{% else %}{% set ns.trimming = false %}{% endif %}
           {% endif %}
         {% endfor %}
@@ -4425,10 +4721,12 @@ automation:
             {% set raw = state_attr('sensor.hpvc_effective_inverter_runtime', 'runtime_json') %}
             {{ raw if raw is sequence and raw is not string and raw is not mapping else raw | from_json([]) }}
           current_entry: >-
-            {{ runtime_rows[(repeat.index | int) - 1] if runtime_rows is sequence and runtime_rows is not string and (runtime_rows | count) >= (repeat.index | int) else '' }}
+            {{ runtime_rows[(repeat.index | int) - 1] if runtime_rows is sequence and runtime_rows is not string and (runtime_rows |
+            count) >= (repeat.index | int) else '' }}
       - variables:
           currently_auto: >-
-            {{ current_entry is string and (current_entry.split('|') | count) >= 7 and current_entry.split('|')[6] | trim == 'auto' }}
+            {{ current_entry is string and (current_entry.split('|') | count) >= 7 and current_entry.split('|')[6] | trim == 'auto'
+            }}
       - if:
         - condition: template
           value_template: "{{ is_state('input_boolean.hpvc_pv' ~ slot ~ '_auto_managed', 'on') and not currently_auto }}"
@@ -4553,6 +4851,9 @@ automation:
     entity_id: binary_sensor.hpvc_required_inputs_ready
     to: 'on'
   - platform: state
+    entity_id: sensor.hpvc_node_red_runtime_health
+    to: Ready
+  - platform: state
     entity_id: input_boolean.hpvc_defaults_applied
     to: 'on'
   - platform: state
@@ -4568,6 +4869,9 @@ automation:
   - condition: state
     entity_id: binary_sensor.hpvc_required_inputs_ready
     state: 'on'
+  - condition: state
+    entity_id: sensor.hpvc_node_red_runtime_health
+    state: Ready
   - condition: state
     entity_id: input_boolean.hpvc_onboarding_complete
     state: 'off'
@@ -4587,7 +4891,8 @@ automation:
 
 - id: hpvc_disable_when_required_inputs_invalid
   alias: HPVC · Safety · Disable when required inputs are invalid
-  description: Turns off the HPVC master control when a required live input or configuration value is invalid and remembers whether HPVC should resume.
+  description: Turns off the HPVC master control when a required live input or configuration value is invalid and remembers 
+    whether HPVC should resume.
   mode: restart
   trigger:
   - platform: homeassistant
@@ -4621,7 +4926,8 @@ automation:
 
 - id: hpvc_resume_when_required_inputs_recover
   alias: HPVC · Recovery · Resume when required inputs recover
-  description: Re-enables HPVC only after configuration and all required live inputs have remained valid for 5 continuous seconds, and only when HPVC was automatically disabled by a fault.
+  description: Re-enables HPVC only after configuration and all required live inputs have remained valid for 5 continuous seconds,
+    and only when HPVC was automatically disabled by a fault.
   mode: restart
   trigger:
   - platform: homeassistant
@@ -4649,6 +4955,9 @@ automation:
   - condition: state
     entity_id: binary_sensor.hpvc_required_inputs_ready
     state: 'on'
+  - condition: state
+    entity_id: sensor.hpvc_node_red_runtime_health
+    state: Ready
   action:
   - delay: 00:00:05
   - condition: state
@@ -4657,6 +4966,9 @@ automation:
   - condition: state
     entity_id: binary_sensor.hpvc_required_inputs_ready
     state: 'on'
+  - condition: state
+    entity_id: sensor.hpvc_node_red_runtime_health
+    state: Ready
   - condition: state
     entity_id: input_boolean.hpvc_auto_resume_pending
     state: 'on'
@@ -4669,7 +4981,8 @@ automation:
 
 - id: hpvc_cancel_auto_resume_on_manual_disable
   alias: HPVC · Recovery · Cancel automatic resume after manual switch-off
-  description: Clears the automatic-resume latch only for a direct user switch-off, not for an automatic safety shutdown that inherited a user context.
+  description: Clears the automatic-resume latch only for a direct user switch-off, not for an automatic safety shutdown that 
+    inherited a user context.
   mode: restart
   trigger:
   - platform: state
@@ -4702,7 +5015,8 @@ automation:
 
 - id: hpvc_reset_report_ready_timeout
   alias: HPVC · Reports · Reset report ready after timeout
-  description: Resets the report tile after 60 seconds as a safe fallback for remote access paths such as Tailscale, while keeping the report-view webhook local-only.
+  description: Resets the report tile after 60 seconds as a safe fallback for remote access paths such as Tailscale, while keeping
+    the report-view webhook local-only.
   mode: restart
   trigger:
   - platform: state

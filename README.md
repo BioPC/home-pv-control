@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="releases/v1.6.0/release.md"><img src="https://img.shields.io/badge/release-v1.6.0-blue" alt="Release v1.6.0"></a>
+  <a href="releases/v1.6.1/release.md"><img src="https://img.shields.io/badge/release-v1.6.1-blue" alt="Release v1.6.1"></a>
   <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant ready"></a>
   <a href="https://nodered.org/"><img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED flow"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="GPL-3.0-or-later"></a>
@@ -94,7 +94,7 @@ See [Inverter compatibility](docs/05-inverter-compatibility.md) and [Configurati
 - Installed Home Assistant websocket dependency verification through Node-RED `/nodes`
 - Transaction-safe update, rollback and recovery handling
 - Manual upgrade and safe uninstall workflows
-- Five managed Node-RED tabs, including the dedicated **HPVC Maintenance v1.6.0** tab for updater, persistence, recovery and removal logic
+- Five managed Node-RED tabs, including the dedicated **HPVC Maintenance v1.6.1** tab for updater, persistence, recovery and removal logic
 
 ## Safety
 
@@ -222,7 +222,7 @@ See [How HPVC works → Accuracy and factor attribution](docs/03-how-it-works.md
 
 ## Screenshots
 
-The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.6.0 YAML and Node-RED flow are authoritative.
+The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.6.1 YAML and Node-RED flow are authoritative.
 
 ### Settings
 
@@ -252,9 +252,9 @@ Smart Update preserves HPVC configuration, helper values and saved data, validat
 
 For the authoritative update lifecycle, rollback/recovery behavior, trust model and manual upgrade procedure, see [Installation → Smart update from v1.5.3 onward](docs/01-installation.md#smart-update-from-v153-onward).
 
-### v1.6.0 upgrade notes
+### v1.6.1 upgrade notes
 
-When upgrading to v1.6.0, replace the Home Assistant package, Node-RED flow and managed dashboard together so the runtime, templates and UI remain aligned. The current flow contains five managed tabs: Inputs, Engine, Outputs, Reports, and Maintenance. Smart Update remains preferred on supported Home Assistant OS / Supervised Node-RED add-on installations.
+When upgrading to v1.6.1, replace the Home Assistant package, Node-RED flow and managed dashboard together so the runtime, templates and UI remain aligned. The current flow contains five managed tabs: Inputs, Engine, Outputs, Reports, and Maintenance. Smart Update remains preferred on supported Home Assistant OS / Supervised Node-RED add-on installations.
 
 Priority checks after upgrade:
 
@@ -266,7 +266,7 @@ Priority checks after upgrade:
 
 The release also fixes stale-PV Night Restore entry, dispatch-policy mismatch, superseded adapter sequencing, downward import recovery, cooldown rounding, dispatch-time verification, contradictory OpenDTU serial fallback and false manual-disable completion.
 
-See the [v1.6.0 release notes](releases/v1.6.0/release.md) for the full release summary.
+See the [v1.6.1 release notes](releases/v1.6.1/release.md) for the full release summary.
 
 ## Uninstalling
 
@@ -283,7 +283,7 @@ See [Installation → Full uninstall](docs/01-installation.md#full-uninstall) fo
 - [Inverter compatibility](docs/05-inverter-compatibility.md)
 - [Documentation index](docs/README.md)
 - [Changelog](CHANGELOG.md)
-- [v1.6.0 release notes](releases/v1.6.0/release.md)
+- [v1.6.1 release notes](releases/v1.6.1/release.md)
 
 For Home Battery Control itself, see the [HBC documentation](https://docs.homebatterycontrol.com/).
 
@@ -334,7 +334,7 @@ docs/
 releases/
   v1.0.0/
   ...
-  v1.6.0/
+  v1.6.1/
 ```
 
 ## Support the project

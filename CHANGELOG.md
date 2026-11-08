@@ -1,5 +1,34 @@
 # Changelog
 
+## v1.6.1
+
+### Smart Update and activation
+- Support Home Assistant `homeassistant.reload_all` as an activation verification trigger alongside the HPVC Maintenance Quick Reload action. The installed-version and required-entity checks remain part of activation; live Home Assistant event delivery still requires testing.
+- Invalidate cross-release Node-RED configuration snapshot caches when upgrading, while preserving Night Restore and inverter restoration state.
+- Keep activation pending if the updated Home Assistant package has not been verified.
+
+### Node-RED runtime health
+- Replace the persistent `Ready` display with five independent Node-RED tab heartbeats and Home Assistant-computed runtime health.
+- Report `Ready`, `Incomplete`, `Stale`, `Missing`, `Updating` and explicit maintenance-progress states, preserving the distinction between manual deletion (`Stale`) and confirmed flow removal (`Removed`).
+- Reduce heartbeat interval to 10 seconds, freshness expiry to 30 seconds, and health polling to 5 seconds for faster stale-flow detection.
+- Record `Removing` and `Removed` in the maintenance workflow; ensure the health sensor respects operation status over still-fresh heartbeats.
+
+### Maintenance, safety and uninstall
+- Publish preparation and inverter-restoration progress before destructive cleanup; transition to `Removing` / `Uninstalling` only after the existing verified-safe shutdown watcher succeeds.
+- Abort removal or uninstall when inverter restoration cannot be verified; display `Restoration failed` or `Needs attention` on the relevant failure path. Do not bypass restoration obligations.
+- Check Maintenance tab liveness separately. Hide unavailable update, remove-flows and uninstall actions when its handler is offline, and use one short offline warning rather than duplicate warnings.
+- Clear heartbeat helpers after confirmed Maintenance flow removal. Manual Node-RED editor deletion is detected by heartbeat expiration and is not treated as a verified uninstall.
+- Keep warning cards outside action-button rows and use a compact mobile Maintenance layout to avoid stretched controls.
+
+### Master Control and dashboard
+- Grey out the **Enable HPVC** control when runtime health is not `Ready` and add a Home Assistant guard against enabling control without healthy flows.
+- Display disabled/offline status in Master Control and Decision Details after manual or Maintenance flow removal without replacing stored control-history values.
+- Tighten the Reason layout spacing and clarify the disabled-state prompt when required inputs and flows are ready.
+
+### Validation and limitations
+- Source syntax, package structure and simulated regression checks are not substitutes for live Smart Update, Home Assistant reload, inverter readback, flow-removal or uninstall acceptance tests.
+- Heartbeats confirm recent activity in each tab, not complete flow-inventory or control-pipeline health. Full Uninstall continues to require a functioning Maintenance flow.
+
 ## v1.6.0
 
 ### Control safety and inverter restoration
@@ -47,7 +76,6 @@
 
 ### Smart Update activation recovery
 
-- Added a fifth managed Node-RED tab, **HPVC Maintenance v1.6.0**, and moved updater, persistence, recovery, flow-removal and uninstall maintenance there without changing control node IDs. All updater/removal/rollback/fingerprinting paths now manage the same five-tab set.
 - Organized HPVC Home Assistant automation aliases into consistent Safety, Recovery, Inverter, Setup and Reports groups while preserving automation IDs and behavior.
 - Fixed a v1.5.5 recovery deadlock where a completed transaction could remain stuck on **Update activation pending** when Home Assistant restored `hpvc_update_reload_required` or `hpvc_update_in_progress` stale, or Node-RED retained its local update latch.
 - Finalized transactions now rerun the existing idempotent activation finalizer only when stale activation/update state still needs reconciliation; durable finalization is sufficient even when transient readiness metadata or the redundant activation-complete flag is missing.

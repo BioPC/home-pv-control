@@ -1,6 +1,43 @@
-# Home PV Control v1.6.0 — Release notes
+# Home PV Control v1.6.1 — Release notes
 
-HPVC v1.6.0 strengthens inverter safety, recovery and maintenance, and adds automatic Enphase DPEL and Hoymiles/OpenDTU discovery. Manual Number and Action/service controllers remain supported.
+Version 1.6.1 is a maintenance and reliability update to the v1.6.0 feature baseline. It strengthens Smart Update activation, flow liveness reporting, safe removal and Master Control feedback.
+
+## Smart Update and configuration compatibility
+- Recognizes Home Assistant `homeassistant.reload_all` calls as a possible trigger for the existing activation verifier, alongside HPVC Maintenance Quick Reload.
+- Requires the expected installed version (`1.6.1`) and Home Assistant package entities before completing update activation; Node-RED deploy alone does not substitute for Home Assistant reload.
+- Rebuilds Node-RED's cross-release configuration snapshot after Smart Update without erasing persistent Night Restore or inverter-restoration obligations.
+- The Home Assistant UI reload event payload and end-to-end activation still require testing on the target installation.
+
+## Five-tab runtime health
+- Independently tracks the Inputs, Engine, Outputs, Reports and Maintenance tab heartbeats through Home Assistant helpers.
+- Uses 10-second heartbeats, a 30-second liveness window and a 5-second health refresh. Manual deletion is reported as `Stale` after the last heartbeat expires, rather than falsely retaining `Ready` indefinitely.
+- Reports confirmed Maintenance removal as `Removed`. Other possible states include `Ready`, `Incomplete`, `Missing`, `Updating`, maintenance progress and failure states.
+- A heartbeat shows that a tab is reporting; it is not a complete flow-inventory or successful-control-operation test.
+
+## Safe removal and uninstall
+- On action acceptance, reports preparation and inverter-restoration progress; displays `Removing` or `Uninstalling` only after verified-safe inverter restoration permits deletion.
+- Maintains the established safety checks and aborts cleanup on failed inverter verification, reporting `Restoration failed` or `Needs attention` as appropriate.
+- Clears flow heartbeat helpers after a confirmed Maintenance removal. Manual deletion has no detached cleanup worker and is detected by heartbeat timeout.
+- If the Maintenance tab is offline, update, remove and uninstall controls are unavailable. Re-import the HPVC flows to restore the Maintenance handler before uninstalling.
+
+## Dashboard and Master Control
+- Uses a single short Maintenance-offline warning, including inverter-limit guidance. Keeps mobile action rows compact, and avoids stretched action buttons on desktop.
+- Greys out **Enable HPVC** when the five-tab runtime is not `Ready`; Home Assistant also turns off an attempted enable when flows are unhealthy.
+- Displays a consistent disabled state in HPVC Status and Decision Details after manual or confirmed flow removal, preserving historical decision data internally.
+- Improves Reason spacing and the disabled-state instruction for the ready-but-off condition.
+
+## Installation and verification
+1. Back up the Home Assistant package and Node-RED flows.
+2. Install `home assistant/hpvc_config.yaml`, `home assistant/hpvc_dashboard.yaml` and `node-red/hpvc_flow.json` together, then reload Home Assistant and deploy the flows.
+3. Confirm the five tab heartbeats and runtime-health sensor are reporting before enabling HPVC. Verify inverter restoration and maintenance flows on real hardware before relying on removal/uninstall.
+
+**Limitations:** Package parsing, JavaScript checks and simulated regressions do not prove live Home Assistant reload event handling, inverter readback, Smart Update completion or full uninstall. The Maintenance flow is still required for uninstall; an independently running flow-inventory watchdog is not implemented.
+
+---
+
+## v1.6.0 feature baseline
+
+HPVC v1.6.0 strengthened inverter safety, recovery and maintenance, and added automatic Enphase DPEL and Hoymiles/OpenDTU discovery. Manual Number and Action/service controllers remain supported.
 
 ## Safety and restoration (highest priority)
 
@@ -42,7 +79,7 @@ HPVC v1.6.0 strengthens inverter safety, recovery and maintenance, and adds auto
 
 ## Upgrade guidance
 
-1. Back up Home Assistant and Node-RED. On supported Home Assistant OS/Supervised systems, use **Settings → Maintenance → HPVC updates** once v1.6.0 is available as a normal GitHub release; otherwise follow the documented manual upgrade.
+1. Back up Home Assistant and Node-RED. On supported Home Assistant OS/Supervised systems, use **Settings → Maintenance → HPVC updates** once v1.6.1 is available as a normal GitHub release; otherwise follow the documented manual upgrade.
 2. Update `home assistant/hpvc_config.yaml`, `home assistant/hpvc_dashboard.yaml` and `node-red/hpvc_flow.json` together; keep the saved helper configuration and recovery data.
 3. Check each effective inverter, per-controller permission, OpenDTU Full Limit source and Enphase manual Max/Min. Resolve any migration warning or dispatch recovery state before enabling control.
 

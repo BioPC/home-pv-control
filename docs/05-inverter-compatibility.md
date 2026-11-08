@@ -2,7 +2,7 @@
 
 ## Inverter compatibility
 
-Home PV Control (HPVC) v1.6.0 controls inverter output through either a writable Home Assistant `number` entity or a configurable Home Assistant **Action/service** adapter. Limits can be expressed in **Watts** or **Percent**, while HPVC continues to calculate internally in Watts.
+Home PV Control (HPVC) v1.6.1 controls inverter output through either a writable Home Assistant `number` entity or a configurable Home Assistant **Action/service** adapter. Limits can be expressed in **Watts** or **Percent**, while HPVC continues to calculate internally in Watts.
 
 Compatibility depends on the **Home Assistant integration and the entities it exposes**, not only on the inverter brand or model. A writable grid-export limit is not automatically equivalent to an inverter active-power limit: HPVC expects to control the inverter production ceiling itself.
 
@@ -53,7 +53,7 @@ The matrix below describes integration fit, not a guarantee for every model/firm
 
 ### OpenDTU / Hoymiles auto-detection
 
-HPVC v1.6.0 can automatically discover Hoymiles inverter devices published by OpenDTU through Home Assistant MQTT Auto Discovery. The preferred automatic control is the writable **non-persistent absolute** limit in watts, corresponding to OpenDTU's `limit_nonpersistent_absolute` command semantics. HPVC prefers Home Assistant entity/device registry metadata so user-renamed entity IDs remain usable, and it verifies that the entity belongs to an MQTT/OpenDTU/Hoymiles device before registering it.
+HPVC v1.6.1 can automatically discover Hoymiles inverter devices published by OpenDTU through Home Assistant MQTT Auto Discovery. The preferred automatic control is the writable **non-persistent absolute** limit in watts, corresponding to OpenDTU's `limit_nonpersistent_absolute` command semantics. HPVC prefers Home Assistant entity/device registry metadata so user-renamed entity IDs remain usable, and it verifies that the entity belongs to an MQTT/OpenDTU/Hoymiles device before registering it.
 
 The automatic adapter uses the native Number-entity min/step and Watt state, counts one OpenDTU inverter device as one HPVC controller slot, reuses empty Number slots first, deduplicates a manually entered copy of the same number, and respects the existing ten-controller maximum. Rated/full power is preferably taken from OpenDTU `/api/limit/status` `max_power`, then from a cached confirmed API value. If neither is available, HPVC requires the effective slot's manual **Full Limit**. 
 
@@ -63,7 +63,7 @@ When registry metadata is unavailable, HPVC accepts only the conservative offici
 
 ### Enphase DPEL auto-detection
 
-HPVC v1.6.0 can automatically discover the DPEL entities exposed by **Enphase Envoy Installer 0.10.2 or newer**. No HPVC slot needs the word `enphase`, and no custom action/service adapter is required. A complete controller consists of:
+HPVC v1.6.1 can automatically discover the DPEL entities exposed by **Enphase Envoy Installer 0.10.2 or newer**. No HPVC slot needs the word `enphase`, and no custom action/service adapter is required. A complete controller consists of:
 
 - `switch.envoy_*_dpel_enabled`
 - `number.envoy_*_dpel_limit`
@@ -99,7 +99,7 @@ Safe disable, external PV release and safe-uninstall restore use the same config
 
 During full uninstall, HPVC keeps inverter configuration intact until safe shutdown is resolved so configured reachable inverters can be restored through the normal verification/retry path. For the complete uninstall sequence, see [Installation → Full uninstall](01-installation.md#full-uninstall).
 
-Manual-disable completion also requires independent full-limit evidence in v1.6.0. An Action/service adapter without readback can send a restore but remains pending verification; cached commands cannot establish physical completion.
+Manual-disable completion also requires independent full-limit evidence in v1.6.1. An Action/service adapter without readback can send a restore but remains pending verification; cached commands cannot establish physical completion.
 
 A real readback remains recommended. Without independent readback, HPVC can confirm its command path but cannot prove the physical inverter response beyond the semantics exposed by the selected integration.
 

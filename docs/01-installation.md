@@ -183,7 +183,7 @@ Private transaction metadata and original/intended files are kept in `/config/hp
 
 Repeated clicks while safe shutdown is still restoring/confirming PV or HBC state are ignored and cannot reach the installer. Recovery-only mode cannot start a fresh installation when no interrupted transaction exists. The launch guard reconciles terminal HA status with its local latch, and a filesystem process lock prevents a second updater writer from starting while another updater process is still active. If HPVC files/flows were changed outside the transaction, recovery refuses to overwrite them. Inspect the notification and backups before making a manual repair.
 
-If a manual reinstall or partial restore leaves the update helpers active but `transaction.json` is no longer present, v1.6.0 performs a separate conservative orphan-state check. It will clear those stale helpers only when no local destructive/update phase is active, no updater/reclaim/fresh activation lock is present, and the managed `/config/packages/hpvc_config.yaml` independently verifies as v1.6.0. Otherwise the activation gate remains in place for manual investigation.
+If a manual reinstall or partial restore leaves the update helpers active but `transaction.json` is no longer present, v1.6.1 performs a separate conservative orphan-state check. It will clear those stale helpers only when no local destructive/update phase is active, no updater/reclaim/fresh activation lock is present, and the managed `/config/packages/hpvc_config.yaml` independently verifies as v1.6.1. Otherwise the activation gate remains in place for manual investigation.
 
 #### Quick Reload package-entity readiness
 
@@ -195,7 +195,7 @@ A persisted `checking` phase is retried only after that lease is no longer live,
 
 The readiness inventory is stored only in `/config/hpvc-data/update-recovery/reload-readiness.json`; no extra Home Assistant helper is created for this mechanism. HPVC template entities use explicit `default_entity_id` values so Smart Update never has to infer an entity ID from `unique_id`. Verified rollback deletes the pending readiness metadata so an aborted update cannot leave stale activation requirements behind.
 
-v1.6.0 also reconciles a completed transaction if Home Assistant restores `hpvc_update_reload_required` or `hpvc_update_in_progress` stale, or if Node-RED retains its local update latch. The durable transaction remains authoritative: HPVC reruns the existing idempotent finalizer only when a finalized transaction still has stale activation/update state, verifies both HA update booleans are Off, restores the saved master intent, and clears the local Node-RED update phase/timestamps. Genuine incomplete transactions and `awaiting_quick_reload` are not bypassed.
+v1.6.1 also reconciles a completed transaction if Home Assistant restores `hpvc_update_reload_required` or `hpvc_update_in_progress` stale, or if Node-RED retains its local update latch. The durable transaction remains authoritative: HPVC reruns the existing idempotent finalizer only when a finalized transaction still has stale activation/update state, verifies both HA update booleans are Off, restores the saved master intent, and clears the local Node-RED update phase/timestamps. Genuine incomplete transactions and `awaiting_quick_reload` are not bypassed.
 
 #### Smart Update trust model
 
