@@ -113,6 +113,9 @@ input_boolean:
   hpvc_auto_resume_pending:
     name: HPVC Automatic Resume Pending
     icon: mdi:restart-alert
+  hpvc_runtime_ready_session:
+    name: HPVC Previously Running With Healthy Node-RED
+    icon: mdi:shield-check-outline
   hpvc_report_ready:
     name: HPVC Report Ready
     icon: mdi:file-check-outline
@@ -1198,6 +1201,9 @@ input_number:
     icon: mdi:refresh-auto
 
 input_button:
+  hpvc_cancel_auto_resume:
+    name: HPVC Cancel Automatic Resume
+    icon: mdi:stop-circle-outline
   hpvc_reconcile_removed_inverter:
     name: Reconcile Permanently Removed Inverter
     icon: mdi:shield-check
@@ -2419,7 +2425,7 @@ template:
     default_entity_id: sensor.hpvc_installed_version
     unique_id: hpvc_installed_version
     icon: mdi:tag
-    state: "1.6.1"
+    state: "1.6.2"
   # Explicit default_entity_id is intentional for this renamed v1.3.0 sensor so
   # fresh installs use the documented entity ID; all HPVC template entities use
   # explicit default_entity_id values so Smart Update can verify activation deterministically.
@@ -4377,12 +4383,54 @@ script:
         entity_id: input_button.hpvc_defaults_restored_event
 
 automation:
+- id: hpvc_mark_healthy_enabled_runtime
+  alias: HPVC · Recovery · Remember healthy enabled runtime
+  description: >-
+    Records that HPVC was genuinely enabled while all safety prerequisites
+    and Node-RED runtime health were Ready. Restored across HA restarts.
+  mode: single
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.hpvc_enabled
+    - sensor.hpvc_node_red_runtime_health
+  - platform: time_pattern
+    seconds: '/5'
+  condition:
+  - condition: state
+    entity_id: input_boolean.hpvc_enabled
+    state: 'on'
+  - condition: state
+    entity_id: sensor.hpvc_node_red_runtime_health
+    state: Ready
+  - condition: state
+    entity_id: binary_sensor.hpvc_configuration_valid
+    state: 'on'
+  - condition: state
+    entity_id: binary_sensor.hpvc_required_inputs_ready
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.hpvc_defaults_applied
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.hpvc_onboarding_complete
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.hpvc_update_in_progress
+    state: 'off'
+  - condition: state
+    entity_id: input_boolean.hpvc_update_reload_required
+    state: 'off'
+  action:
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.hpvc_runtime_ready_session
 - id: hpvc_block_enable_without_runtime
   alias: HPVC · Safety · Keep master off when Node-RED runtime not Ready
   description: >-
-    Prevents master enable from another dashboard or automation while HPVC
-    flows are missing, removed, stale, incomplete, or in maintenance.
-    Does not clear inverter restoration obligations.
+    Fail closed when Node-RED health is not Ready. Remember automatic resume
+    only for a previously healthy, enabled runtime; never arm recovery for
+    a new/invalid enable attempt. Preserve inverter restoration obligations.
   mode: restart
   trigger:
   - platform: homeassistant
@@ -4408,7 +4456,7 @@ automation:
       {% set pending = is_state('input_boolean.hpvc_update_reload_required', 'on') %}
       {% set update_done = is_state('input_boolean.hpvc_update_in_progress', 'off') %}
       {% set message = states('input_text.hpvc_update_status') %}
-      {% set correct_version = is_state('sensor.hpvc_installed_version', '1.6.1') %}
+      {% set correct_version = is_state('sensor.hpvc_installed_version', '1.6.2') %}
       {% set names = ['inputs', 'engine', 'outputs', 'reports', 'maintenance'] %}
       {% set now_s = as_timestamp(now()) %}
       {% set ns = namespace(all_fresh=true) %}
@@ -4422,11 +4470,32 @@ automation:
       {% set settling = not pending and message.startswith('Quick Reload complete;') %}
       {{ not health_ready and not (correct_version and update_done and ns.all_fresh and (preparing or settling)) }}
   action:
+  # A ready-session witness is set only when HPVC has actually been enabled
+  # with healthy flows. A manual attempt to enable against an unhealthy runtime
+  # has no witness and must not turn into an unattended auto-enable later.
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_boolean.hpvc_runtime_ready_session
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.hpvc_defaults_applied
+        state: 'on'
+      - condition: state
+        entity_id: input_boolean.hpvc_onboarding_complete
+        state: 'on'
+      sequence:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.hpvc_auto_resume_pending
+    # No default branch: a concurrent required-input failure may have already
+    # armed recovery. A missing witness must not create OR clear that reservation.
   - service: input_boolean.turn_off
     target:
-      entity_id:
-      - input_boolean.hpvc_enabled
-      - input_boolean.hpvc_auto_resume_pending
+      entity_id: input_boolean.hpvc_enabled
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.hpvc_runtime_ready_session
 - id: hpvc_external_release_lease_watchdog
   alias: HPVC · Safety · External Release Lease Watchdog
   mode: restart
@@ -4808,6 +4877,7 @@ automation:
       - input_boolean.hpvc_insights_enabled
       - input_boolean.hpvc_onboarding_complete
       - input_boolean.hpvc_auto_resume_pending
+      - input_boolean.hpvc_runtime_ready_session
   - service: input_number.set_value
     target:
       entity_id: input_number.hpvc_pv_limiting_price
@@ -4907,9 +4977,12 @@ automation:
   - service: input_boolean.turn_off
     target:
       entity_id: input_boolean.hpvc_auto_resume_pending
-  - service: input_boolean.turn_on
+  # Completing onboarding must never energize control without operator consent.
+  - service: input_boolean.turn_off
     target:
-      entity_id: input_boolean.hpvc_enabled
+      entity_id:
+      - input_boolean.hpvc_enabled
+      - input_boolean.hpvc_runtime_ready_session
 
 - id: hpvc_disable_when_required_inputs_invalid
   alias: HPVC · Safety · Disable when required inputs are invalid
@@ -4939,12 +5012,20 @@ automation:
     entity_id: input_boolean.hpvc_enabled
     state: 'on'
   action:
-  - service: input_boolean.turn_on
-    target:
-      entity_id: input_boolean.hpvc_auto_resume_pending
+  # Invalid first-enable attempts do not qualify for unattended recovery.
+  - if:
+    - condition: state
+      entity_id: input_boolean.hpvc_runtime_ready_session
+      state: 'on'
+    then:
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.hpvc_auto_resume_pending
   - service: input_boolean.turn_off
     target:
-      entity_id: input_boolean.hpvc_enabled
+      entity_id:
+      - input_boolean.hpvc_enabled
+      - input_boolean.hpvc_runtime_ready_session
 
 - id: hpvc_resume_when_required_inputs_recover
   alias: HPVC · Recovery · Resume when required inputs recover
@@ -4958,6 +5039,9 @@ automation:
     entity_id:
     - binary_sensor.hpvc_configuration_valid
     - binary_sensor.hpvc_required_inputs_ready
+    - sensor.hpvc_node_red_runtime_health
+    - input_boolean.hpvc_update_in_progress
+    - input_boolean.hpvc_update_reload_required
   - platform: state
     entity_id: input_boolean.hpvc_auto_resume_pending
     to: 'on'
@@ -4980,6 +5064,12 @@ automation:
   - condition: state
     entity_id: sensor.hpvc_node_red_runtime_health
     state: Ready
+  - condition: state
+    entity_id: input_boolean.hpvc_update_in_progress
+    state: 'off'
+  - condition: state
+    entity_id: input_boolean.hpvc_update_reload_required
+    state: 'off'
   action:
   - delay: 00:00:05
   - condition: state
@@ -4994,6 +5084,12 @@ automation:
   - condition: state
     entity_id: input_boolean.hpvc_auto_resume_pending
     state: 'on'
+  - condition: state
+    entity_id: input_boolean.hpvc_update_in_progress
+    state: 'off'
+  - condition: state
+    entity_id: input_boolean.hpvc_update_reload_required
+    state: 'off'
   - service: input_boolean.turn_on
     target:
       entity_id: input_boolean.hpvc_enabled
@@ -5003,22 +5099,59 @@ automation:
 
 - id: hpvc_cancel_auto_resume_on_manual_disable
   alias: HPVC · Recovery · Cancel automatic resume after manual switch-off
-  description: Clears the automatic-resume latch only for a direct user switch-off, not for an automatic safety shutdown that 
-    inherited a user context.
+  description: >-
+    Clear recovery on an explicit direct-user OFF transition, even when a recovery
+    reservation is pending. Safety-driven OFF transitions must preserve their
+    recovery reservation. An already-off master requires the Cancel button.
   mode: restart
   trigger:
   - platform: state
     entity_id: input_boolean.hpvc_enabled
+    from: 'on'
     to: 'off'
-  condition:
-  - condition: template
-    value_template: >-
-      {{ trigger.to_state.context.user_id is not none
-         and trigger.to_state.context.parent_id is none }}
+  action:
+  # HA direct UI actions normally have a user_id and no parent context.
+  # Safety automation service calls carry a parent context, even when triggered
+  # by an operation initiated by a user. Never interpret their OFF as manual.
+  # Non-UI scripts/integrations with ambiguous context should use the dedicated
+  # cancellation button to revoke pending recovery explicitly.
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: >-
+          {{ trigger.to_state.context.user_id is not none
+             and trigger.to_state.context.parent_id is none }}
+      sequence:
+      - service: input_boolean.turn_off
+        target:
+          entity_id:
+          - input_boolean.hpvc_auto_resume_pending
+          - input_boolean.hpvc_runtime_ready_session
+    default:
+    # When there is no recovery reservation, a stop ends the healthy session
+    # regardless of context. When pending is on, preserve safety recovery.
+    - if:
+      - condition: state
+        entity_id: input_boolean.hpvc_auto_resume_pending
+        state: 'off'
+      then:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.hpvc_runtime_ready_session
+
+- id: hpvc_cancel_pending_auto_resume
+  alias: HPVC · Recovery · Cancel pending automatic resume
+  description: Explicit operator stop while master is already off due to a fault.
+  mode: restart
+  trigger:
+  - platform: state
+    entity_id: input_button.hpvc_cancel_auto_resume
   action:
   - service: input_boolean.turn_off
     target:
-      entity_id: input_boolean.hpvc_auto_resume_pending
+      entity_id:
+      - input_boolean.hpvc_auto_resume_pending
+      - input_boolean.hpvc_runtime_ready_session
 
 - id: hpvc_reset_report_after_view
   alias: HPVC · Reports · Reset report after viewing

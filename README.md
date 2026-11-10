@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="releases/v1.6.1/release.md"><img src="https://img.shields.io/badge/release-v1.6.1-blue" alt="Release v1.6.1"></a>
+  <a href="releases/v1.6.2/release.md"><img src="https://img.shields.io/badge/release-v1.6.2-blue" alt="Release v1.6.2"></a>
   <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-ready-41BDF5" alt="Home Assistant ready"></a>
   <a href="https://nodered.org/"><img src="https://img.shields.io/badge/Node--RED-flow-8F0000" alt="Node-RED flow"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="GPL-3.0-or-later"></a>
@@ -94,7 +94,7 @@ See [Inverter compatibility](docs/05-inverter-compatibility.md) and [Configurati
 - Installed Home Assistant websocket dependency verification through Node-RED `/nodes`
 - Transaction-safe update, rollback and recovery handling
 - Manual upgrade and safe uninstall workflows
-- Five managed Node-RED tabs, including the dedicated **HPVC Maintenance v1.6.1** tab for updater, persistence, recovery and removal logic
+- Five managed Node-RED tabs, including the dedicated **HPVC Maintenance v1.6.2** tab for updater, persistence, recovery and removal logic
 
 ## Safety
 
@@ -222,7 +222,7 @@ See [How HPVC works → Accuracy and factor attribution](docs/03-how-it-works.md
 
 ## Screenshots
 
-The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.6.1 YAML and Node-RED flow are authoritative.
+The bundled screenshots are retained for orientation and may show an earlier HPVC version. The shipped v1.6.2 YAML and Node-RED flow are authoritative.
 
 ### Settings
 
@@ -252,21 +252,11 @@ Smart Update preserves HPVC configuration, helper values and saved data, validat
 
 For the authoritative update lifecycle, rollback/recovery behavior, trust model and manual upgrade procedure, see [Installation → Smart update from v1.5.3 onward](docs/01-installation.md#smart-update-from-v153-onward).
 
-### v1.6.1 upgrade notes
+### v1.6.2 install notes
 
-When upgrading to v1.6.1, replace the Home Assistant package, Node-RED flow and managed dashboard together so the runtime, templates and UI remain aligned. The current flow contains five managed tabs: Inputs, Engine, Outputs, Reports, and Maintenance. Smart Update remains preferred on supported Home Assistant OS / Supervised Node-RED add-on installations.
+When installing v1.6.2 without updating, replace the Home Assistant package, Node-RED flow and managed dashboard together so the runtime, templates and UI remain aligned. The current flow contains five managed tabs: Inputs, Engine, Outputs, Reports, and Maintenance. Smart Update remains preferred on supported Home Assistant OS / Supervised Node-RED add-on installations.
 
-Priority checks after upgrade:
-
-1. Verify each effective inverter/controller is detected or configured and that **HPVC Control** has the intended state.
-2. For auto-detected OpenDTU/Hoymiles, confirm **Max power** comes from trusted OpenDTU `max_power`/cache or enter the slot’s manual **Full Limit** when required. Do not use the HA Number entity `max` attribute as rated inverter power.
-3. Confirm the editable **Min power** value for every controller; automatic Enphase slots use manually configured Max/Min power, while OpenDTU slots honor the configured minimum within native/trusted-full-power bounds.
-4. If HPVC reports inverter dispatch recovery required after a partial deployment or interrupted update, follow [Troubleshooting](docs/04-troubleshooting.md#inverter-dispatch-recovery-required) before resuming control or maintenance.
-5. Confirm the zero-inverter state behaves as intended: HPVC remains OFF/non-operational until at least one usable controller exists.
-
-The release also fixes stale-PV Night Restore entry, dispatch-policy mismatch, superseded adapter sequencing, downward import recovery, cooldown rounding, dispatch-time verification, contradictory OpenDTU serial fallback and false manual-disable completion.
-
-See the [v1.6.1 release notes](releases/v1.6.1/release.md) for the full release summary.
+See the [v1.6.2 release notes](releases/v1.6.2/release.md) for the full release summary.
 
 ## Uninstalling
 
@@ -283,13 +273,13 @@ See [Installation → Full uninstall](docs/01-installation.md#full-uninstall) fo
 - [Inverter compatibility](docs/05-inverter-compatibility.md)
 - [Documentation index](docs/README.md)
 - [Changelog](CHANGELOG.md)
-- [v1.6.1 release notes](releases/v1.6.1/release.md)
+- [v1.6.2 release notes](releases/v1.6.2/release.md)
 
 For Home Battery Control itself, see the [HBC documentation](https://docs.homebatterycontrol.com/).
 
 ## Support
 
-The HTML support report is published at `/local/hpvc/support-report.html`. With **Enable Insights** on, the dashboard keeps the **Generate report → Generating… → View report** workflow. Turning Insights off hides the 10-Insights section and report controls and stops optional analytics/report background work while core control and Daily Control Accuracy remain active. Opening the report on the local Home Assistant network resets the tile to **Generate report** immediately through the bundled local-only Home Assistant webhook. Remote viewing (for example through Tailscale) intentionally cannot call that webhook, so HPVC now also clears the Ready state automatically after **60 seconds**. The generated report file remains available until a newer report replaces it. Because `/local/` files are served without Home Assistant authentication, treat the report URL as locally accessible diagnostic output and avoid exposing it beyond networks you trust.
+The HTML support report is published at `/local/hpvc/support-report.html`. With **Enable Insights** on, the dashboard keeps the **Generate report → Generating… → View report** workflow.
 
 Before opening an issue:
 
@@ -334,7 +324,7 @@ docs/
 releases/
   v1.0.0/
   ...
-  v1.6.1/
+  v1.6.2/
 ```
 
 ## Support the project

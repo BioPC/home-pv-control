@@ -18,7 +18,7 @@ views:
               <div align="center">
 
 
-              ## Home PV Control (v1.6.1)
+              ## Home PV Control (v1.6.2)
 
               #### Standalone PV optimization for dynamic energy contracts.
               Optional HBC integration.
@@ -516,6 +516,22 @@ views:
           - type: conditional
             conditions:
               - condition: state
+                entity: input_boolean.hpvc_auto_resume_pending
+                state: 'on'
+            card:
+              type: tile
+              entity: input_button.hpvc_cancel_auto_resume
+              name: Cancel automatic resume
+              hide_state: true
+              icon: mdi:stop-circle-outline
+              tap_action:
+                action: perform-action
+                perform_action: input_button.press
+                target:
+                  entity_id: input_button.hpvc_cancel_auto_resume
+          - type: conditional
+            conditions:
+              - condition: state
                 entity: sensor.hpvc_node_red_runtime_health
                 state_not: Ready
             card:
@@ -526,6 +542,9 @@ views:
               color: grey
               hide_state: true
               vertical: false
+              features_position: inline
+              features:
+                - type: toggle
               tap_action:
                 action: none
               icon_tap_action:
@@ -2541,17 +2560,6 @@ views:
           - type: markdown
             content: |
               ### 🔆 Inverters
-          - type: markdown
-            content: >-
-              {% set reason = states('input_text.hpvc_reason') %} {% if
-              reason.startswith('Migration warning') %} **⚠️ Inverter migration
-              requires review**
-
-              {{ reason.split(' | ')[0] }}
-
-              Existing manual settings are preserved. Check device registry
-              identities before enabling an additional automatic controller. {%
-              endif %}
           - type: markdown
             text_only: true
             content: |-

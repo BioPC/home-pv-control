@@ -230,7 +230,7 @@ To have Smart Update manage the dashboard automatically, switch to the file-back
 
 #### Mobile report navigation buttons appear only after refresh
 
-Use the current v1.6.1 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
+Use the current v1.6.2 report flow and generate a new report after deployment. Older already-published HTML files do not contain the updated mobile navigation script.
 
 ### Accuracy diagnostics
 
@@ -314,7 +314,7 @@ For deeper telemetry, cutoff, persistence, attribution, and report semantics, se
 
 ### Node-RED latency or heap growth
 
-v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test the current v1.6.1 build unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
+v1.4.1 removes the two full Home Assistant state-table deep clones present in v1.4.0 and no longer transports the complete HA state map in `msg.hpvc`. If Node-RED latency or memory growth is still observed, first test the current v1.6.2 build unchanged for several hours so the remaining behavior can be isolated from the confirmed v1.4.0 allocation problem.
 
 The runtime stores bounded diagnostics in the Node-RED global context key `homePvControlPerformanceDiagnostics`. It contains the latest cycle total, maximum and rolling average evaluation time, expanded per-stage timings for cooldown gates, battery-capacity learning, HBC charge priority, final-target calculation, transition logging, inverter service-call preparation and Insights/diagnostics, and—when the Function sandbox permits it—a memory sample no more than once per minute. No per-cycle timing or heap history is retained by this diagnostic.
 
@@ -407,17 +407,17 @@ This mechanism is automatic for future HPVC-owned helpers and template entities 
 
 #### Update activation pending remains after the update already completed
 
-Update to v1.6.1 or later. v1.5.5 could leave the runtime gate stuck if the durable update transaction had already finalized but Home Assistant restored `input_boolean.hpvc_update_reload_required` / `input_boolean.hpvc_update_in_progress` stale, or Node-RED retained its local update latch. v1.6.1 detects that mismatch and reruns the idempotent finalizer, verifies both HA update booleans are Off, restores the saved HPVC enabled/disabled intent, and clears the local Node-RED update state. Do not delete recovery metadata or force-enable HPVC while a genuine incomplete transaction is still present.
+Update to v1.6.2 or later. v1.5.5 could leave the runtime gate stuck if the durable update transaction had already finalized but Home Assistant restored `input_boolean.hpvc_update_reload_required` / `input_boolean.hpvc_update_in_progress` stale, or Node-RED retained its local update latch. v1.6.2 detects that mismatch and reruns the idempotent finalizer, verifies both HA update booleans are Off, restores the saved HPVC enabled/disabled intent, and clears the local Node-RED update state. Do not delete recovery metadata or force-enable HPVC while a genuine incomplete transaction is still present.
 
-If the update helpers are still stale but `transaction.json` is missing, v1.6.1 also has a conservative orphan-recovery path. It clears the stale update helpers only when no local update/destructive phase is active, no updater/reclaim/fresh activation lock is present, and the managed `/config/packages/hpvc_config.yaml` independently verifies as v1.6.1. The in-progress helper is cleared first and the runtime activation gate last, then both are verified. If any of those safety checks fail, HPVC leaves the gate in place.
+If the update helpers are still stale but `transaction.json` is missing, v1.6.2 also has a conservative orphan-recovery path. It clears the stale update helpers only when no local update/destructive phase is active, no updater/reclaim/fresh activation lock is present, and the managed `/config/packages/hpvc_config.yaml` independently verifies as v1.6.2. The in-progress helper is cleared first and the runtime activation gate last, then both are verified. If any of those safety checks fail, HPVC leaves the gate in place.
 
-If v1.6.1 still remains pending after those checks, preserve `/config/hpvc-data/update-recovery/` and inspect `transaction.json`, `reload-readiness.json` and any update/activation lock before manual cleanup.
+If v1.6.2 still remains pending after those checks, preserve `/config/hpvc-data/update-recovery/` and inspect `transaction.json`, `reload-readiness.json` and any update/activation lock before manual cleanup.
 
 ### Manual upgrade / Node-RED flow removal
 
 #### Manual upgrade: remove and reinstall the HPVC Node-RED flows
 
-Use **Settings → Maintenance → Manual upgrade → Remove HPVC flows** when the HPVC tabs need to be rebuilt but you want to keep the Home Assistant package, helpers/entities, dashboard and saved HPVC data. The action first runs the same safe PV/HBC shutdown verification used by Smart Update/Full uninstall, then removes only the five managed HPVC tabs, including **HPVC Maintenance v1.6.1**. Re-import the complete current `node-red/hpvc_flow.json` before enabling HPVC again.
+Use **Settings → Maintenance → Manual upgrade → Remove HPVC flows** when the HPVC tabs need to be rebuilt but you want to keep the Home Assistant package, helpers/entities, dashboard and saved HPVC data. The action first runs the same safe PV/HBC shutdown verification used by Smart Update/Full uninstall, then removes only the five managed HPVC tabs, including **HPVC Maintenance v1.6.2**. Re-import the complete current `node-red/hpvc_flow.json` before enabling HPVC again.
 
 After successful removal through the Manual upgrade action, Maintenance shows **Node-RED flows: Removed**. Once the supplied flow is re-imported and starts, it changes to **Ready**. If the HPVC flows were removed manually or the flow state cannot be confirmed, the dashboard shows **Not detected**. If automatic removal fails or leaves an inconsistent state, it shows **Needs attention**.
 
@@ -445,9 +445,9 @@ This can be normal while an inverter command or verification is still active.
 
 #### WebSocket error: request requires a `type`
 
-Current v1.6.1 rebuilds a clean `config/entity_registry/list` WebSocket payload immediately before the entity-registry API node and uses the live-proven per-entity removal payload for `config/entity_registry/remove`.
+Current v1.6.2 rebuilds a clean `config/entity_registry/list` WebSocket payload immediately before the entity-registry API node and uses the live-proven per-entity removal payload for `config/entity_registry/remove`.
 
-If this error appears with a modified/older flow, re-import the complete current v1.6.1 flow rather than rewriting the registry API node manually.
+If this error appears with a modified/older flow, re-import the complete current v1.6.2 flow rather than rewriting the registry API node manually.
 
 #### Node-RED Global Context Store is disabled
 
@@ -468,14 +468,14 @@ A Node-RED cleanup failure does not block deletion of HPVC-owned files/data. If 
 
 #### Reinstall restores old settings
 
-Current v1.6.1 full uninstall resets the complete HPVC helper set to fresh-install defaults and waits 15 seconds for RestoreEntity persistence before entity-registry removal.
+Current v1.6.2 full uninstall resets the complete HPVC helper set to fresh-install defaults and waits 15 seconds for RestoreEntity persistence before entity-registry removal.
 
 If an older or interrupted uninstall left stale values:
 
-1. install/deploy the current complete v1.6.1 package;
+1. install/deploy the current complete v1.6.2 package;
 2. run **Uninstall HPVC** again and let it complete;
 3. restart Home Assistant after the final Maintenance tab disappears;
-4. reinstall v1.6.1.
+4. reinstall v1.6.2.
 
 A normal update intentionally preserves helper values; only the full uninstall performs the clean-reset sequence.
 
@@ -491,7 +491,7 @@ HPVC checks communication freshness as well as numeric state. Power/inverter obs
 
 #### Disable remains pending after an inverter disappears
 
-v1.6.1 retains the original per-inverter restore obligations. Restore the missing inverter's numeric feedback and confirm its applied full-output limit; a healthy/full second inverter cannot prove that the missing one restored. Action/service adapters without independent readback remain unverified. If you intentionally replaced an obligated adapter, check the old physical device before re-enabling and starting a new disable attempt with the new configuration.
+v1.6.2 retains the original per-inverter restore obligations. Restore the missing inverter's numeric feedback and confirm its applied full-output limit; a healthy/full second inverter cannot prove that the missing one restored. Action/service adapters without independent readback remain unverified. If you intentionally replaced an obligated adapter, check the old physical device before re-enabling and starting a new disable attempt with the new configuration.
 
 #### Inverter dispatch recovery required
 
@@ -499,13 +499,13 @@ This status means retained dispatcher state cannot be tied to a live call in the
 
 1. Keep HPVC master control **off**. Inspect Home Assistant scripts, integration jobs and the Node-RED Action node. Stop and independently verify completion/cancellation of every outstanding HPVC inverter action. Check every configured inverter's actual applied limit through independent live readback; do not trust the HPVC command cache. If you cannot establish this, leave the dispatcher held.
 2. Only after those checks, use Node-RED's global context sidebar to remove **only** `homePvControlAdapterScheduler` from the configured context store. Do not reset dispatch/generation counters, the runtime journal, ownership metadata or update-recovery files.
-3. Deploy the complete corrected v1.6.1 flow and allow a fresh evaluation with master control still off. Confirm that any required full-limit restoration finishes and that fresh per-inverter readback proves completion before enabling control or retrying maintenance.
+3. Deploy the complete corrected v1.6.2 flow and allow a fresh evaluation with master control still off. Confirm that any required full-limit restoration finishes and that fresh per-inverter readback proves completion before enabling control or retrying maintenance.
 
 A full restart with volatile context cannot retain evidence of HA work that survives Node-RED. Perform the same independent action and limit checks before resuming after an interrupted call. Test your context provider and adapter completion behavior in staging; service acknowledgement is not hardware confirmation.
 
 #### An adapter sequence is waiting for a service call
 
-The v1.6.1 dispatcher waits for the current Home Assistant call's success/error callback before issuing another inverter call. This prevents an old delayed main action from overwriting a newer restore. Inspect the Action node and integration for the unresolved service. Do not add an overlapping bypass or assume an elapsed timeout cancels a command already accepted by the integration. 
+The v1.6.2 dispatcher waits for the current Home Assistant call's success/error callback before issuing another inverter call. This prevents an old delayed main action from overwriting a newer restore. Inspect the Action node and integration for the unresolved service. Do not add an overlapping bypass or assume an elapsed timeout cancels a command already accepted by the integration. 
 
 Identical restore requests reuse the live sequence, so the normal control timer does not restart a slow pre-action. Smart Update, uninstall and flow removal wait for this work even if a verification timer expires or an older Night Restore proof exists. After a warm partial deployment, the current call must still drain before fresh work proceeds. If the live lease cannot be established after a restart or replacement, follow the recovery procedure below.
 
@@ -522,7 +522,7 @@ Only for an inverter **removed from the active HPVC configuration** which cannot
 
 This action **does not verify or restore physical inverter power**; the operator is responsible for isolating/removing the equipment or correcting the limit outside HPVC. The original identity, reason, timestamp and explicit unverified status are recorded in the persistent runtime journal. Wait for the journal to finish saving before restarting Node-RED. Reconciliation is scoped to the original restore obligation; remaining obligations still block Smart Update, flow removal and uninstall. This is not a generic maintenance safety bypass.
 
-### HPVC Node-RED runtime health (v1.6.1 hotfix)
+### HPVC Node-RED runtime health (v1.6.2 hotfix)
 
 The Maintenance health card now reads `sensor.hpvc_node_red_runtime_health` rather than trusting the persisted `input_text.hpvc_node_red_flows_status` flag. Each of the five HPVC tabs sends an independent heartbeat to a Home Assistant input_number every 10 seconds. Home Assistant computes the result itself, including after all Node-RED tabs are manually deleted:
 

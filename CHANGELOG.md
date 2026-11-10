@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.6.2
+
+### Follow-up fixes — manual stop and orphan activation gate
+- A direct Home Assistant user OFF transition (`user_id` present, `parent_id` absent) cancels `hpvc_auto_resume_pending` **and** the healthy-session witness even if recovery was pending; safety automation OFF transitions preserve a valid reservation. If HPVC is already off or a script/integration has ambiguous context, press **Cancel automatic resume** explicitly.
+- Correct the Node-RED **Reconcile orphaned activation gate** package-version check from `1.6.0` to `1.6.2`. It continues refusing reconciliation when a recovery transaction or uncertain updater lock exists, and leaves the reload safety gate set until in-progress is cleared.
+- Both corrections retain the `1.6.2` release identifier. Source-level tests do not establish live Home Assistant timing or physical inverter behavior.
+
+### Corrected v1.6.2 safety build
+- Completing first-install setup marks onboarding complete but **leaves HPVC disabled** until a person enables it.
+- Safety shutdown preserves any previously armed auto-resume reservation, including overlapping Node-RED/input failures; an invalid first-enable attempt cannot create one.
+- For an already-disabled HPVC with automatic resume pending, the dashboard now shows **Cancel automatic resume**. Press it to prevent unattended re-enabling. Merely toggling an already-off boolean cannot produce an off-state event in Home Assistant.
+- Manual switch-off during normal running invalidates the healthy-session witness. A safety-driven off-state transition does not clear an existing recovery reservation.
+- Static checks cannot establish every asynchronous Home Assistant event-order or inverter behavior: conduct live testing before unattended deployment.
+
+### Runtime-health shutdown and recovery
+- Fix a safety-guard regression that cleared `hpvc_auto_resume_pending` whenever a previously healthy Node-RED runtime became temporarily `Incomplete`, `Stale`, or otherwise not `Ready`. HPVC continues to fail closed, without automatically restarting control during an unhealthy period.
+- Record a persistent `hpvc_runtime_ready_session` witness only when HPVC was already enabled with healthy Node-RED flows, valid configuration/inputs, completed onboarding and no update gate. Only a witnessed runtime interruption is eligible to arm automatic recovery; an attempted first enable while unhealthy stays off.
+- Trigger automatic recovery when Node-RED runtime health returns to `Ready` (as well as when other safety prerequisites recover), require five seconds of continuously valid conditions and no Smart Update activation gate, then clear the pending latch.
+- Direct manual switch-off cancels both automatic recovery and the healthy-session witness. First-install initialization resets the witness; other original shutdown, inverter restoration, Night Restore and maintenance safeguards remain in force.
+- Bump Home Assistant installed-version sensor and Smart Update guard to `1.6.2`, and update the Node-RED flow metadata, dashboard and documentation.
+
 ## v1.6.1
 
 ### Smart Update and activation
